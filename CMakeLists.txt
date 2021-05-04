@@ -54,7 +54,6 @@ add_definitions(
 add_executable(main 
 	src/main.cpp
     src/logger.cpp
-    src/shader.cpp
     src/glhelper.cpp
     src/mesh.cpp
 )

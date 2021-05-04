@@ -8,7 +8,7 @@ GLFWwindow* GLHelper::window() {
 
 bool GLHelper::init(int width, int height, const char* name) {
 
-    if( glfwInit() != true ) {
+	if( glfwInit() != true ) {
 		logger::fatal( "Failed to initialize GLFW!" );
 		return false;
 	}
@@ -35,11 +35,11 @@ bool GLHelper::init(int width, int height, const char* name) {
 		return false;
 	}
 
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-    srand( time(0) );
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	srand( time(0) );
 
-    return true;
+	return true;
 
 }
 

@@ -10,7 +10,7 @@ void Mesh::buildIndice( std::vector<GLfloat>& vec, GLfloat x, GLfloat y, GLfloat
 }
 
 void Mesh::buildQuad( std::vector<GLfloat>& vec, GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2, GLfloat x3, GLfloat y3, GLfloat z3, GLfloat x4, GLfloat y4, GLfloat z4, GLfloat r, GLfloat g, GLfloat b ) {
-    Mesh::buildIndice( vec, x1, y1, z1, r, g, b );
+	Mesh::buildIndice( vec, x1, y1, z1, r, g, b );
 	Mesh::buildIndice( vec, x2, y2, z2, r, g, b );
 	Mesh::buildIndice( vec, x3, y3, z3, r, g, b );
 	Mesh::buildIndice( vec, x2, y2, z2, r, g, b );
@@ -54,29 +54,29 @@ void Mesh::buildVoxel( std::vector<GLfloat>& vec, byte* rgb, float x, float y, f
 
 std::vector<GLfloat> Mesh::build( byte* arr, int size ) {
 
-    std::vector<GLfloat> vertex_buffer;
+	std::vector<GLfloat> vertex_buffer;
 
-    logger::info("Generating vertex data...");
+	logger::info("Generating vertex data...");
 
-    const float s = 1.f / size;
-    const int zoff = 3;
-    const int yoff = zoff * size;
-    const int xoff = yoff * size;
+	const float s = 1.f / size;
+	const int zoff = 3;
+	const int yoff = zoff * size;
+	const int xoff = yoff * size;
 
-    for( int x = 0; x < size; x ++ ) {
+	for( int x = 0; x < size; x ++ ) {
 		for( int y = 0; y < size; y ++ ) {
 			for( int z = 0; z < size; z ++ ) {
-                const float xs = ((float) x / size) * 2 - 1.f + s;
-                const float ys = ((float) y / size) * 2 - 1.f + s;
-                const float zs = ((float) z / size) * 2 - 1.f + s;
+				const float xs = ((float) x / size) * 2 - 1.f + s;
+				const float ys = ((float) y / size) * 2 - 1.f + s;
+				const float zs = ((float) z / size) * 2 - 1.f + s;
 
 				Mesh::buildVoxel( vertex_buffer, &(arr[x * xoff + y * yoff + z * zoff]), xs, ys, zs, s );
 			}
 		}
 	}
 
-    vertex_buffer.shrink_to_fit();
-    return vertex_buffer;
+	vertex_buffer.shrink_to_fit();
+	return vertex_buffer;
 
 }
 

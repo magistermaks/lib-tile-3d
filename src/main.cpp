@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "logger.hpp"
-#include "shader.hpp"
 #include "glhelper.hpp"
 #include "mesh.hpp"
 
@@ -27,9 +26,9 @@
 
 int main( void ) {
 
-    const int width = 1024;
-    const int height = 768;
-    const int size = 32;
+	const int width = 1024;
+	const int height = 768;
+	const int size = 32;
 
 	// print cwd, nice for debugging
 	{  
@@ -38,11 +37,11 @@ int main( void ) {
 	}
 
 	// initilize GLFW and GLEW
-    if( !GLHelper::init(width, height, "LibTile3D") ) {
-        return -1;
-    }
+	if( !GLHelper::init(width, height, "LibTile3D") ) {
+		return -1;
+	}
 	
-    GLFWwindow* window = GLHelper::window();
+	GLFWwindow* window = GLHelper::window();
 
 	byte arr[size][size][size][3]; // x => y => z => [r, g, b]
 
@@ -63,10 +62,10 @@ int main( void ) {
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders();
 
-    auto vertex_buffer_data = Mesh::build( (byte*) arr, size );
+	auto vertex_buffer_data = Mesh::build( (byte*) arr, size );
 	auto vertex_buffer_size = vertex_buffer_data.size() * sizeof(GLfloat);
-    
-    logger::info( std::string("Cube size: ") + std::to_string(size) + ", used vertex memory: " + std::to_string(vertex_buffer_size) + " bytes");
+	
+	logger::info( std::string("Cube size: ") + std::to_string(size) + ", used vertex memory: " + std::to_string(vertex_buffer_size) + " bytes");
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	glm::mat4 model = glm::mat4(1.0f);
@@ -80,8 +79,8 @@ int main( void ) {
 	GLHelper::vertexAttribute(0, 3, GL_FLOAT, 6, 0, sizeof(GLfloat));
 	GLHelper::vertexAttribute(1, 3, GL_FLOAT, 6, 3, sizeof(GLfloat));
 
-    // this data is now copied to the GPU, we don't need it here anymore
-    vertex_buffer_data.clear();
+	// this data is now copied to the GPU, we don't need it here anymore
+	vertex_buffer_data.clear();
 
 	// get locations from sahder program
 	GLuint modelLoc = program.location("model");

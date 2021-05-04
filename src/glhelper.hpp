@@ -10,7 +10,7 @@
 
 namespace GLHelper {
 
-    GLFWwindow* window();
+	GLFWwindow* window();
 
 	void vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size );
 
@@ -32,21 +32,22 @@ namespace GLHelper {
 
 	class ShaderProgram {
 
-        private:
-            GLuint program;
-        
-        public:
-            ShaderProgram(GLuint);
-			ShaderProgram(ShaderProgramBuilder&);
-            ~ShaderProgram();
+		private:
+			GLuint program;
 
-            GLuint id();
+		public:
+			ShaderProgram(GLuint);
+			ShaderProgram(ShaderProgramBuilder&);
+			~ShaderProgram();
+
+			GLuint id();
 			GLuint location(const char*);
-            void bind();
-            static ShaderProgramBuilder make();
-    };
+			void bind();
+			static ShaderProgramBuilder make();
+	};
 
 	bool init(int, int, const char*);
 	ShaderProgram loadShaders();
 
 }
+
