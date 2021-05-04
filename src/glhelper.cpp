@@ -36,6 +36,14 @@ bool GLHelper::init(int width, int height, const char* name) {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT); // yes, i have written it the wrong way, but it works
+
+	// not fully supported (breaks 50% of the time)
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 	srand( time(0) );
 

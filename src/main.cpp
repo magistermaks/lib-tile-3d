@@ -28,7 +28,7 @@ int main( void ) {
 
 	const int width = 1024;
 	const int height = 768;
-	const int size = 32;
+	const int size = 48;
 
 	// print cwd, nice for debugging
 	{  
@@ -43,7 +43,7 @@ int main( void ) {
 	
 	GLFWwindow* window = GLHelper::window();
 
-	byte arr[size][size][size][3]; // x => y => z => [r, g, b]
+	byte arr[size][size][size][4]; // x => y => z => [r, g, b, a]
 
 	for( int x = 0; x < size; x ++ ) {
 		for( int y = 0; y < size; y ++ ) {
@@ -51,6 +51,9 @@ int main( void ) {
 				for( int c = 0; c < 3; c ++ ) {
 					arr[x][y][z][c] = (byte) rand();
 				}
+
+				// currently alpha only supports on/off 
+				arr[x][y][z][3] = ( (byte) rand() ) < 100 ? 0 : 255;
 			}
 		}
 	}
