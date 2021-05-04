@@ -60,6 +60,7 @@ GLHelper::ShaderProgram GLHelper::loadShaders() {
 		exit(-1);
 	}
 
+	// let's hope that the return will be optimized, otherwise things will break (the destructor must not be called!)
 	return GLHelper::ShaderProgram( builder.get() );
 
 }
@@ -114,7 +115,7 @@ void GLHelper::ShaderProgramBuilder::compileFile( std::string path, GLenum type 
 
 void GLHelper::ShaderProgramBuilder::link() {
 
-    logger::info("Linking program...");
+    logger::info("Linking shader program...");
 
     if( this->failed ) {
         logger::error( "Unable to link, compilation incomplete!" );

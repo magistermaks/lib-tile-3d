@@ -1,24 +1,8 @@
 #include "mesh.hpp"
 
 float Mesh::buildFakeFloat( byte a, byte b, byte c, byte d ) {
-//	GLuint source = 0;
-//
-//	GLuint r_ = a;
-//	GLuint g_ = b;
-//	GLuint b_ = c;
-//	GLuint w_ = d;
-//
-//	source = r_ + g_ * 255 + b_ * 255 * 255;
-//
-//	source |= (r_      );
-//	source |= (g_ * 0xFF );
-//	source |= (b_ * 0xFF * 0xFF);
-//	source |= (w_ >> 24);
-//
-//	GLfloat value;
-//	memcpy( &value, &source, sizeof(GLfloat) ); 
 
-	GLfloat value = 0;
+	GLfloat value;
 	byte* facs = (byte*) &value;
 
 	facs[0] = a;
@@ -29,30 +13,25 @@ float Mesh::buildFakeFloat( byte a, byte b, byte c, byte d ) {
 	return value;
 }
 
-void Mesh::buildIndice( std::vector<GLfloat>& vec, GLfloat x, GLfloat y, GLfloat z, GLfloat r, GLfloat g, GLfloat b ) {
+void Mesh::buildIndice( std::vector<GLfloat>& vec, GLfloat x, GLfloat y, GLfloat z, GLfloat color ) {
 	vec.push_back(x);
 	vec.push_back(y);
 	vec.push_back(z);
-	vec.push_back(r);
-	//vec.push_back(g);
-	//vec.push_back(b);
+	vec.push_back(color);
 }
 
-void Mesh::buildQuad( std::vector<GLfloat>& vec, GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2, GLfloat x3, GLfloat y3, GLfloat z3, GLfloat x4, GLfloat y4, GLfloat z4, GLfloat r, GLfloat g, GLfloat b ) {
-	Mesh::buildIndice( vec, x1, y1, z1, r, g, b );
-	Mesh::buildIndice( vec, x2, y2, z2, r, g, b );
-	Mesh::buildIndice( vec, x3, y3, z3, r, g, b );
-	Mesh::buildIndice( vec, x2, y2, z2, r, g, b );
-	Mesh::buildIndice( vec, x4, y4, z4, r, g, b );
-	Mesh::buildIndice( vec, x3, y3, z3, r, g, b );
+void Mesh::buildQuad( std::vector<GLfloat>& vec, GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2, GLfloat x3, GLfloat y3, GLfloat z3, GLfloat x4, GLfloat y4, GLfloat z4, GLfloat color ) {
+	Mesh::buildIndice( vec, x1, y1, z1, color );
+	Mesh::buildIndice( vec, x2, y2, z2, color );
+	Mesh::buildIndice( vec, x3, y3, z3, color );
+	Mesh::buildIndice( vec, x2, y2, z2, color );
+	Mesh::buildIndice( vec, x4, y4, z4, color );
+	Mesh::buildIndice( vec, x3, y3, z3, color );
 }
 
 void Mesh::buildVoxel( std::vector<GLfloat>& vec, byte* rgb, float x, float y, float z, float s ) {
 
-	const float r = Mesh::buildFakeFloat(rgb[0], rgb[1], rgb[2], 0);
-	//const float r = //rgb[0] / 255.0f;
-	const float g = 0;//rgb[1] / 255.0f;
-	const float b = 0;//rgb[2] / 255.0f;
+	const float color = Mesh::buildFakeFloat(rgb[0], rgb[1], rgb[2], 255);
 
 	//                          x   y   z               x   y   z
 	//    e-------f      a = ( -1,  1, -1 )  =>  e = ( -1,  1,  1 )
@@ -73,12 +52,12 @@ void Mesh::buildVoxel( std::vector<GLfloat>& vec, byte* rgb, float x, float y, f
 	// h: ( x + s, y - s, z + s )
 	//
 	//                    1      1      1      2      2      2      3      3      3      4      4      4
-	Mesh::buildQuad( vec, x - s, y - s, z - s, x + s, y - s, z - s, x - s, y + s, z - s, x + s, y + s, z - s, r, g, b ); // (c => d => a => b) => front 
-	Mesh::buildQuad( vec, x + s, y - s, z + s, x - s, y - s, z + s, x + s, y + s, z + s, x - s, y + s, z + s, r, g, b ); // (h => g => f => e) => back
-	Mesh::buildQuad( vec, x - s, y - s, z + s, x - s, y - s, z - s, x - s, y + s, z + s, x - s, y + s, z - s, r, g, b ); // (g => c => e => a) => left
-	Mesh::buildQuad( vec, x + s, y - s, z - s, x + s, y - s, z + s, x + s, y + s, z - s, x + s, y + s, z + s, r, g, b ); // (d => h => b => f) => right
-	Mesh::buildQuad( vec, x - s, y + s, z - s, x + s, y + s, z - s, x - s, y + s, z + s, x + s, y + s, z + s, r, g, b ); // (a => b => e => f) => top
-	Mesh::buildQuad( vec, x - s, y - s, z + s, x + s, y - s, z + s, x - s, y - s, z - s, x + s, y - s, z - s, r, g, b ); // (g => h => c => d) => bottom
+	Mesh::buildQuad( vec, x - s, y - s, z - s, x + s, y - s, z - s, x - s, y + s, z - s, x + s, y + s, z - s, color ); // (c => d => a => b) => front 
+	Mesh::buildQuad( vec, x + s, y - s, z + s, x - s, y - s, z + s, x + s, y + s, z + s, x - s, y + s, z + s, color ); // (h => g => f => e) => back
+	Mesh::buildQuad( vec, x - s, y - s, z + s, x - s, y - s, z - s, x - s, y + s, z + s, x - s, y + s, z - s, color ); // (g => c => e => a) => left
+	Mesh::buildQuad( vec, x + s, y - s, z - s, x + s, y - s, z + s, x + s, y + s, z - s, x + s, y + s, z + s, color ); // (d => h => b => f) => right
+	Mesh::buildQuad( vec, x - s, y + s, z - s, x + s, y + s, z - s, x - s, y + s, z + s, x + s, y + s, z + s, color ); // (a => b => e => f) => top
+	Mesh::buildQuad( vec, x - s, y - s, z + s, x + s, y - s, z + s, x - s, y - s, z - s, x + s, y - s, z - s, color ); // (g => h => c => d) => bottom
 		
 }
 

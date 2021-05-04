@@ -37,7 +37,7 @@ int main( void ) {
 	}
 
 	// initilize GLFW and GLEW
-	if( !GLHelper::init(width, height, "LibTile3D") ) {
+	if( !GLHelper::init(width, height, "LibTile3D | FPS: 0") ) {
 		return -1;
 	}
 	
@@ -75,16 +75,11 @@ int main( void ) {
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 
 	glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_data.data(), GL_STATIC_DRAW);
-
-	//GLHelper::vertexAttribute(0, 3, GL_FLOAT, 6, 0, sizeof(GLfloat));
-	//GLHelper::vertexAttribute(1, 4, GL_BYTE, 6, 3, sizeof(GLfloat), true);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*) (long) 0);
-	glEnableVertexAttribArray(0);
-
-	// get RGBA from a single 4-byte packed float, and normalize it into a 0-1 float
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4 * sizeof(GLfloat), (GLvoid*) (long) (3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
+	
+	// 0 => xyz as floats
+	// 1 => get RGBA from a single 4-byte packed float, and normalize it into a 0-1 float
+	GLHelper::vertexAttribute(0, 3, GL_FLOAT, 4, 0, sizeof(GLfloat));
+	GLHelper::vertexAttribute(1, 4, GL_UNSIGNED_BYTE, 4, 3, sizeof(GLfloat), GL_TRUE);
 
 	// this data is now copied to the GPU, we don't need it here anymore
 	vertex_buffer_data.clear();
@@ -93,12 +88,26 @@ int main( void ) {
 	GLuint modelLoc = program.location("model");
 	GLuint viewLoc = program.location("view");
 	GLuint projectionLoc = program.location("projection");
+
+	time_t last = 0;
+	long count = 0;
+
+	// remove frame cap - for performance testing
+	// it's not 100% relible on all systems/drivers
+	glfwSwapInterval(0);
  
 	do {
 
+		if( last != time(0) ) {
+			std::string title = "LibTile3D | FPS: " + std::to_string(count);
+			glfwSetWindowTitle(window, title.c_str());
+			last = time(0);
+			count = 0;
+		}
+
 		// fancy location
-		float camX = sin(glfwGetTime()) * 10;
-		float camZ = cos(glfwGetTime()) * 10;
+		float camX = sin( glfwGetTime() ) * 10;
+		float camZ = cos( glfwGetTime() ) * 10;
 		glm::mat4 view = glm::lookAt(glm::vec3(camX, camZ, camZ), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
 
 		// clear the screen and depth buffer
@@ -121,6 +130,8 @@ int main( void ) {
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		count ++;
 
 	} while( glfwWindowShouldClose(window) == 0 );
 
