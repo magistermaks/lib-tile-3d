@@ -21,8 +21,6 @@ void Mesh::buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2
 
 void Mesh::buildVoxel( std::vector<byte>& vec, byte* color, byte x, byte y, byte z, byte flags ) {
 
-	//const float color = Mesh::buildFakeFloat(rgb[0], rgb[1], rgb[2], rgb[3]);
-	
 	const byte s = 1;
 
 	//                          x   y   z               x   y   z

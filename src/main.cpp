@@ -28,7 +28,7 @@ int main( void ) {
 
 	const int width = 1024;
 	const int height = 768;
-	const int size = 32;
+	const int size = 16;
 
 	// print cwd, nice for debugging
 	{  
@@ -45,6 +45,8 @@ int main( void ) {
 
 	byte arr[size][size][size][4]; // x => y => z => [r, g, b, a]
 
+	int c = size / 2;
+
 	for( int x = 0; x < size; x ++ ) {
 		for( int y = 0; y < size; y ++ ) {
 			for( int z = 0; z < size; z ++ ) {
@@ -52,8 +54,16 @@ int main( void ) {
 					arr[x][y][z][c] = (byte) rand();
 				}
 
+				float A = c - x, B = c - y, C = c - z;
+
+				if( sqrt( A*A + B*B + C*C ) < c ) {
+					arr[x][y][z][3] = ( (byte) rand() ) < 100 ? 0 : 255;
+				}else{
+					arr[x][y][z][3] = 0;
+				}
+
 				// currently alpha only supports on/off 
-				arr[x][y][z][3] = ( (byte) rand() ) < 100 ? 0 : 255;
+				//arr[x][y][z][3] = ( (byte) rand() ) < 100 ? 0 : 255;
 			}
 		}
 	}
@@ -68,7 +78,7 @@ int main( void ) {
 	auto vertex_buffer_data = Mesh::build( (byte*) arr, size );
 	auto vertex_buffer_size = vertex_buffer_data.size(); //* sizeof(GLbyte);
 	
-	logger::info( std::string("Cube size: ") + std::to_string(size) + ", used vertex memory: " + std::to_string(vertex_buffer_size) + " bytes");
+	logger::info( std::string("Cube size: ") + std::to_string(size) + ", used vertex memory: " + std::to_string(vertex_buffer_size) + " bytes (" + std::to_string(vertex_buffer_size / 7) + " voxels)");
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	glm::mat4 model = glm::mat4(1.0f);
