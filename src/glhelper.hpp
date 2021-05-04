@@ -13,6 +13,7 @@ namespace GLHelper {
 	GLFWwindow* window();
 
 	void vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size, GLboolean normalize = GL_FALSE );
+	void getError();
 
 	class ShaderProgramBuilder {
 

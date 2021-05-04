@@ -147,6 +147,8 @@ int main( void ) {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
+		GLHelper::getError();
+
 		count ++;
 
 	} while( glfwWindowShouldClose(window) == 0 );

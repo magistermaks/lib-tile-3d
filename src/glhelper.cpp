@@ -51,6 +51,28 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 }
 
+void GLHelper::getError() {
+	GLenum err = glGetError();
+
+	std::string name;
+
+	switch( err ) {
+		case GL_NO_ERROR: name = "GL_NO_ERROR"; break;
+		case GL_INVALID_ENUM: name = "GL_INVALID_ENUM"; break;
+		case GL_INVALID_VALUE: name = "GL_INVALID_VALUE"; break;
+		case GL_INVALID_OPERATION: name = "GL_INVALID_OPERATION"; break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION: name = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+		case GL_OUT_OF_MEMORY: name = "GL_OUT_OF_MEMORY"; break;
+		case GL_STACK_UNDERFLOW: name = "GL_STACK_UNDERFLOW"; break;
+		case GL_STACK_OVERFLOW: name = "GL_STACK_OVERFLOW"; break;
+		default: name = "UNKNOWN";
+	}
+
+	if( err != GL_NO_ERROR ) {
+		logger::warn( "OpenGL Error: " + std::to_string(err) + ", " + name + "!" );
+	}
+}
+
 void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size, GLboolean normalize ) {
 	glVertexAttribPointer(index, length, type, normalize, stride * size, (GLvoid*) (long) (offset * size));
 	glEnableVertexAttribArray(index);
