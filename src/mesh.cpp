@@ -1,12 +1,41 @@
 #include "mesh.hpp"
 
+float Mesh::buildFakeFloat( byte a, byte b, byte c, byte d ) {
+//	GLuint source = 0;
+//
+//	GLuint r_ = a;
+//	GLuint g_ = b;
+//	GLuint b_ = c;
+//	GLuint w_ = d;
+//
+//	source = r_ + g_ * 255 + b_ * 255 * 255;
+//
+//	source |= (r_      );
+//	source |= (g_ * 0xFF );
+//	source |= (b_ * 0xFF * 0xFF);
+//	source |= (w_ >> 24);
+//
+//	GLfloat value;
+//	memcpy( &value, &source, sizeof(GLfloat) ); 
+
+	GLfloat value = 0;
+	byte* facs = (byte*) &value;
+
+	facs[0] = a;
+	facs[1] = b;
+	facs[2] = c;
+	facs[3] = d;
+
+	return value;
+}
+
 void Mesh::buildIndice( std::vector<GLfloat>& vec, GLfloat x, GLfloat y, GLfloat z, GLfloat r, GLfloat g, GLfloat b ) {
 	vec.push_back(x);
 	vec.push_back(y);
 	vec.push_back(z);
 	vec.push_back(r);
-	vec.push_back(g);
-	vec.push_back(b);
+	//vec.push_back(g);
+	//vec.push_back(b);
 }
 
 void Mesh::buildQuad( std::vector<GLfloat>& vec, GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2, GLfloat x3, GLfloat y3, GLfloat z3, GLfloat x4, GLfloat y4, GLfloat z4, GLfloat r, GLfloat g, GLfloat b ) {
@@ -20,9 +49,10 @@ void Mesh::buildQuad( std::vector<GLfloat>& vec, GLfloat x1, GLfloat y1, GLfloat
 
 void Mesh::buildVoxel( std::vector<GLfloat>& vec, byte* rgb, float x, float y, float z, float s ) {
 
-	const float r = rgb[0] / 255.0f;
-	const float g = rgb[1] / 255.0f;
-	const float b = rgb[2] / 255.0f;
+	const float r = Mesh::buildFakeFloat(rgb[0], rgb[1], rgb[2], 0);
+	//const float r = //rgb[0] / 255.0f;
+	const float g = 0;//rgb[1] / 255.0f;
+	const float b = 0;//rgb[2] / 255.0f;
 
 	//                          x   y   z               x   y   z
 	//    e-------f      a = ( -1,  1, -1 )  =>  e = ( -1,  1,  1 )

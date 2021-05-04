@@ -76,8 +76,15 @@ int main( void ) {
 
 	glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_data.data(), GL_STATIC_DRAW);
 
-	GLHelper::vertexAttribute(0, 3, GL_FLOAT, 6, 0, sizeof(GLfloat));
-	GLHelper::vertexAttribute(1, 3, GL_FLOAT, 6, 3, sizeof(GLfloat));
+	//GLHelper::vertexAttribute(0, 3, GL_FLOAT, 6, 0, sizeof(GLfloat));
+	//GLHelper::vertexAttribute(1, 4, GL_BYTE, 6, 3, sizeof(GLfloat), true);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*) (long) 0);
+	glEnableVertexAttribArray(0);
+
+	// get RGBA from a single 4-byte packed float, and normalize it into a 0-1 float
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4 * sizeof(GLfloat), (GLvoid*) (long) (3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
 
 	// this data is now copied to the GPU, we don't need it here anymore
 	vertex_buffer_data.clear();
@@ -109,7 +116,7 @@ int main( void ) {
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 
 		// Draw the triangles
-		glDrawArrays(GL_TRIANGLES, 0, size*size*size*6*2*3);
+		glDrawArrays(GL_TRIANGLES, 0, size * size * size * 6 * 2 * 3);
 
 		// Swap buffers
 		glfwSwapBuffers(window);

@@ -43,8 +43,8 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 }
 
-void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size ) {
-	glVertexAttribPointer(index, length, type, GL_FALSE, stride * size, (GLvoid*) (long) (offset * size));
+void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size, GLboolean normalize ) {
+	glVertexAttribPointer(index, length, type, normalize, stride * size, (GLvoid*) (long) (offset * size));
 	glEnableVertexAttribArray(index);
 }
 
