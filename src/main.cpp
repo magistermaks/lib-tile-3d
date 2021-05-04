@@ -28,7 +28,7 @@ int main( void ) {
 
 	const int width = 1024;
 	const int height = 768;
-	const int size = 48;
+	const int size = 32;
 
 	// print cwd, nice for debugging
 	{  
@@ -66,7 +66,7 @@ int main( void ) {
 	GLHelper::ShaderProgram program = GLHelper::loadShaders();
 
 	auto vertex_buffer_data = Mesh::build( (byte*) arr, size );
-	auto vertex_buffer_size = vertex_buffer_data.size() * sizeof(GLfloat);
+	auto vertex_buffer_size = vertex_buffer_data.size(); //* sizeof(GLbyte);
 	
 	logger::info( std::string("Cube size: ") + std::to_string(size) + ", used vertex memory: " + std::to_string(vertex_buffer_size) + " bytes");
 
@@ -81,8 +81,8 @@ int main( void ) {
 	
 	// 0 => xyz as floats
 	// 1 => get RGBA from a single 4-byte packed float, and normalize it into a 0-1 float
-	GLHelper::vertexAttribute(0, 3, GL_FLOAT, 4, 0, sizeof(GLfloat));
-	GLHelper::vertexAttribute(1, 4, GL_UNSIGNED_BYTE, 4, 3, sizeof(GLfloat), GL_TRUE);
+	GLHelper::vertexAttribute(0, 3, GL_BYTE, 7, 0, sizeof(GLbyte), GL_FALSE);
+	GLHelper::vertexAttribute(1, 4, GL_UNSIGNED_BYTE, 7, 3, sizeof(GLbyte), GL_TRUE);
 
 	// this data is now copied to the GPU, we don't need it here anymore
 	vertex_buffer_data.clear();
@@ -91,6 +91,7 @@ int main( void ) {
 	GLuint modelLoc = program.location("model");
 	GLuint viewLoc = program.location("view");
 	GLuint projectionLoc = program.location("projection");
+	GLuint sizeLoc = program.location("size");
 
 	time_t last = 0;
 	long count = 0;
@@ -112,6 +113,7 @@ int main( void ) {
 		float camX = sin( glfwGetTime() ) * 10;
 		float camZ = cos( glfwGetTime() ) * 10;
 		glm::mat4 view = glm::lookAt(glm::vec3(camX, camZ, camZ), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
+		view = glm::translate( view, glm::vec3(-1, -1, -1));
 
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -123,12 +125,13 @@ int main( void ) {
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+		glUniform1f(sizeLoc, ((float) size / 2));
 
 		// bind vertex buffer
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 
 		// Draw the triangles
-		glDrawArrays(GL_TRIANGLES, 0, size * size * size * 6 * 2 * 3);
+		glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_size / 7);
 
 		// Swap buffers
 		glfwSwapBuffers(window);

@@ -9,9 +9,8 @@
 typedef unsigned char byte;
 
 namespace Mesh {
-	std::vector<GLfloat> build( byte*, int ); 
-	float buildFakeFloat( byte, byte, byte, byte );
-	void buildIndice( std::vector<GLfloat>& vec, GLfloat x, GLfloat y, GLfloat z, GLfloat color );
-	void buildQuad( std::vector<GLfloat>& vec, GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2, GLfloat x3, GLfloat y3, GLfloat z3, GLfloat x4, GLfloat y4, GLfloat z4, GLfloat color );
-	void buildVoxel( std::vector<GLfloat>& vec, byte* rgb, float x, float y, float z, float s, byte flags );
+	std::vector<byte> build( byte*, int ); 
+	void buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, byte* color );
+	void buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, byte* color );
+	void buildVoxel( std::vector<byte>& vec, byte* rgb, byte x, byte y, byte z, byte flags );
 }
