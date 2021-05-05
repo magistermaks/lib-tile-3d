@@ -14,6 +14,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <ctime>
 
 // C
 #include <stdio.h>
@@ -27,6 +28,7 @@ typedef unsigned char byte;
 #include "glhelper.hpp"
 #include "mesh.hpp"
 #include "chunk.hpp"
+#include "camera.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>

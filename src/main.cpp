@@ -51,6 +51,8 @@ int main( void ) {
 	program.bind();
 	
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+	Camera camera(CameraMode::fpv);
  
 	do {
 
@@ -64,10 +66,7 @@ int main( void ) {
 		}
 
 		// fancy location
-		float camX = sin( glfwGetTime() ) * 10;
-		float camZ = cos( glfwGetTime() ) * 10;
-		glm::mat4 view = glm::lookAt(glm::vec3(camX, camZ, camZ), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 1.0, 0.0)); 
-		view = glm::translate( view, glm::vec3(-1, -1, -1));
+		glm::mat4 view = camera.update(window);
 
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
