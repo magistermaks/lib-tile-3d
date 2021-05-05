@@ -10,20 +10,10 @@ glm::mat4 Camera::orbit() {
 
 glm::mat4 Camera::fpv(GLFWwindow* glwindow) {
 	double xpos = 0, ypos = 0;
-	int state = glfwGetMouseButton(glwindow, GLFW_MOUSE_BUTTON_LEFT);
-	if (state == GLFW_PRESS) {
-		glfwGetCursorPos(glwindow, &xpos, &ypos);
-		xpos = cursorStartPos.x + invertX * (prevCursorPos.x - xpos);
-		ypos = cursorStartPos.y + invertY * (prevCursorPos.y - ypos);
-	}
-	else {
-		cursorStartPos = cursorPos;
-		glfwGetCursorPos(glwindow, &xpos, &ypos);
-		prevCursorPos.x = xpos;
-		prevCursorPos.y = ypos;
-		xpos = cursorPos.x;
-		ypos = cursorPos.y;
-	}
+
+	glfwGetCursorPos(glwindow, &xpos, &ypos);
+	xpos = cursorStartPos.x + invertX * (prevCursorPos.x - xpos);
+	ypos = cursorStartPos.y + invertY * (prevCursorPos.y - ypos);
 
 	cursorPos.x = xpos;
 	cursorPos.y = ypos;
