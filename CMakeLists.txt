@@ -56,6 +56,7 @@ add_executable(main
     src/logger.cpp
     src/glhelper.cpp
     src/mesh.cpp
+	src/chunk.cpp
 )
 
 target_link_libraries(main

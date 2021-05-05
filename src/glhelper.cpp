@@ -35,10 +35,15 @@ bool GLHelper::init(int width, int height, const char* name) {
 		return false;
 	}
 
+	// clear invalid error
+	glGetError();
+
 	glEnable(GL_DEPTH_TEST);
 
+	glFrontFace(GL_CW); // yes, i have written it the wrong way, but it works
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT); // yes, i have written it the wrong way, but it works
+
+	GLHelper::getError();
 
 	// not fully supported (breaks 50% of the time)
 	//glEnable(GL_BLEND);

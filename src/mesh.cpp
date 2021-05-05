@@ -57,8 +57,6 @@ std::vector<byte> Mesh::build( byte* arr, int size ) {
 
 	std::vector<byte> vertex_buffer;
 
-	logger::info("Generating vertex data...");
-
 	const int zoff = 4;
 	const int yoff = zoff * size;
 	const int xoff = yoff * size;

@@ -11,6 +11,7 @@
 #include "logger.hpp"
 #include "glhelper.hpp"
 #include "mesh.hpp"
+#include "chunk.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>
@@ -28,7 +29,7 @@ int main( void ) {
 
 	const int width = 1024;
 	const int height = 768;
-	const int size = 16;
+	const int size = 64;
 
 	// print cwd, nice for debugging
 	{  
@@ -43,59 +44,22 @@ int main( void ) {
 	
 	GLFWwindow* window = GLHelper::window();
 
-	byte arr[size][size][size][4]; // x => y => z => [r, g, b, a]
-
-	int c = size / 2;
-
-	for( int x = 0; x < size; x ++ ) {
-		for( int y = 0; y < size; y ++ ) {
-			for( int z = 0; z < size; z ++ ) {
-				for( int c = 0; c < 3; c ++ ) {
-					arr[x][y][z][c] = (byte) rand();
-				}
-
-				float A = c - x, B = c - y, C = c - z;
-
-				if( sqrt( A*A + B*B + C*C ) < c ) {
-					arr[x][y][z][3] = ( (byte) rand() ) < 100 ? 0 : 255;
-				}else{
-					arr[x][y][z][3] = 0;
-				}
-
-				// currently alpha only supports on/off 
-				//arr[x][y][z][3] = ( (byte) rand() ) < 100 ? 0 : 255;
-			}
-		}
-	}
-
-	GLuint vertex_array;
-	glGenVertexArrays(1, &vertex_array);
-	glBindVertexArray(vertex_array);
+	logger::info("Generating voxel data...");
+	byte arr1[size][size][size][4]; 
+	byte arr2[size][size][size][4]; 
+	Chunk::genCube( arr1, 0 );
+	Chunk::genBall( arr2, 0 );
 
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders();
 
-	auto vertex_buffer_data = Mesh::build( (byte*) arr, size );
-	auto vertex_buffer_size = vertex_buffer_data.size(); //* sizeof(GLbyte);
-	
-	logger::info( std::string("Cube size: ") + std::to_string(size) + ", used vertex memory: " + std::to_string(vertex_buffer_size) + " bytes (" + std::to_string(vertex_buffer_size / 7) + " voxels)");
-
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
-	glm::mat4 model = glm::mat4(1.0f);
-
-	GLuint vertex_buffer;
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-
-	glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_data.data(), GL_STATIC_DRAW);
-	
-	// 0 => xyz as floats
-	// 1 => get RGBA from a single 4-byte packed float, and normalize it into a 0-1 float
-	GLHelper::vertexAttribute(0, 3, GL_BYTE, 7, 0, sizeof(GLbyte), GL_FALSE);
-	GLHelper::vertexAttribute(1, 4, GL_UNSIGNED_BYTE, 7, 3, sizeof(GLbyte), GL_TRUE);
-
-	// this data is now copied to the GPU, we don't need it here anymore
-	vertex_buffer_data.clear();
+	 
+	logger::info("Generating vertex data...");
+	Chunk chunkA( (byte*) arr1 );
+	Chunk chunkB( (byte*) arr2 );
+	Chunk chunkC( (byte*) arr1 );
+	Chunk chunkD( (byte*) arr2 );
 
 	// get locations from sahder program
 	GLuint modelLoc = program.location("model");
@@ -109,8 +73,16 @@ int main( void ) {
 	// remove frame cap - for performance testing
 	// it's not 100% relible on all systems/drivers
 	glfwSwapInterval(0);
+
+	// enable shader program
+	program.bind();
+	
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	glUniform1f(sizeLoc, ((float) size / 2));
  
 	do {
+
+		glm::mat4 model = glm::mat4(1.0f);
 
 		if( last != time(0) ) {
 			std::string title = "LibTile3D | FPS: " + std::to_string(count);
@@ -128,20 +100,13 @@ int main( void ) {
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// enable shader program
-		program.bind();
-
 		// pass matricies to GPU
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
-		glUniform1f(sizeLoc, ((float) size / 2));
 
-		// bind vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-
-		// Draw the triangles
-		glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_size / 7);
+		chunkA.render( 0, 0, 0, modelLoc );
+		chunkB.render( 4, 0, 4, modelLoc );
+		chunkC.render( 4, 0, 0, modelLoc );
+		chunkD.render( 0, 0, 4, modelLoc );
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -152,10 +117,6 @@ int main( void ) {
 		count ++;
 
 	} while( glfwWindowShouldClose(window) == 0 );
-
-	// free VBOs
-	glDeleteBuffers(1, &vertex_buffer);
-	glDeleteVertexArrays(1, &vertex_array);
 
 	// close window
 	glfwTerminate();
