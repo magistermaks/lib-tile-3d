@@ -44,15 +44,3 @@ typedef unsigned char byte;
 // primitive used for rendering, set to GL_QUADS or GL_TRIANGLES
 #define LT3D_PRIMITIVE GL_QUADS
 
-
-
-
-
-
-
-
-
-
-
-
-

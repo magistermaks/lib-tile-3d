@@ -87,12 +87,11 @@ void Chunk::render( float x, float y, float z, GLuint uniform ) {
 
 void Chunk::genCube( chunk_t arr, byte air ) {
 
-	int size = 64;
-	int c = size / 2;
+	const int c = 32;
 
-	for( int x = 0; x < size; x ++ ) {
-		for( int y = 0; y < size; y ++ ) {
-			for( int z = 0; z < size; z ++ ) {
+	for( int x = 0; x < 64; x ++ ) {
+		for( int y = 0; y < 64; y ++ ) {
+			for( int z = 0; z < 64; z ++ ) {
 
 				// random RGB
 				for( int c = 0; c < 3; c ++ ) {
@@ -109,12 +108,11 @@ void Chunk::genCube( chunk_t arr, byte air ) {
 
 void Chunk::genBall( chunk_t arr, byte air ) {
 
-		int size = 64;
-	int c = size / 2;
+	const int c = 32;
 
-	for( int x = 0; x < size; x ++ ) {
-		for( int y = 0; y < size; y ++ ) {
-			for( int z = 0; z < size; z ++ ) {
+	for( int x = 0; x < 64; x ++ ) {
+		for( int y = 0; y < 64; y ++ ) {
+			for( int z = 0; z < 64; z ++ ) {
 
 				// random RGB
 				for( int c = 0; c < 3; c ++ ) {
