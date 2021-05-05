@@ -1,5 +1,5 @@
 
-#version 330 core
+#version 330
 
 out vec4 color;
 in vec4 col;

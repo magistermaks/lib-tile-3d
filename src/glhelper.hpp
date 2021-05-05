@@ -1,12 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <sstream>
-#include <vector>
-#include <fstream>
-
-#include "logger.hpp"
+#include "config.hpp"
 
 namespace GLHelper {
 

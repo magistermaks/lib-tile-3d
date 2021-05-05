@@ -1,35 +1,10 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <vector>
-
-#include "logger.hpp"
-#include "glhelper.hpp"
-#include "mesh.hpp"
-#include "chunk.hpp"
-
-#ifdef WIN32 
-#	include <windows.h>
-#	include <direct.h>
-#	define CWD_MAX_PATH MAX_PATH
-#	define POSIX_GETCWD _getcwd
-#else
-#	include <unistd.h>
-#	include <sys/stat.h>
-#	define CWD_MAX_PATH PATH_MAX
-#	define POSIX_GETCWD getcwd
-#endif
+#include "config.hpp"
 
 int main( void ) {
 
 	const int width = 1024;
 	const int height = 768;
-	const int size = 64;
 
 	// print cwd, nice for debugging
 	{  
@@ -37,7 +12,7 @@ int main( void ) {
 		logger::info( "Current working directory: '" + std::string( POSIX_GETCWD(temp, sizeof(temp)) ? temp : "" ) + "'" );
 	}
 
-	// initilize GLFW and GLEW
+	// initilize GLFW, GLEW, and OpenGL
 	if( !GLHelper::init(width, height, "LibTile3D | FPS: 0") ) {
 		return -1;
 	}
@@ -45,8 +20,7 @@ int main( void ) {
 	GLFWwindow* window = GLHelper::window();
 
 	logger::info("Generating voxel data...");
-	byte arr1[size][size][size][4]; 
-	byte arr2[size][size][size][4]; 
+	chunk_t arr1, arr2;
 	Chunk::genCube( arr1, 0 );
 	Chunk::genBall( arr2, 0 );
 
@@ -65,7 +39,6 @@ int main( void ) {
 	GLuint modelLoc = program.location("model");
 	GLuint viewLoc = program.location("view");
 	GLuint projectionLoc = program.location("projection");
-	GLuint sizeLoc = program.location("size");
 
 	time_t last = 0;
 	long count = 0;
@@ -78,7 +51,6 @@ int main( void ) {
 	program.bind();
 	
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
-	glUniform1f(sizeLoc, ((float) size / 2));
  
 	do {
 

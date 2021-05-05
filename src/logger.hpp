@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <iostream>
+#include "config.hpp"
 
 namespace logger {
 	void info( std::string );

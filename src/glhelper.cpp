@@ -13,10 +13,13 @@ bool GLHelper::init(int width, int height, const char* name) {
 		return false;
 	}
 
-	//glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwSetErrorCallback( [] (int err, const char* msg) -> void {
+		logger::warn( "GLFW Error: " + std::string(msg) );
+	} );
+
+	//glfwWindowHint(GLFW_SAMPLES, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
 	windowHandle = glfwCreateWindow( width, height, name, NULL, NULL);
 
@@ -39,11 +42,7 @@ bool GLHelper::init(int width, int height, const char* name) {
 	glGetError();
 
 	glEnable(GL_DEPTH_TEST);
-
-	glFrontFace(GL_CW); // yes, i have written it the wrong way, but it works
 	glEnable(GL_CULL_FACE);
-
-	GLHelper::getError();
 
 	// not fully supported (breaks 50% of the time)
 	//glEnable(GL_BLEND);
