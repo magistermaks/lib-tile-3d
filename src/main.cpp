@@ -58,7 +58,7 @@ int main( void ) {
 	
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-	Camera camera(CameraMode::fpv);
+	Camera camera(CameraMode::fpv, window);
  
 	do {
 
