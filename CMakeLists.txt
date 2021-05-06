@@ -5,7 +5,6 @@ project(LibTile3D)
 
 find_package(OpenGL REQUIRED)
 
-# check build/source directory
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
     message( FATAL_ERROR "Please select another Build Directory!" )
 endif()
@@ -19,12 +18,6 @@ if( CMAKE_BINARY_DIR MATCHES " " )
 endif()
 
 add_subdirectory (external)
-
-# On Visual 2005 and above, this module can set the debug working directory
-# cmake_policy(SET CMP0026 OLD)
-# list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-fe2273")
-# include(CreateLaunchers)
-# include(MSVCMultipleProcessCompile) # /MP
 
 if(INCLUDE_DISTRIB)
 	add_subdirectory(distrib)
@@ -63,9 +56,4 @@ add_executable(main
 target_link_libraries(main
 	${ALL_LIBS}
 )
-
-#add_custom_command(
-#   TARGET main POST_BUILD
-#   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/main${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/main/"
-#)
 

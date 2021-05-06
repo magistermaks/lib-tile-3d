@@ -10,20 +10,21 @@ parser.add_argument( "--clean", help=f"(re-)generate build system", action="stor
 parser.add_argument( "--run", help=f"execute binary", action="store_true" )
 args = parser.parse_args();
 
+main = "build/main" + (".exe" if os.name == "nt" else "")
+
 if args.clean:
-    shutil.rmtree("build")
+	shutil.rmtree("build")
     
 if not os.path.isdir("build"):
-    print( "\nPreparing Target..." )
-    os.mkdir("build")
-    os.system("cd build && cmake ../")
+	print( "\nPreparing Target..." )
+	os.mkdir("build")
+	os.system("cd build && cmake ../")
 
 print( "\nBuilding Target..." )
+os.remove(main)
 os.system("cd build && make")
 
 if args.run:
-    print( "\nRunning Target..." )
-    if os.name == "nt":
-        os.system("build/main.exe")
-    else:
-        os.system("build/main")
+	print( "\nRunning Target..." )
+	print( f"Executable: '{main}'" )
+	os.system(main)
