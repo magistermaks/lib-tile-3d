@@ -20,7 +20,7 @@ namespace std {
 
 	template <>
 	struct hash<ChunkPos> : public std::unary_function<const ChunkPos&, std::size_t> {
-    	inline std::size_t operator()( const ChunkPos& pos ) const;
+		inline std::size_t operator()( const ChunkPos& pos ) const;
 	};
 
 }
@@ -28,31 +28,29 @@ namespace std {
 class Region {
 
 	private:
-
-		// ChunkPos is written in such a way to support multiple map types for future performance testing
 		std::unordered_map< ChunkPos, Chunk* > map;
 
 	public:
 
-		// add chunk to region, expects chunk to be on the heap
+		/// add chunk to region, expects chunk to be on the heap
 		void put( byte* chunk, int x, int y, int z );
 
-		// remove (and free) chunk from region
+		/// remove (and free) chunk from region
 		void remove( int x, int y, int z );
 
-		// get chunk from region
+		/// get chunk from region
 		Chunk* chunk( int x, int y, int z );
 
-		// get tile from world, relative to a chunk
+		/// get tile from world, relative to a chunk
 		byte* tile( int cx, int cy, int cz, int x, int y, int z );
 
-		// remove (and free) all chunks from region
+		/// remove (and free) all chunks from region
 		void clear();
 
-		// render this region
+		/// render this region
 		void render( GLuint location );
 
-		// build mesh
+		/// build mesh
 		void build();
 		
 

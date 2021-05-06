@@ -81,13 +81,13 @@ void Chunk::update() {
 	glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
 	glBufferData(GL_ARRAY_BUFFER, this->size, mesh.data(), GL_STATIC_DRAW);
 
-	GLHelper::vertexAttribute(0, 3, GL_BYTE, 7, 0, sizeof(GLbyte), GL_FALSE);
-	GLHelper::vertexAttribute(1, 4, GL_UNSIGNED_BYTE, 7, 3, sizeof(GLbyte), GL_TRUE);
+	GLHelper::vertexAttribute(0, 3, GL_BYTE, 6, 0, sizeof(GLbyte), GL_FALSE);
+	GLHelper::vertexAttribute(1, 3, GL_UNSIGNED_BYTE, 6, 3, sizeof(GLbyte), GL_TRUE);
 
 	#if LT3D_PRIMITIVE == GL_QUADS
-	std::string count = std::to_string(this->size / 7 / 4) + " quads"; 
+	std::string count = std::to_string(this->size / 6 / 4) + " quads"; 
 	#else
-	std::string count = std::to_string(this->size / 7 / 3) + " triangles"; 
+	std::string count = std::to_string(this->size / 6 / 3) + " triangles"; 
 	#endif
 
 	logger::info( "Generated chunk mesh, used vertex memory: " + std::to_string(this->size) + " bytes (" + count + ")");
@@ -99,7 +99,7 @@ void Chunk::render( GLuint uniform ) {
 	glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(model));
 
 	glBindVertexArray(this->vao);
-	glDrawArrays(LT3D_PRIMITIVE, 0, this->size / 7);
+	glDrawArrays(LT3D_PRIMITIVE, 0, this->size / 6);
 
 }
 

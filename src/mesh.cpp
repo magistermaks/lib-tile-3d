@@ -8,7 +8,6 @@ void Mesh::buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, byte* co
 	vec.push_back(color[0]);
 	vec.push_back(color[1]);
 	vec.push_back(color[2]);
-	vec.push_back(color[3]);
 
 }
 

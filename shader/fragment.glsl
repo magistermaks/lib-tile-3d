@@ -2,9 +2,9 @@
 #version 330
 
 out vec4 color;
-in vec4 col;
+in vec3 col;
 
 void main() {
-	color = col;
+	color = vec4(col, 1.0f);
 }
 

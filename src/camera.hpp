@@ -17,7 +17,7 @@ class Camera {
 		glm::vec2 cursorStartPos;
 		glm::vec3 pos;
 		float mouse_sensivity = 0.1f;
-		float movement_sensitivity = 40.0f;
+		float movement_sensitivity = 15.0f;
 		float invertX = -1.0f, invertY = 1.0f;
 
 		double lastFrame;

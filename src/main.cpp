@@ -32,13 +32,13 @@ int main( void ) {
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
-	logger::info("Generating vertex data...");
 	Region region;
 	region.put( arr1, 0, 0, 0 );
 	region.put( arr2, 1, 0, 1 );
 	region.put( arr1, 1, 0, 0 );
 	region.put( arr2, 0, 0, 1 );
 
+	logger::info("Generating vertex data...");
 	region.build();
 
 	// get locations from sahder program
