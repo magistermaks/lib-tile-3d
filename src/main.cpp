@@ -20,7 +20,10 @@ int main( void ) {
 	GLFWwindow* window = GLHelper::window();
 
 	logger::info("Generating voxel data...");
-	chunk_t arr1, arr2;
+
+	byte* arr1 = Chunk::allocate();
+	byte* arr2 = Chunk::allocate();
+
 	Chunk::genCube( arr1, 0 );
 	Chunk::genBall( arr2, 0 );
 
@@ -30,10 +33,13 @@ int main( void ) {
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
 	logger::info("Generating vertex data...");
-	Chunk chunkA( (byte*) arr1 );
-	Chunk chunkB( (byte*) arr2 );
-	Chunk chunkC( (byte*) arr1 );
-	Chunk chunkD( (byte*) arr2 );
+	Region region;
+	region.put( arr1, 0, 0, 0 );
+	region.put( arr2, 1, 0, 1 );
+	region.put( arr1, 1, 0, 0 );
+	region.put( arr2, 0, 0, 1 );
+
+	region.build();
 
 	// get locations from sahder program
 	GLuint modelLoc = program.location("model");
@@ -74,10 +80,7 @@ int main( void ) {
 		// pass matricies to GPU
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-		chunkA.render( 0, 0, 0, modelLoc );
-		chunkB.render( 4, 0, 4, modelLoc );
-		chunkC.render( 4, 0, 0, modelLoc );
-		chunkD.render( 0, 0, 4, modelLoc );
+		region.render( modelLoc );
 
 		// Swap buffers
 		glfwSwapBuffers(window);

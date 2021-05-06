@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <murmur-3/murmur.hpp>
 
 // C++
 #include <vector>
@@ -15,6 +16,8 @@
 #include <string>
 #include <iostream>
 #include <ctime>
+#include <tuple>
+#include <unordered_map>
 
 // C
 #include <stdio.h>
@@ -29,6 +32,7 @@ typedef unsigned char byte;
 #include "mesh.hpp"
 #include "chunk.hpp"
 #include "camera.hpp"
+#include "region.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>
@@ -45,4 +49,5 @@ typedef unsigned char byte;
 // Settings:
 // primitive used for rendering, set to GL_QUADS or GL_TRIANGLES
 #define LT3D_PRIMITIVE GL_QUADS
+
 

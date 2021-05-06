@@ -4,25 +4,34 @@
 
 typedef byte chunk_t[64][64][64][4];
 
+class Region;
+
+byte* get(byte* arr, byte x, byte y, byte z);
+
 class Chunk {
 
 	private:
 		byte* data;
 		GLuint vbo, vao;
 		size_t size;
+		Region* region;
+		int cx, cy, cz;
 
 		std::vector<byte> build();
 
 	public:
-		Chunk( byte* );
+		Chunk( byte*, Region*, int, int, int );
 		~Chunk();
 
-		inline byte* xyz(byte x, byte y, byte z);
+		byte* xyz(byte x, byte y, byte z);
 		void update();
-		void render( float x, float y, float z, GLuint uniform );
+		void render( GLuint uniform );
+
+		static byte* allocate();
 
 		// move this stuff to worldgen.cpp
-		static void genCube( chunk_t arr, byte air );
-		static void genBall( chunk_t arr, byte air );
+		static void genCube( byte* arr, byte air );
+		static void genBall( byte* arr, byte air );
 
 };
+
