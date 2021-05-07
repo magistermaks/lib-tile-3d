@@ -18,6 +18,7 @@
 #include <ctime>
 #include <tuple>
 #include <unordered_map>
+#include <chrono>
 
 // C
 #include <stdio.h>
@@ -25,6 +26,8 @@
 #include <string.h>
 
 typedef unsigned char byte;
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::milliseconds milliseconds;
 
 // internal
 #include "logger.hpp"

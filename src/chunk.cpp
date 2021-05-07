@@ -73,6 +73,9 @@ inline byte* Chunk::xyz(byte x, byte y, byte z) {
 }
 
 void Chunk::update() {
+
+	Clock::time_point point = Clock::now();
+
 	auto mesh = this->build();
 	this->size = mesh.size();
 
@@ -90,7 +93,9 @@ void Chunk::update() {
 	std::string count = std::to_string(this->size / 6 / 3) + " triangles"; 
 	#endif
 
-	logger::info( "Generated chunk mesh, used vertex memory: " + std::to_string(this->size) + " bytes (" + count + ")");
+	long ms = std::chrono::duration_cast<milliseconds>( Clock::now() - point ).count();
+
+	logger::info( "Generated chunk mesh, used vertex memory: " + std::to_string(this->size) + " bytes (" + count + ") took: " + std::to_string(ms) + "ms");
 }
 
 void Chunk::render( GLuint uniform ) {
