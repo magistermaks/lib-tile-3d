@@ -26,35 +26,66 @@ std::vector<byte> Chunk::build() {
 	
 	std::vector<byte> vertex_buffer;
 
-	const byte m = 63;
+	Chunk* l = nullptr;
+	Chunk* r = nullptr;
+	Chunk* d = nullptr;
+	Chunk* u = nullptr;
+	Chunk* f = nullptr;
+	Chunk* b = nullptr;
+	
+	try{ l = region->chunk(cx - 1, cy, cz); }catch(...){}
+	try{ r = region->chunk(cx + 1, cy, cz); }catch(...){}
+	try{ d = region->chunk(cx, cy - 1, cz); }catch(...){}
+	try{ u = region->chunk(cx, cy + 1, cz); }catch(...){}
+	try{ f = region->chunk(cx, cy, cz - 1); }catch(...){}
+	try{ b = region->chunk(cx, cy, cz + 1); }catch(...){}
 
 	for( int x = 0; x < 64; x ++ ) {
 		for( int y = 0; y < 64; y ++ ) {
 			for( int z = 0; z < 64; z ++ ) {
 
-				byte* vox = this->xyz(x, y, z);
+				const byte* vox = this->xyz(x, y, z);
+
 				if( vox[3] != 0 ) {
 
 					byte flags = 0;
 
-					// region voxel requests are slower than local access
-					// so we do it only when necessary (the voxel is at the chunk border)
-					if( x == 0 || y == 0 || z == 0 || x == m || y == m || z == m ) {
-						flags |= (this->region->tile(cx, cy, cz, x - 1, y, z)[3] != 255) ? 0b100000 : 0; 
-						flags |= (this->region->tile(cx, cy, cz, x + 1, y, z)[3] != 255) ? 0b010000 : 0; 
-						flags |= (this->region->tile(cx, cy, cz, x, y - 1, z)[3] != 255) ? 0b001000 : 0; 
-						flags |= (this->region->tile(cx, cy, cz, x, y + 1, z)[3] != 255) ? 0b000100 : 0; 
-						flags |= (this->region->tile(cx, cy, cz, x, y, z - 1)[3] != 255) ? 0b000010 : 0; 
-						flags |= (this->region->tile(cx, cy, cz, x, y, z + 1)[3] != 255) ? 0b000001 : 0; 
-					}else{
-						flags |= (this->xyz(x - 1, y, z)[3] != 255) ? 0b100000 : 0; // -X
-						flags |= (this->xyz(x + 1, y, z)[3] != 255) ? 0b010000 : 0; // +X
-						flags |= (this->xyz(x, y - 1, z)[3] != 255) ? 0b001000 : 0; // -Y
-						flags |= (this->xyz(x, y + 1, z)[3] != 255) ? 0b000100 : 0; // +Y
-						flags |= (this->xyz(x, y, z - 1)[3] != 255) ? 0b000010 : 0; // -Z
-						flags |= (this->xyz(x, y, z + 1)[3] != 255) ? 0b000001 : 0; // +Z
+					if( x == 0 ) {
+						flags |= (l == nullptr || l->xyz(63, y, z)[3] != 255) * 0b100000;
+					} else {
+						flags |= (this->xyz(x - 1, y, z)[3] != 255) * 0b100000;
+
+						if( x == 63 ) {
+							flags |= (r == nullptr || r->xyz(0, y, z)[3] != 255) * 0b010000;
+						} else {
+							flags |= (this->xyz(x + 1, y, z)[3] != 255) * 0b010000;
+						}
 					}
 
+					if( y == 0 ) {
+						flags |= (d == nullptr || d->xyz(x, 63, z)[3] != 255) * 0b001000;
+					} else {
+						flags |= (this->xyz(x, y - 1, z)[3] != 255) * 0b001000;
+
+						if( y == 63 ) {
+							flags |= (u == nullptr || u->xyz(x, 0, z)[3] != 255) * 0b000100;
+						} else {
+							flags |= (this->xyz(x, y + 1, z)[3] != 255) * 0b000100;
+						}
+					}
+
+					if( z == 0 ) {
+						flags |= (f == nullptr || f->xyz(x, y, 63)[3] != 255) * 0b000010;
+					} else {
+						flags |= (this->xyz(x, y, z - 1)[3] != 255) * 0b000010;
+
+						if( z == 63 ) {
+							flags |= (b == nullptr || b->xyz(x, y, 0)[3] != 255) * 0b000001;
+						} else {
+							flags |= (this->xyz(x, y, z + 1)[3] != 255) * 0b000001;
+						}
+					}
+					
 					if( flags ) Mesh::buildVoxel( vertex_buffer, vox, x * 2, y * 2, z * 2, flags );
 
 				}
@@ -79,13 +110,17 @@ void Chunk::update() {
 	auto mesh = this->build();
 	this->size = mesh.size();
 
-	glBindVertexArray(this->vao);
+	if( this->size != 0 ) {
 
-	glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-	glBufferData(GL_ARRAY_BUFFER, this->size, mesh.data(), GL_STATIC_DRAW);
+		glBindVertexArray(this->vao);
 
-	GLHelper::vertexAttribute(0, 3, GL_BYTE, 6, 0, sizeof(GLbyte), GL_FALSE);
-	GLHelper::vertexAttribute(1, 3, GL_UNSIGNED_BYTE, 6, 3, sizeof(GLbyte), GL_TRUE);
+		glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+		glBufferData(GL_ARRAY_BUFFER, this->size, mesh.data(), GL_STATIC_DRAW);
+
+		GLHelper::vertexAttribute(0, 3, GL_BYTE, 6, 0, sizeof(GLbyte), GL_FALSE);
+		GLHelper::vertexAttribute(1, 3, GL_UNSIGNED_BYTE, 6, 3, sizeof(GLbyte), GL_TRUE);
+
+	}
 
 	#if LT3D_PRIMITIVE == GL_QUADS
 	std::string count = std::to_string(this->size / 6 / 4) + " quads"; 
@@ -99,12 +134,16 @@ void Chunk::update() {
 }
 
 void Chunk::render( GLuint uniform ) {
-		
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(this->cx * 4, this->cy * 4, this->cz * 4));
-	glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(model));
 
-	glBindVertexArray(this->vao);
-	glDrawArrays(LT3D_PRIMITIVE, 0, this->size / 6);
+	if( this->size != 0 ) {
+		
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(this->cx * 4, this->cy * 4, this->cz * 4));
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindVertexArray(this->vao);
+		glDrawArrays(LT3D_PRIMITIVE, 0, this->size / 6);
+
+	}
 
 }
 
@@ -142,7 +181,7 @@ void Chunk::genCube( byte* arr, byte air ) {
 
 }
 
-void Chunk::genBall( byte* arr, byte air ) {
+void Chunk::genBall( byte* arr, byte air, int r ) {
 
 	const int c = 32;
 
@@ -151,13 +190,13 @@ void Chunk::genBall( byte* arr, byte air ) {
 			for( int z = 0; z < 64; z ++ ) {
 
 				// random RGB
-				for( int c = 0; c < 3; c ++ ) {
-					get(arr, x, y, z)[c] = (byte) rand();
+				for( int h = 0; h < 3; h ++ ) {
+					get(arr, x, y, z)[h] = (byte) rand();
 				}
 
 				float A = c - x, B = c - y, C = c - z;
 
-				if( sqrt( A*A + B*B + C*C ) < c ) {
+				if( sqrt( A*A + B*B + C*C ) < r ) {
 					get(arr, x, y, z)[3] = ( (byte) rand() ) < air ? 0 : 255;
 				}else{
 					get(arr, x, y, z)[3] = 0;

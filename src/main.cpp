@@ -22,10 +22,10 @@ int main( void ) {
 	logger::info("Generating voxel data...");
 
 	byte* arr1 = Chunk::allocate();
-	byte* arr2 = Chunk::allocate();
+	//byte* arr2 = Chunk::allocate();
 
-	Chunk::genCube( arr1, 0 );
-	Chunk::genBall( arr2, 0 );
+	//Chunk::genCube( arr1, 0 );
+	Chunk::genBall( arr1, 0, 40 );
 
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders();
@@ -33,10 +33,14 @@ int main( void ) {
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
 	Region region;
-	region.put( arr1, 0, 0, 0 );
-	region.put( arr2, 1, 0, 1 );
-	region.put( arr1, 1, 0, 0 );
-	region.put( arr2, 0, 0, 1 );
+
+	for( int x = 0; x < 16; x ++ ) {
+		for( int y = 0; y < 1; y ++ ) {
+			for( int z = 0; z < 16; z ++ ) {
+				region.put( arr1, x, y, z );
+			}
+		}
+	}
 
 	logger::info("Generating vertex data...");
 	region.build();

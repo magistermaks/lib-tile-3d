@@ -31,7 +31,7 @@ class Chunk {
 
 		// move this stuff to worldgen.cpp
 		static void genCube( byte* arr, byte air );
-		static void genBall( byte* arr, byte air );
+		static void genBall( byte* arr, byte air, int radius  );
 
 };
 

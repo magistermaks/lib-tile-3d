@@ -1,6 +1,6 @@
 #include "mesh.hpp"
 
-void Mesh::buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, byte* color ) {
+void Mesh::buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, const byte* color ) {
 
 	vec.push_back(x);
 	vec.push_back(y);
@@ -11,7 +11,7 @@ void Mesh::buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, byte* co
 
 }
 
-void Mesh::buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, byte* color ) {	
+void Mesh::buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const byte* color ) {	
 
 #if LT3D_PRIMITIVE == GL_QUADS 
 	Mesh::buildIndice( vec, x1, y1, z1, color );
@@ -29,7 +29,7 @@ void Mesh::buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2
 
 }
 
-void Mesh::buildVoxel( std::vector<byte>& vec, byte* color, byte x, byte y, byte z, byte flags ) {
+void Mesh::buildVoxel( std::vector<byte>& vec, const byte* color, byte x, byte y, byte z, byte flags ) {
 
 	//                          x   y   z               x   y   z
 	//    e-------f      a = ( -1,  1, -1 )  =>  e = ( -1,  1,  1 )

@@ -33,6 +33,7 @@ Chunk* Region::chunk( int x, int y, int z ) {
 	return this->map.at( ChunkPos(x, y, z) );
 }
 
+/* deprecated */
 byte* Region::tile( int cx, int cy, int cz, int x, int y, int z ) {
 
 	if( x >= 64 ) {
