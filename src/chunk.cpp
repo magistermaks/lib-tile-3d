@@ -148,8 +148,8 @@ void Chunk::render( GLuint uniform ) {
 }
 
 byte* Chunk::allocate() {
-	double (*chunk)[64][64][4];
-	chunk = new double[64][64][64][4];
+	byte (*chunk)[64][64][4];
+	chunk = new byte[64][64][64][4];
 
 	return (byte*) chunk;
 }
