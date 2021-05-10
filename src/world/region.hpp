@@ -1,11 +1,9 @@
 #pragma once
 
-#include "config.hpp"
-
-// it may be beneficial to use https://github.com/greg7mdp/parallel-hashmap instead of the C++ ones
+#include "../config.hpp"
 
 class Chunk;
-class DummyChunk;
+class Region;
 
 struct ChunkPos {
 	int x, y, z;
@@ -23,14 +21,34 @@ namespace std {
 		inline std::size_t operator()( const ChunkPos& pos ) const;
 	};
 
+	std::string to_string( ChunkPos pos );
+
 }
+
+class ChunkMeshUpdate {
+
+	private:
+		ChunkPos pos;
+		std::vector<byte>* data;
+
+	public:
+		ChunkMeshUpdate( ChunkPos pos, std::vector<byte>* data );
+		void apply( Region* region );
+
+};
 
 class Region {
 
 	private:
 		std::unordered_map< ChunkPos, Chunk* > map;
 
+		ThreadPool pool;
+		std::vector<ChunkMeshUpdate> mesh_updates;
+		std::mutex mesh_updates_mtx; 
+
 	public:
+
+		Region();
 
 		/// add chunk to region, expects chunk to be on the heap
 		void put( byte* chunk, int x, int y, int z );
@@ -40,6 +58,7 @@ class Region {
 
 		/// get chunk from region
 		Chunk* chunk( int x, int y, int z );
+		Chunk* chunk( ChunkPos& pos );
 
 		/// get tile from world, relative to a chunk
 		byte* tile( int cx, int cy, int cz, int x, int y, int z );
@@ -52,6 +71,18 @@ class Region {
 
 		/// build mesh
 		void build();
+
+		/// execute scheduled tasks
+		void update();
+
+		/// update chunk mesh
+		void update( int x, int y, int z );
+
+		/// Show off thread system
+		void discard();
+
+		/// add task to task queue
+		void synchronized( ChunkMeshUpdate update );
 		
 
 };

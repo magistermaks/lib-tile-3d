@@ -21,6 +21,22 @@ std::size_t std::hash<ChunkPos>::operator()( const ChunkPos& pos ) const {
 	return murmur3_32( (uint8_t*) &pos, sizeof(ChunkPos), 0 );
 }
 
+std::string std::to_string( ChunkPos pos ) {
+	return std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z);
+}
+
+ChunkMeshUpdate::ChunkMeshUpdate( ChunkPos xyz, std::vector<byte>* data ) : pos( xyz ) {
+	this->data = data;
+}
+
+void ChunkMeshUpdate::apply( Region* region ) {
+	region->chunk( this->pos )->update( this->data );
+}
+
+Region::Region() : pool( ThreadPool::optimal() ) {
+
+}
+
 void Region::put( byte* chunk, int x, int y, int z ) {
 	this->map[ ChunkPos(x, y, z) ] = new Chunk(chunk, this, x, y, z);
 }
@@ -30,7 +46,16 @@ void Region::remove( int x, int y, int z ) {
 }
 
 Chunk* Region::chunk( int x, int y, int z ) {
-	return this->map.at( ChunkPos(x, y, z) );
+	ChunkPos pos( x, y, z );
+	return this->chunk( pos );
+}
+
+Chunk* Region::chunk( ChunkPos& pos ) {
+	try {
+		return this->map.at( pos );
+	} catch(std::out_of_range& err) {
+		throw std::runtime_error( "No chunk at: " + std::to_string(pos) );
+	}
 }
 
 /* deprecated */
@@ -84,8 +109,42 @@ void Region::render( GLuint location ) {
 
 void Region::build() {
 	for( auto pair : this->map ) {
-		pair.second->update();
+		this->update( pair.first.x, pair.first.y, pair.first.z );
 	}
+}
+
+void Region::update( int x, int y, int z ) {
+	ChunkPos pos( x, y, z );
+	Chunk* chunk = this->chunk( pos );
+
+	this->pool.enqueue( [this, chunk, pos]() {
+		this->synchronized( ChunkMeshUpdate( pos, chunk->build() ) );
+	} );
+}
+
+void Region::discard() {
+	for( auto pair : this->map ) {
+		pair.second->discard();
+	}
+}
+
+void Region::update() {
+	if( !this->mesh_updates.empty() ) {
+		this->mesh_updates_mtx.lock();
+
+		for( auto& update : this->mesh_updates ) {
+			update.apply(this);
+		}
+
+		this->mesh_updates.clear();
+		this->mesh_updates_mtx.unlock();
+	}
+}
+
+void Region::synchronized( ChunkMeshUpdate update ) {
+	this->mesh_updates_mtx.lock();
+	this->mesh_updates.push_back(update);
+	this->mesh_updates_mtx.unlock();
 }
 
 

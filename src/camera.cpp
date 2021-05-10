@@ -77,7 +77,7 @@ Camera::Camera(CameraMode cammode, GLFWwindow* glwindow) {
 	mode = cammode;
 	cameraRot = glm::vec2(0);
 	cursorStartPos = glm::vec2(0);
-	pos = glm::vec3(0);
+	pos = glm::vec3(0, 10, 0);
 	double x, y;
 	glfwGetCursorPos(glwindow, &x, &y);
 	lastFrame = glfwGetTime();

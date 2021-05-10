@@ -22,9 +22,11 @@ Chunk::~Chunk() {
 	delete[] this->data;
 }
 
-std::vector<byte> Chunk::build() {
-	
-	std::vector<byte> vertex_buffer;
+std::vector<byte>* Chunk::build() {
+
+	Clock::time_point point = Clock::now();
+
+	std::vector<byte>* vertex_buffer = new std::vector<byte>();
 
 	Chunk* l = nullptr;
 	Chunk* r = nullptr;
@@ -86,7 +88,7 @@ std::vector<byte> Chunk::build() {
 						}
 					}
 					
-					if( flags ) Mesh::buildVoxel( vertex_buffer, vox, x * 2, y * 2, z * 2, flags );
+					if( flags ) Mesh::buildVoxel( *vertex_buffer, vox, x * 2, y * 2, z * 2, flags );
 
 				}
 
@@ -94,7 +96,20 @@ std::vector<byte> Chunk::build() {
 		}
 	}
 
-	vertex_buffer.shrink_to_fit();
+	vertex_buffer->shrink_to_fit();
+
+	size_t size = vertex_buffer->size();
+
+	#if LT3D_PRIMITIVE == GL_QUADS
+	std::string count = std::to_string(size / 6 / 4) + " quads"; 
+	#else
+	std::string count = std::to_string(size / 6 / 3) + " triangles"; 
+	#endif
+
+	long ms = std::chrono::duration_cast<milliseconds>( Clock::now() - point ).count();
+
+	logger::info( "Generated chunk mesh, used vertex memory: " + std::to_string(size) + " bytes (" + count + ") took: " + std::to_string(ms) + "ms");
+
 	return vertex_buffer;
 
 }
@@ -103,34 +118,20 @@ inline byte* Chunk::xyz(byte x, byte y, byte z) {
 	return &(this->data[x * 0x4000 + y * 0x100 + z * 0x4]);
 }
 
-void Chunk::update() {
+void Chunk::update( std::vector<byte>* mesh ) {
 
-	Clock::time_point point = Clock::now();
+	this->size = mesh->size();
 
-	auto mesh = this->build();
-	this->size = mesh.size();
+	glBindVertexArray(this->vao);
 
-	if( this->size != 0 ) {
+	glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+	glBufferData(GL_ARRAY_BUFFER, this->size, mesh->data(), GL_STATIC_DRAW);
 
-		glBindVertexArray(this->vao);
+	GLHelper::vertexAttribute(0, 3, GL_BYTE, 6, 0, sizeof(GLbyte), GL_FALSE);
+	GLHelper::vertexAttribute(1, 3, GL_UNSIGNED_BYTE, 6, 3, sizeof(GLbyte), GL_TRUE);
 
-		glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-		glBufferData(GL_ARRAY_BUFFER, this->size, mesh.data(), GL_STATIC_DRAW);
+	delete mesh;
 
-		GLHelper::vertexAttribute(0, 3, GL_BYTE, 6, 0, sizeof(GLbyte), GL_FALSE);
-		GLHelper::vertexAttribute(1, 3, GL_UNSIGNED_BYTE, 6, 3, sizeof(GLbyte), GL_TRUE);
-
-	}
-
-	#if LT3D_PRIMITIVE == GL_QUADS
-	std::string count = std::to_string(this->size / 6 / 4) + " quads"; 
-	#else
-	std::string count = std::to_string(this->size / 6 / 3) + " triangles"; 
-	#endif
-
-	long ms = std::chrono::duration_cast<milliseconds>( Clock::now() - point ).count();
-
-	logger::info( "Generated chunk mesh, used vertex memory: " + std::to_string(this->size) + " bytes (" + count + ") took: " + std::to_string(ms) + "ms");
 }
 
 void Chunk::render( GLuint uniform ) {
@@ -147,6 +148,10 @@ void Chunk::render( GLuint uniform ) {
 
 }
 
+void Chunk::discard() {
+	this->size = 0;
+}
+
 byte* Chunk::allocate() {
 	byte (*chunk)[64][64][4];
 	chunk = new byte[64][64][64][4];
@@ -154,7 +159,7 @@ byte* Chunk::allocate() {
 	return (byte*) chunk;
 }
 
-//FIXME: UGLY WORLDGEN
+//FIXME: UGLY WORLDGEN, MOVE ELSEWHERE
 
 byte* get(byte* arr, byte x, byte y, byte z) {
 	return &(arr[x * 0x4000 + y * 0x100 + z * 0x4]);

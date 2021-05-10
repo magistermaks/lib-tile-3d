@@ -22,9 +22,6 @@ int main( void ) {
 	logger::info("Generating voxel data...");
 
 	byte* arr1 = Chunk::allocate();
-	//byte* arr2 = Chunk::allocate();
-
-	//Chunk::genCube( arr1, 0 );
 	Chunk::genBall( arr1, 0, 40 );
 
 	// compile GLSL program from the shaders
@@ -34,9 +31,9 @@ int main( void ) {
 	 
 	Region region;
 
-	for( int x = 0; x < 16; x ++ ) {
+	for( int x = 0; x < 8; x ++ ) {
 		for( int y = 0; y < 1; y ++ ) {
-			for( int z = 0; z < 16; z ++ ) {
+			for( int z = 0; z < 8; z ++ ) {
 				region.put( arr1, x, y, z );
 			}
 		}
@@ -45,17 +42,13 @@ int main( void ) {
 	logger::info("Generating vertex data...");
 	region.build();
 
-	// get locations from sahder program
+	// get locations from shader program
 	GLuint modelLoc = program.location("model");
 	GLuint viewLoc = program.location("view");
 	GLuint projectionLoc = program.location("projection");
 
 	time_t last = 0;
 	long count = 0;
-
-	// remove frame cap - for performance testing
-	// it's not 100% relible on all systems/drivers
-	glfwSwapInterval(0);
 
 	// enable shader program
 	program.bind();
@@ -65,6 +58,8 @@ int main( void ) {
 	Camera camera(CameraMode::fpv, window);
  
 	do {
+
+		region.update();
 
 		glm::mat4 model = glm::mat4(1.0f);
 
@@ -93,6 +88,11 @@ int main( void ) {
 		GLHelper::getError();
 
 		count ++;
+
+		if( glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS  ) {
+			region.discard();
+			region.build();
+		}
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 

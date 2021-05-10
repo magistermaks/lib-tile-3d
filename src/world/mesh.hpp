@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.hpp"
+#include "../config.hpp"
 
 namespace Mesh {
 	void buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, const byte* color );

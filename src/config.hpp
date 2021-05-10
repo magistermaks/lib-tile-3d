@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <murmur-3/murmur.hpp>
+#include <thread_pool/thread_pool.hpp>
 
 // C++
 #include <vector>
@@ -19,6 +20,10 @@
 #include <tuple>
 #include <unordered_map>
 #include <chrono>
+#include <queue>
+#include <functional>
+#include <mutex>
+#include <thread>
 
 // C
 #include <stdio.h>
@@ -32,10 +37,10 @@ typedef std::chrono::milliseconds milliseconds;
 // internal
 #include "logger.hpp"
 #include "glhelper.hpp"
-#include "mesh.hpp"
-#include "chunk.hpp"
+#include "world/mesh.hpp"
+#include "world/chunk.hpp"
 #include "camera.hpp"
-#include "region.hpp"
+#include "world/region.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>

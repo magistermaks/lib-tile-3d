@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.hpp"
+#include "../config.hpp"
 
 typedef byte chunk_t[64][64][64][4];
 
@@ -17,15 +17,15 @@ class Chunk {
 		Region* region;
 		int cx, cy, cz;
 
-		std::vector<byte> build();
-
 	public:
 		Chunk( byte*, Region*, int, int, int );
 		~Chunk();
 
 		byte* xyz(byte x, byte y, byte z);
-		void update();
+		void update( std::vector<byte>* mesh );
 		void render( GLuint uniform );
+		void discard();
+		std::vector<byte>* build();
 
 		static byte* allocate();
 
