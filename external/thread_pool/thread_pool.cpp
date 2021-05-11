@@ -1,64 +1,74 @@
 
 #include "thread_pool.hpp"
  
-// the constructor just launches some amount of workers
-ThreadPool::ThreadPool(size_t threads)
-    :   stop(false)
-{
-    for(size_t i = 0;i<threads;++i)
-        workers.emplace_back(
-            [this]
-            {
-                for(;;)
-                {
-                    std::function<void()> task;
+// the constructor launches workers
+ThreadPool::ThreadPool(size_t threads) : stop(false) {
 
-                    {
-                        std::unique_lock<std::mutex> lock(this->queue_mutex);
-                        this->condition.wait(lock,
-                            [this]{ return this->stop || !this->tasks.empty(); });
-                        if(this->stop && this->tasks.empty())
-                            return;
-                        task = std::move(this->tasks.front());
-                        this->tasks.pop();
-                    }
+	while( threads --> 0 ) {
+		addWorker();
+	}
 
-                    task();
-                }
-            }
-        );
+}
+
+// add new worker to the pool
+int ThreadPool::addWorker() {
+	
+	workers.emplace_back( [this] {
+		while(true) {
+
+			std::function<void()> task;
+
+			{
+				std::unique_lock<std::mutex> lock(this->queue_mutex);
+
+				this->condition.wait(lock, [this]{ return this->stop || !this->tasks.empty(); });
+				if(this->stop && this->tasks.empty()) return;
+
+				task = std::move( this->tasks.front() );
+				this->tasks.pop();
+			}
+
+			task();
+
+		}
+	} );
+
+	return workers.size() - 1;
+
 }
 
 // add new work item to the pool
-void ThreadPool::enqueue(std::function<void()> task)
-{
+void ThreadPool::enqueue(std::function<void()> task) {
         
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
 
         // don't allow enqueueing after stopping the pool
-        if(stop)
-            throw std::runtime_error("enqueue on stopped ThreadPool");
+        if( stop ) throw std::runtime_error("Unable to add task to a stopped pool!");
 
         tasks.emplace(task);
     }
     condition.notify_one();
+
 }
 
 // the destructor joins all threads
-ThreadPool::~ThreadPool()
-{
+ThreadPool::~ThreadPool() {
+
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
         stop = true;
     }
     condition.notify_all();
-    for(std::thread &worker: workers)
+
+    for(auto& worker : workers) {
         worker.join();
+	}
+
 }
 
-int ThreadPool::optimal() 
-{
-	return std::min((int) std::thread::hardware_concurrency() - 1, 1);
+// get the optimal amount of workers
+int ThreadPool::optimal() {
+	return std::max((int) std::thread::hardware_concurrency() - 1, 1);
 }
 
