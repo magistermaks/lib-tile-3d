@@ -58,7 +58,6 @@ Chunk* Region::chunk( ChunkPos& pos ) {
 	try {
 		return this->map.at( pos );
 	} catch(std::out_of_range& err) {
-		//throw std::runtime_error( "No chunk at: " + std::to_string(pos) );
 		return nullptr;
 	}
 }
