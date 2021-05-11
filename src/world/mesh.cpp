@@ -1,24 +1,92 @@
+
 #include "mesh.hpp"
 
-void Mesh::buildIndice( std::vector<byte>& vec, byte x, byte y, byte z, const byte* color ) {
+Mesh::ReusableBuffer::ReusableBuffer( size_t length ) {
+	this->length = length;
+	this->buffer = (byte*) malloc(length);
+}
 
-	vec.push_back(x);
-	vec.push_back(y);
-	vec.push_back(z);
-	vec.push_back(color[0]);
-	vec.push_back(color[1]);
-	vec.push_back(color[2]);
+Mesh::ReusableBuffer::ReusableBuffer( ReusableBuffer&& buffer ) {
+	this->length = buffer.length;
+	this->buffer = buffer.buffer;
+}
+
+Mesh::ReusableBuffer::~ReusableBuffer() {
+	free(this->buffer);
+}
+	
+inline void Mesh::ReusableBuffer::push( byte data ) {
+	this->buffer[ pos ++ ] = data;
+}
+
+void Mesh::ReusableBuffer::clear() {
+	this->pos = 0;
+}
+
+void Mesh::ReusableBuffer::assert_size( int count ) {
+	if( this->pos + count > this->length ) {
+
+		if( this->length > LT3D_MAX_MESH_SIZE ) {
+			logger::fatal( "Excedded maximum mesh buffer size of " + std::to_string(this->length) + " bytes!" );
+			throw std::runtime_error( "Maximum buffer size excedded!" );
+		}
+
+		size_t new_size = std::min(this->length * 2, (size_t) LT3D_MAX_MESH_SIZE);
+
+		this->buffer = (byte*) realloc(this->buffer, new_size);
+		this->length = new_size;
+
+		logger::warn( "Mesh buffer resized to: " + std::to_string(new_size) + " bytes!" );
+
+	}
+}
+
+byte* Mesh::ReusableBuffer::copy() {
+	size_t size = this->pos + 1;
+	byte* buf = new byte[size];
+	memcpy(buf, this->buffer, size);
+
+	return buf;
+}
+
+byte* Mesh::ReusableBuffer::data() {
+	return this->buffer;
+}
+
+size_t Mesh::ReusableBuffer::size() {
+	return this->pos + 1;
+}
+
+Mesh::StaticBuffer::StaticBuffer( ReusableBuffer* buffer ) : data(buffer->copy()), size(buffer->size()) {
+	buffer->clear();
+}
+
+Mesh::StaticBuffer::~StaticBuffer() {
+	delete[] this->data;
+}
+
+
+void Mesh::buildIndice( ReusableBuffer& vec, byte x, byte y, byte z, const byte* color ) {
+
+	vec.push(x);
+	vec.push(y);
+	vec.push(z);
+	vec.push(color[0]);
+	vec.push(color[1]);
+	vec.push(color[2]);
 
 }
 
-void Mesh::buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const byte* color ) {	
+void Mesh::buildQuad( ReusableBuffer& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const byte* color ) {	
 
 #if LT3D_PRIMITIVE == GL_QUADS 
+	vec.assert_size( 4*6 );
 	Mesh::buildIndice( vec, x1, y1, z1, color );
 	Mesh::buildIndice( vec, x3, y3, z3, color );
 	Mesh::buildIndice( vec, x4, y4, z4, color );
 	Mesh::buildIndice( vec, x2, y2, z2, color );
 #else
+	vec.assert_size( 6*6 );
 	Mesh::buildIndice( vec, x1, y1, z1, color );
 	Mesh::buildIndice( vec, x3, y3, z3, color );
 	Mesh::buildIndice( vec, x2, y2, z2, color );
@@ -29,7 +97,7 @@ void Mesh::buildQuad( std::vector<byte>& vec, byte x1, byte y1, byte z1, byte x2
 
 }
 
-void Mesh::buildVoxel( std::vector<byte>& vec, const byte* color, byte x, byte y, byte z, byte flags ) {
+void Mesh::buildVoxel( ReusableBuffer& vec, const byte* color, byte x, byte y, byte z, byte flags ) {
 
 	//                          x   y   z               x   y   z
 	//    e-------f      a = ( -1,  1, -1 )  =>  e = ( -1,  1,  1 )

@@ -5,6 +5,7 @@ int main( void ) {
 
 	const int width = 1024;
 	const int height = 768;
+	bool building = false;
 
 	// print cwd, nice for debugging
 	{  
@@ -89,9 +90,15 @@ int main( void ) {
 
 		count ++;
 
-		if( glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS  ) {
-			region.discard();
-			region.build();
+		if( glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS ) {
+			if( !building ) {
+				logger::info("Generating vertex data...");
+				region.discard();
+				region.build();
+				building = true;
+			}
+		}else{
+			building = false;
 		}
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );

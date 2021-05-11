@@ -22,25 +22,18 @@ Chunk::~Chunk() {
 	delete[] this->data;
 }
 
-std::vector<byte>* Chunk::build() {
+Mesh::StaticBuffer* Chunk::build( void* ptr ) {
 
 	Clock::time_point point = Clock::now();
 
-	std::vector<byte>* vertex_buffer = new std::vector<byte>();
+	Mesh::ReusableBuffer* buffer = (Mesh::ReusableBuffer*) ptr;
 
-	Chunk* l = nullptr;
-	Chunk* r = nullptr;
-	Chunk* d = nullptr;
-	Chunk* u = nullptr;
-	Chunk* f = nullptr;
-	Chunk* b = nullptr;
-	
-	try{ l = region->chunk(cx - 1, cy, cz); }catch(...){}
-	try{ r = region->chunk(cx + 1, cy, cz); }catch(...){}
-	try{ d = region->chunk(cx, cy - 1, cz); }catch(...){}
-	try{ u = region->chunk(cx, cy + 1, cz); }catch(...){}
-	try{ f = region->chunk(cx, cy, cz - 1); }catch(...){}
-	try{ b = region->chunk(cx, cy, cz + 1); }catch(...){}
+	Chunk* l = region->chunk(cx - 1, cy, cz);
+	Chunk* r = region->chunk(cx + 1, cy, cz);
+	Chunk* d = region->chunk(cx, cy - 1, cz);
+	Chunk* u = region->chunk(cx, cy + 1, cz);
+	Chunk* f = region->chunk(cx, cy, cz - 1);
+	Chunk* b = region->chunk(cx, cy, cz + 1);
 
 	for( int x = 0; x < 64; x ++ ) {
 		for( int y = 0; y < 64; y ++ ) {
@@ -88,7 +81,7 @@ std::vector<byte>* Chunk::build() {
 						}
 					}
 					
-					if( flags ) Mesh::buildVoxel( *vertex_buffer, vox, x * 2, y * 2, z * 2, flags );
+					if( flags ) Mesh::buildVoxel( *buffer, vox, x * 2, y * 2, z * 2, flags );
 
 				}
 
@@ -96,9 +89,7 @@ std::vector<byte>* Chunk::build() {
 		}
 	}
 
-	vertex_buffer->shrink_to_fit();
-
-	size_t size = vertex_buffer->size();
+	size_t size = buffer->size();
 
 	#if LT3D_PRIMITIVE == GL_QUADS
 	std::string count = std::to_string(size / 6 / 4) + " quads"; 
@@ -110,7 +101,7 @@ std::vector<byte>* Chunk::build() {
 
 	logger::info( "Generated chunk mesh, used vertex memory: " + std::to_string(size) + " bytes (" + count + ") took: " + std::to_string(ms) + "ms");
 
-	return vertex_buffer;
+	return new Mesh::StaticBuffer(buffer);
 
 }
 
@@ -118,14 +109,14 @@ inline byte* Chunk::xyz(byte x, byte y, byte z) {
 	return &(this->data[x * 0x4000 + y * 0x100 + z * 0x4]);
 }
 
-void Chunk::update( std::vector<byte>* mesh ) {
+void Chunk::update( Mesh::StaticBuffer* mesh ) {
 
-	this->size = mesh->size();
+	this->size = mesh->size;
 
 	glBindVertexArray(this->vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-	glBufferData(GL_ARRAY_BUFFER, this->size, mesh->data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, this->size, mesh->data, GL_STATIC_DRAW);
 
 	GLHelper::vertexAttribute(0, 3, GL_BYTE, 6, 0, sizeof(GLbyte), GL_FALSE);
 	GLHelper::vertexAttribute(1, 3, GL_UNSIGNED_BYTE, 6, 3, sizeof(GLbyte), GL_TRUE);

@@ -2,43 +2,23 @@
 #include "thread_pool.hpp"
  
 // the constructor launches workers
-ThreadPool::ThreadPool(size_t threads) : stop(false) {
+ThreadPool::ThreadPool( size_t threads ) : stop(false) {
 
 	while( threads --> 0 ) {
-		addWorker();
+		addWorker<int>( []{ return 0; } );
 	}
 
 }
 
-// add new worker to the pool
-int ThreadPool::addWorker() {
-	
-	workers.emplace_back( [this] {
-		while(true) {
+// the constructor creates empty pool
+ThreadPool::ThreadPool() : stop(false) {
 
-			std::function<void()> task;
-
-			{
-				std::unique_lock<std::mutex> lock(this->queue_mutex);
-
-				this->condition.wait(lock, [this]{ return this->stop || !this->tasks.empty(); });
-				if(this->stop && this->tasks.empty()) return;
-
-				task = std::move( this->tasks.front() );
-				this->tasks.pop();
-			}
-
-			task();
-
-		}
-	} );
-
-	return workers.size() - 1;
+	// add threads using pool.addWorker<>()
 
 }
 
 // add new work item to the pool
-void ThreadPool::enqueue(std::function<void()> task) {
+void ThreadPool::enqueue(std::function<void(void*)> task) {
         
     {
         std::unique_lock<std::mutex> lock(queue_mutex);

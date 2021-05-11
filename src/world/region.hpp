@@ -29,10 +29,10 @@ class ChunkMeshUpdate {
 
 	private:
 		ChunkPos pos;
-		std::vector<byte>* data;
+		Mesh::StaticBuffer* data;
 
 	public:
-		ChunkMeshUpdate( ChunkPos pos, std::vector<byte>* data );
+		ChunkMeshUpdate( ChunkPos pos, Mesh::StaticBuffer* data );
 		void apply( Region* region );
 
 };

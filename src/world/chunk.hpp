@@ -6,6 +6,10 @@ typedef byte chunk_t[64][64][64][4];
 
 class Region;
 
+namespace Mesh {
+	class StaticBuffer;
+}
+
 byte* get(byte* arr, byte x, byte y, byte z);
 
 class Chunk {
@@ -22,10 +26,10 @@ class Chunk {
 		~Chunk();
 
 		byte* xyz(byte x, byte y, byte z);
-		void update( std::vector<byte>* mesh );
+		void update( Mesh::StaticBuffer* mesh );
 		void render( GLuint uniform );
 		void discard();
-		std::vector<byte>* build();
+		Mesh::StaticBuffer* build( void* buffer );
 
 		static byte* allocate();
 

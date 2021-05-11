@@ -25,7 +25,7 @@ std::string std::to_string( ChunkPos pos ) {
 	return std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z);
 }
 
-ChunkMeshUpdate::ChunkMeshUpdate( ChunkPos xyz, std::vector<byte>* data ) : pos( xyz ) {
+ChunkMeshUpdate::ChunkMeshUpdate( ChunkPos xyz, Mesh::StaticBuffer* data ) : pos( xyz ) {
 	this->data = data;
 }
 
@@ -33,8 +33,12 @@ void ChunkMeshUpdate::apply( Region* region ) {
 	region->chunk( this->pos )->update( this->data );
 }
 
-Region::Region() : pool( ThreadPool::optimal() ) {
+Region::Region() : pool() {
+	int threads = ThreadPool::optimal();
 
+	while( threads --> 0 ) {
+		pool.addWorker<Mesh::ReusableBuffer>( []() { return Mesh::ReusableBuffer( 15000 ); } );
+	}
 }
 
 void Region::put( byte* chunk, int x, int y, int z ) {
@@ -54,7 +58,8 @@ Chunk* Region::chunk( ChunkPos& pos ) {
 	try {
 		return this->map.at( pos );
 	} catch(std::out_of_range& err) {
-		throw std::runtime_error( "No chunk at: " + std::to_string(pos) );
+		//throw std::runtime_error( "No chunk at: " + std::to_string(pos) );
+		return nullptr;
 	}
 }
 
@@ -117,8 +122,8 @@ void Region::update( int x, int y, int z ) {
 	ChunkPos pos( x, y, z );
 	Chunk* chunk = this->chunk( pos );
 
-	this->pool.enqueue( [this, chunk, pos]() {
-		this->synchronized( ChunkMeshUpdate( pos, chunk->build() ) );
+	this->pool.enqueue( [this, chunk, pos](void* buffer) {
+		this->synchronized( ChunkMeshUpdate( pos, chunk->build( buffer ) ) );
 	} );
 }
 

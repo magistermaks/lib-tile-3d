@@ -58,4 +58,7 @@ typedef std::chrono::milliseconds milliseconds;
 // primitive used for rendering, set to GL_QUADS or GL_TRIANGLES
 #define LT3D_PRIMITIVE GL_QUADS
 
+// maximum mesh buffer size, should be set to (64*64*64*6*<bytes per face>)/2
+#define LT3D_MAX_MESH_SIZE (64*64*64*3*(6*4))
+
 
