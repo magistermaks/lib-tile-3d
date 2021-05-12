@@ -7,5 +7,4 @@ python3 build.py --run
 ```
 
 ### TODO
-- Frustum chunk culling  
-- Lighting 
+- Path tracing on OpenCL/Compute Shaders
