@@ -22,7 +22,7 @@ int main( void ) {
 
 	logger::info("Generating voxel data...");
 
-	byte* arr1 = Chunk::allocate();
+	Voxel* arr1 = Chunk::allocate();
 	Chunk::genBall( arr1, 0, 40 );
 
 	// compile GLSL program from the shaders

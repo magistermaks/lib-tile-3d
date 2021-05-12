@@ -2,6 +2,8 @@
 
 #include "config.hpp"
 
+byte randomByte();
+
 namespace GLHelper {
 
 	GLFWwindow* window();

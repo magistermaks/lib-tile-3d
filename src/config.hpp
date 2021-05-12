@@ -24,6 +24,7 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <random>
 
 // C
 #include <stdio.h>
@@ -33,10 +34,12 @@
 typedef unsigned char byte;
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::milliseconds milliseconds;
+typedef std::mt19937 rng_type;
 
 // internal
 #include "logger.hpp"
 #include "glhelper.hpp"
+#include "voxel.hpp"
 #include "world/mesh.hpp"
 #include "world/chunk.hpp"
 #include "camera.hpp"

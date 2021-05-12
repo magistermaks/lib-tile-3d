@@ -1,6 +1,12 @@
 #include "glhelper.hpp"
 
 GLFWwindow* windowHandle = NULL;
+std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
+rng_type rng;
+
+byte randomByte() {
+	return (byte) udist(rng);
+}
 
 GLFWwindow* GLHelper::window() {
     return windowHandle;
@@ -53,7 +59,8 @@ bool GLHelper::init(int width, int height, const char* name) {
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-	srand( time(0) );
+	srand(time(0));
+	rng.seed(time(0) - rand());
 
 	// remove frame cap - for performance testing
 	// it's not 100% relible on all systems/drivers

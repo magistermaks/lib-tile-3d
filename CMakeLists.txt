@@ -57,6 +57,7 @@ add_executable(main
 	src/logger.cpp
 	src/glhelper.cpp
 	src/camera.cpp
+	src/voxel.cpp
 )
 
 target_link_libraries(main

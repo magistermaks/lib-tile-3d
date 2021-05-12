@@ -41,7 +41,7 @@ Region::Region() : pool() {
 	}
 }
 
-void Region::put( byte* chunk, int x, int y, int z ) {
+void Region::put( Voxel* chunk, int x, int y, int z ) {
 	this->map[ ChunkPos(x, y, z) ] = new Chunk(chunk, this, x, y, z);
 }
 
@@ -63,7 +63,7 @@ Chunk* Region::chunk( ChunkPos& pos ) {
 }
 
 /* deprecated */
-byte* Region::tile( int cx, int cy, int cz, int x, int y, int z ) {
+Voxel* Region::tile( int cx, int cy, int cz, int x, int y, int z ) {
 
 	if( x >= 64 ) {
 		cx ++;
@@ -89,11 +89,8 @@ byte* Region::tile( int cx, int cy, int cz, int x, int y, int z ) {
 		z += 64;
 	}
 
-	try{
-		return this->chunk( cx, cy, cz )->xyz( x, y, z );
-	}catch(...){
-		return dummy;
-	}
+	Chunk* chunk = this->chunk( cx, cy, cz );
+	if( chunk != nullptr ) return chunk->xyz( x, y, z ); else nullptr;
 
 }
 

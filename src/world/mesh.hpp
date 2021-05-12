@@ -2,6 +2,8 @@
 
 #include "../config.hpp"
 
+class Voxel;
+
 namespace Mesh {
 
 	class ReusableBuffer {
@@ -41,7 +43,7 @@ namespace Mesh {
 
 	};
 
-	void buildIndice( ReusableBuffer& vec, byte x, byte y, byte z, const byte* color );
-	void buildQuad( ReusableBuffer& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const byte* color );
-	void buildVoxel( ReusableBuffer& vec, const byte* rgb, byte x, byte y, byte z, byte flags );
+	void buildIndice( ReusableBuffer& vec, byte x, byte y, byte z, const Voxel* color );
+	void buildQuad( ReusableBuffer& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const Voxel* color );
+	void buildVoxel( ReusableBuffer& vec, const Voxel* rgb, byte x, byte y, byte z, byte flags );
 }

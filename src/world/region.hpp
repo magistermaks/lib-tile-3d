@@ -51,7 +51,7 @@ class Region {
 		Region();
 
 		/// add chunk to region, expects chunk to be on the heap
-		void put( byte* chunk, int x, int y, int z );
+		void put( Voxel* chunk, int x, int y, int z );
 
 		/// remove (and free) chunk from region
 		void remove( int x, int y, int z );
@@ -61,7 +61,7 @@ class Region {
 		Chunk* chunk( ChunkPos& pos );
 
 		/// get tile from world, relative to a chunk
-		byte* tile( int cx, int cy, int cz, int x, int y, int z );
+		Voxel* tile( int cx, int cy, int cz, int x, int y, int z );
 
 		/// remove (and free) all chunks from region
 		void clear();

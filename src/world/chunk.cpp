@@ -1,7 +1,7 @@
 
 #include "chunk.hpp"
 
-Chunk::Chunk( byte* data, Region* region, int x, int y, int z ) {
+Chunk::Chunk( Voxel* data, Region* region, int x, int y, int z ) {
 	this->data = data;
 	this->region = region;
 
@@ -39,45 +39,45 @@ Mesh::StaticBuffer* Chunk::build( void* ptr ) {
 		for( int y = 0; y < 64; y ++ ) {
 			for( int z = 0; z < 64; z ++ ) {
 
-				const byte* vox = this->xyz(x, y, z);
+				const Voxel* vox = this->xyz(x, y, z);
 
-				if( vox[3] != 0 ) {
+				if( vox->a != 0 ) {
 
 					byte flags = 0;
 
 					if( x == 0 ) {
-						flags |= (l == nullptr || l->xyz(63, y, z)[3] != 255) * 0b100000;
+						flags |= (l == nullptr || l->xyz(63, y, z)->a != 255) * 0b100000;
 					} else {
-						flags |= (this->xyz(x - 1, y, z)[3] != 255) * 0b100000;
+						flags |= (this->xyz(x - 1, y, z)->a != 255) * 0b100000;
 
 						if( x == 63 ) {
-							flags |= (r == nullptr || r->xyz(0, y, z)[3] != 255) * 0b010000;
+							flags |= (r == nullptr || r->xyz(0, y, z)->a != 255) * 0b010000;
 						} else {
-							flags |= (this->xyz(x + 1, y, z)[3] != 255) * 0b010000;
+							flags |= (this->xyz(x + 1, y, z)->a != 255) * 0b010000;
 						}
 					}
 
 					if( y == 0 ) {
-						flags |= (d == nullptr || d->xyz(x, 63, z)[3] != 255) * 0b001000;
+						flags |= (d == nullptr || d->xyz(x, 63, z)->a != 255) * 0b001000;
 					} else {
-						flags |= (this->xyz(x, y - 1, z)[3] != 255) * 0b001000;
+						flags |= (this->xyz(x, y - 1, z)->a != 255) * 0b001000;
 
 						if( y == 63 ) {
-							flags |= (u == nullptr || u->xyz(x, 0, z)[3] != 255) * 0b000100;
+							flags |= (u == nullptr || u->xyz(x, 0, z)->a != 255) * 0b000100;
 						} else {
-							flags |= (this->xyz(x, y + 1, z)[3] != 255) * 0b000100;
+							flags |= (this->xyz(x, y + 1, z)->a != 255) * 0b000100;
 						}
 					}
 
 					if( z == 0 ) {
-						flags |= (f == nullptr || f->xyz(x, y, 63)[3] != 255) * 0b000010;
+						flags |= (f == nullptr || f->xyz(x, y, 63)->a != 255) * 0b000010;
 					} else {
-						flags |= (this->xyz(x, y, z - 1)[3] != 255) * 0b000010;
+						flags |= (this->xyz(x, y, z - 1)->a != 255) * 0b000010;
 
 						if( z == 63 ) {
-							flags |= (b == nullptr || b->xyz(x, y, 0)[3] != 255) * 0b000001;
+							flags |= (b == nullptr || b->xyz(x, y, 0)->a != 255) * 0b000001;
 						} else {
-							flags |= (this->xyz(x, y, z + 1)[3] != 255) * 0b000001;
+							flags |= (this->xyz(x, y, z + 1)->a != 255) * 0b000001;
 						}
 					}
 					
@@ -105,8 +105,8 @@ Mesh::StaticBuffer* Chunk::build( void* ptr ) {
 
 }
 
-inline byte* Chunk::xyz(byte x, byte y, byte z) {
-	return &(this->data[x * 0x4000 + y * 0x100 + z * 0x4]);
+inline Voxel* Chunk::xyz(byte x, byte y, byte z) {
+	return &(this->data[x * 4096 + y * 64 + z]);
 }
 
 void Chunk::update( Mesh::StaticBuffer* mesh ) {
@@ -143,20 +143,20 @@ void Chunk::discard() {
 	this->size = 0;
 }
 
-byte* Chunk::allocate() {
-	byte (*chunk)[64][64][4];
-	chunk = new byte[64][64][64][4];
+Voxel* Chunk::allocate() {
+	Voxel (*chunk)[64][64];
+	chunk = new Voxel[64][64][64];
 
-	return (byte*) chunk;
+	return (Voxel*) chunk;
 }
 
 //FIXME: UGLY WORLDGEN, MOVE ELSEWHERE
 
-byte* get(byte* arr, byte x, byte y, byte z) {
-	return &(arr[x * 0x4000 + y * 0x100 + z * 0x4]);
+Voxel& get(Voxel* arr, byte x, byte y, byte z) {
+	return arr[x * 4096 + y * 64 + z];
 }
 
-void Chunk::genCube( byte* arr, byte air ) {
+void Chunk::genBall( Voxel* arr, byte air, int r ) {
 
 	const int c = 32;
 
@@ -165,37 +165,14 @@ void Chunk::genCube( byte* arr, byte air ) {
 			for( int z = 0; z < 64; z ++ ) {
 
 				// random RGB
-				for( int c = 0; c < 3; c ++ ) {
-					get(arr, x, y, z)[c] = (byte) rand();
-				}
-
-				// currently alpha only supports on/off 
-				get(arr, x, y, z)[3] = ( (byte) rand() ) < air ? 0 : 255;
-			}
-		}
-	}
-
-}
-
-void Chunk::genBall( byte* arr, byte air, int r ) {
-
-	const int c = 32;
-
-	for( int x = 0; x < 64; x ++ ) {
-		for( int y = 0; y < 64; y ++ ) {
-			for( int z = 0; z < 64; z ++ ) {
-
-				// random RGB
-				for( int h = 0; h < 3; h ++ ) {
-					get(arr, x, y, z)[h] = (byte) rand();
-				}
+				get(arr, x, y, z) = Voxel::random();
 
 				float A = c - x, B = c - y, C = c - z;
 
 				if( sqrt( A*A + B*B + C*C ) < r ) {
-					get(arr, x, y, z)[3] = ( (byte) rand() ) < air ? 0 : 255;
+					get(arr, x, y, z).a = ( (byte) rand() ) < air ? 0 : 255;
 				}else{
-					get(arr, x, y, z)[3] = 0;
+					get(arr, x, y, z).a = 0;
 				}
 
 			}

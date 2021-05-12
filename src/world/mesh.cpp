@@ -66,18 +66,18 @@ Mesh::StaticBuffer::~StaticBuffer() {
 }
 
 
-void Mesh::buildIndice( ReusableBuffer& vec, byte x, byte y, byte z, const byte* color ) {
+void Mesh::buildIndice( ReusableBuffer& vec, byte x, byte y, byte z, const Voxel* vox ) {
 
 	vec.push(x);
 	vec.push(y);
 	vec.push(z);
-	vec.push(color[0]);
-	vec.push(color[1]);
-	vec.push(color[2]);
+	vec.push(vox->r);
+	vec.push(vox->g);
+	vec.push(vox->b);
 
 }
 
-void Mesh::buildQuad( ReusableBuffer& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const byte* color ) {	
+void Mesh::buildQuad( ReusableBuffer& vec, byte x1, byte y1, byte z1, byte x2, byte y2, byte z2, byte x3, byte y3, byte z3, byte x4, byte y4, byte z4, const Voxel* color ) {	
 
 #if LT3D_PRIMITIVE == GL_QUADS 
 	vec.assert_size( 4*6 );
@@ -97,7 +97,7 @@ void Mesh::buildQuad( ReusableBuffer& vec, byte x1, byte y1, byte z1, byte x2, b
 
 }
 
-void Mesh::buildVoxel( ReusableBuffer& vec, const byte* color, byte x, byte y, byte z, byte flags ) {
+void Mesh::buildVoxel( ReusableBuffer& vec, const Voxel* color, byte x, byte y, byte z, byte flags ) {
 
 	//                          x   y   z               x   y   z
 	//    e-------f      a = ( -1,  1, -1 )  =>  e = ( -1,  1,  1 )
