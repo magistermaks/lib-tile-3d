@@ -44,6 +44,7 @@ typedef std::mt19937 rng_type;
 #include "world/chunk.hpp"
 #include "camera.hpp"
 #include "world/region.hpp"
+#include "renderer/renderer.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>

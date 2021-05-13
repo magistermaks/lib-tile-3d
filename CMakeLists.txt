@@ -52,6 +52,8 @@ add_executable(main
 	src/world/mesh.cpp
 	src/world/chunk.cpp
 	src/world/region.cpp
+
+	src/renderer/renderer.cpp
 	
 	src/main.cpp
 	src/logger.cpp

@@ -26,11 +26,21 @@ int main( void ) {
 	Chunk::genBall( arr1, 0, 40 );
 
 	// compile GLSL program from the shaders
-	GLHelper::ShaderProgram program = GLHelper::loadShaders();
+	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
 	Region region;
+	Renderer renderer;
+
+	byte img[] = {
+		100, 200, 200,
+		122, 250, 100,
+		200, 230, 250,
+		100, 130, 160
+	};
+
+	renderer.addLayer( 1 ).update( img, 2, 2 );
 
 	for( int x = 0; x < 8; x ++ ) {
 		for( int y = 0; y < 1; y ++ ) {
@@ -40,27 +50,16 @@ int main( void ) {
 		}
 	}
 
-	logger::info("Generating vertex data...");
-	region.build();
-
 	// get locations from shader program
-	GLuint modelLoc = program.location("model");
-	GLuint viewLoc = program.location("view");
-	GLuint projectionLoc = program.location("projection");
+	GLuint texture_loc = program.location("canvas");
 
 	time_t last = 0;
 	long count = 0;
 
 	// enable shader program
 	program.bind();
-	
-	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-	Camera camera(CameraMode::fpv, window);
  
 	do {
-
-		region.update();
 
 		glm::mat4 model = glm::mat4(1.0f);
 
@@ -71,16 +70,10 @@ int main( void ) {
 			count = 0;
 		}
 
-		// fancy location
-		glm::mat4 view = camera.update(window);
-
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// pass matricies to GPU
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-		region.render( modelLoc );
+		renderer.render();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -89,17 +82,6 @@ int main( void ) {
 		GLHelper::getError();
 
 		count ++;
-
-		if( glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS ) {
-			if( !building ) {
-				logger::info("Generating vertex data...");
-				region.discard();
-				region.build();
-				building = true;
-			}
-		}else{
-			building = false;
-		}
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 

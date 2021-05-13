@@ -29,7 +29,7 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 	windowHandle = glfwCreateWindow( width, height, name, NULL, NULL);
 
-	glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
+	//glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 	glfwSetInputMode(windowHandle, GLFW_STICKY_KEYS, GL_TRUE);
 
 	if( windowHandle == NULL ) {
@@ -51,8 +51,8 @@ bool GLHelper::init(int width, int height, const char* name) {
 	glGetError();
 
 	// Time to enter the third dimension
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_CULL_FACE);
 
 	// not fully supported (breaks 50% of the time)
 	//glEnable(GL_BLEND);
@@ -97,11 +97,11 @@ void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei 
 	glEnableVertexAttribArray(index);
 }
 
-GLHelper::ShaderProgram GLHelper::loadShaders() {
+GLHelper::ShaderProgram GLHelper::loadShaders( std::string name ) {
 
 	auto builder = GLHelper::ShaderProgram::make();
-	builder.compileFile( "shader/vertex.glsl", GL_VERTEX_SHADER );
-	builder.compileFile( "shader/fragment.glsl", GL_FRAGMENT_SHADER );
+	builder.compileFile( "shader/" + name + "/vertex.glsl", GL_VERTEX_SHADER );
+	builder.compileFile( "shader/" + name + "/fragment.glsl", GL_FRAGMENT_SHADER );
 	builder.link();
 
 	if( !builder.isOk() ) {
