@@ -2,11 +2,13 @@
 #include "mesh.hpp"
 
 Mesh::ReusableBuffer::ReusableBuffer( size_t length ) {
+	pos = 0;
 	this->length = length;
 	this->buffer = (byte*) malloc(length);
 }
 
 Mesh::ReusableBuffer::ReusableBuffer( ReusableBuffer&& buffer ) {
+	pos = 0;
 	this->length = buffer.length;
 	this->buffer = buffer.buffer;
 }

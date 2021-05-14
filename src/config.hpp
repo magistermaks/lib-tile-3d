@@ -46,6 +46,7 @@ typedef std::mt19937 rng_type;
 #include "world/region.hpp"
 
 #ifdef WIN32 
+#	define NOMINMAX
 #	include <windows.h>
 #	include <direct.h>
 #	define CWD_MAX_PATH MAX_PATH
