@@ -4,6 +4,7 @@
 project(LibTile3D)
 
 find_package(OpenGL REQUIRED)
+find_package(OpenCL REQUIRED)
 
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
     message( FATAL_ERROR "Please select another Build Directory!" )
@@ -33,6 +34,7 @@ include_directories(
 
 set(ALL_LIBS
 	${OPENGL_LIBRARY}
+	${OpenCL_LIBRARY}
 	glfw
 	GLEW_1130
 )

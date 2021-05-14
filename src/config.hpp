@@ -1,5 +1,8 @@
 #pragma once
 
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION 200
+
 // external
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -8,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <murmur-3/murmur.hpp>
 #include <thread_pool/thread_pool.hpp>
+#include <opencl/opencl.hpp>
 
 // C++
 #include <vector>
