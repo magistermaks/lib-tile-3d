@@ -58,6 +58,7 @@ typedef std::mt19937 rng_type;
 #include "camera.hpp"
 #include "world/region.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/material.hpp"
 #include "renderer/smallpt.hpp"
 
 #ifdef WIN32 

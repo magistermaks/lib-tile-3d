@@ -32,6 +32,7 @@ int main( void ) {
 	 
 	Region region;
 	Renderer renderer;
+	SimpleSpherePathTracer smallpt( 8, {} );
 
 	Layer& layer = renderer.addLayer( 1 );
 
@@ -66,7 +67,7 @@ int main( void ) {
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		render( layer, 1024, 768, 4 );
+		smallpt.render( layer, 1024, 768 );
 		renderer.render();
 
 		// Swap buffers
