@@ -67,29 +67,29 @@ bool GLHelper::init(int width, int height, const char* name) {
 	glfwSwapInterval(0);
 
 	// Initialize OpenCL >=2.0
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-    cl::Platform platform;
+	std::vector<cl::Platform> platforms;
+	cl::Platform::get(&platforms);
+	cl::Platform platform;
 
-    for( auto &p : platforms ) {
-        std::string version = p.getInfo<CL_PLATFORM_VERSION>();
+	for( auto &p : platforms ) {
+		std::string version = p.getInfo<CL_PLATFORM_VERSION>();
 
-        if( version.find("OpenCL 2.") != std::string::npos ) {
+		if( version.find("OpenCL 2.") != std::string::npos ) {
 			logger::info("Found OpenCL 2.0 platform: '" + version + "'");
-            platform = p;
+			platform = p;
 			break;
-        }
-    }
+		}
+	}
 
-    if( platform() == 0 ) {
+	if( platform() == 0 ) {
 		logger::fatal("No OpenCL 2.0 platform found!");
-        return false;
-    }
+		return false;
+	}
 
-    if( cl::Platform::setDefault(plat) != plat ) {
+	if( cl::Platform::setDefault(platform) != platform ) {
 		logger::fatal("Failed to set OpenCL platform as default!");
-        return false;
-    }
+		return false;
+	}
 
 	return true;
 

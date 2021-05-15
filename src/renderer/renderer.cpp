@@ -41,10 +41,12 @@ void Layer::genBuffer( float z ) {
 
 }
 
-void Layer::update( byte* buffer, int width, int height ) {
+void Layer::update( byte* buffer, int width, int height, bool free ) {
 	glActiveTexture( GL_TEXTURE0 );
 	glBindTexture( GL_TEXTURE_2D, tex );
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+
+	if( free ) delete[] buffer;
 }
 
 void Layer::render() {
@@ -52,6 +54,10 @@ void Layer::render() {
 	glBindTexture( GL_TEXTURE_2D, tex );
 	glBindVertexArray(this->vao);
 	glDrawArrays(GL_QUADS, 0, 4);
+}
+
+byte* Layer::allocate( int width, int height ) {
+	return new byte[3 * width * height];
 }
 
 

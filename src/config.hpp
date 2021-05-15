@@ -1,7 +1,15 @@
 #pragma once
 
+// gotta go fast
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_SIMD_AVX2
+
+// OpenCL
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 200
+
+// OpenCL is a little broken
+#pragma GCC diagnostic ignored "-Wignored-attributes"
 
 // external
 #include <GL/glew.h>
@@ -42,6 +50,7 @@ typedef std::mt19937 rng_type;
 
 // internal
 #include "logger.hpp"
+#include "math.hpp"
 #include "glhelper.hpp"
 #include "voxel.hpp"
 #include "world/mesh.hpp"
@@ -49,6 +58,7 @@ typedef std::mt19937 rng_type;
 #include "camera.hpp"
 #include "world/region.hpp"
 #include "renderer/renderer.hpp"
+#include "renderer/smallpt.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>

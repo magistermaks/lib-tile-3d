@@ -33,14 +33,7 @@ int main( void ) {
 	Region region;
 	Renderer renderer;
 
-	byte img[] = {
-		100, 200, 200,
-		122, 250, 100,
-		200, 230, 250,
-		100, 130, 160
-	};
-
-	renderer.addLayer( 1 ).update( img, 2, 2 );
+	Layer& layer = renderer.addLayer( 1 );
 
 	for( int x = 0; x < 8; x ++ ) {
 		for( int y = 0; y < 1; y ++ ) {
@@ -73,6 +66,7 @@ int main( void ) {
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		render( layer, 1024, 768, 4 );
 		renderer.render();
 
 		// Swap buffers

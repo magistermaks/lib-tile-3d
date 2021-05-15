@@ -15,8 +15,10 @@ class Layer {
 		Layer( float );
 		~Layer();
 	
-		void update( byte*, int, int );
+		void update( byte*, int, int, bool free = false );
 		void render();
+
+		static byte* allocate( int, int );
 
 };
 
