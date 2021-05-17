@@ -96,9 +96,39 @@ glm::dvec3 radiance(const Ray &r, int depth, unsigned short *Xi){
 SimpleSpherePathTracer::SimpleSpherePathTracer( int spp, std::vector<Sphere> spheres ) {
 	this->spp = spp;
 	this->spheres = spheres;
+	this->kernel = CLHelper::loadKernel( "smallpt/trace.cl", "simple_add" );
 }
 
 void SimpleSpherePathTracer::render( Layer& layer, int w, int h ) {
+
+	cl::Buffer buffer_A(CL_MEM_READ_WRITE, sizeof(int) * 10);
+	cl::Buffer buffer_B(CL_MEM_READ_WRITE, sizeof(int) * 10);
+	cl::Buffer buffer_C(CL_MEM_READ_WRITE, sizeof(int) * 10);
+
+	int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+	int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
+
+	cl::CommandQueue queue( cl::Context::getDefault(), cl::Device::getDefault() );
+
+	queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(int) * 10, A);
+	queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(int) * 10, B);
+
+	this->kernel.setArg(0, buffer_A);
+	this->kernel.setArg(1, buffer_B);
+	this->kernel.setArg(2, buffer_C);
+	queue.enqueueNDRangeKernel(this->kernel, cl::NullRange, cl::NDRange(h), cl::NullRange);
+	queue.finish();
+
+	int C[10];
+
+    //read result C from the device to array C
+    queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(int) * 10, C);
+ 
+    std::cout<<" Hello from the GPU: \n";
+    for( int i=0; i<10; i++ ){
+        std::cout << C[i] << " ";
+    }
+	std::cout << "\n";
 	
 	const int samples = this->spp / 4;
 	const double rsamples = 1.0 / samples;

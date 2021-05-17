@@ -38,6 +38,8 @@ class SimpleSpherePathTracer {
 		
 		std::vector<Sphere> spheres;
 		int spp;
+		
+		cl::Kernel kernel;
 
 	public:
 

@@ -5,7 +5,7 @@
 #define GLM_FORCE_SIMD_AVX2
 
 // OpenCL
-#define CL_HPP_ENABLE_EXCEPTIONS
+//#define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 200
 
 // OpenCL is a little broken
@@ -52,6 +52,7 @@ typedef std::mt19937 rng_type;
 #include "logger.hpp"
 #include "math.hpp"
 #include "glhelper.hpp"
+#include "clhelper.hpp"
 #include "voxel.hpp"
 #include "world/mesh.hpp"
 #include "world/chunk.hpp"

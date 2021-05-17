@@ -70,6 +70,7 @@ add_executable(main
 	src/main.cpp
 	src/logger.cpp
 	src/glhelper.cpp
+	src/clhelper.cpp
 	src/camera.cpp
 	src/voxel.cpp
 )
