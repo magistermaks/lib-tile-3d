@@ -96,104 +96,25 @@ glm::dvec3 radiance(const Ray &r, int depth, unsigned short *Xi){
 SimpleSpherePathTracer::SimpleSpherePathTracer( int spp, std::vector<Sphere> spheres ) {
 	this->spp = spp;
 	this->spheres = spheres;
-	this->kernel = CLHelper::loadKernel( "smallpt/trace.cl", "simple_add" );
+	this->kernel = CLHelper::loadKernel( "smallpt/trace.cl", "render" );
+	this->buffer_texture = cl::Buffer(CL_MEM_WRITE_ONLY, sizeof(byte) * 1024 * 768 * 3);
+	this->queue = cl::CommandQueue( cl::Context::getDefault(), cl::Device::getDefault() );
+	this->texture = Layer::allocate( 1024, 768 );
 }
 
 void SimpleSpherePathTracer::render( Layer& layer, int w, int h ) {
-
-	cl::Buffer buffer_A(CL_MEM_READ_WRITE, sizeof(int) * 10);
-	cl::Buffer buffer_B(CL_MEM_READ_WRITE, sizeof(int) * 10);
-	cl::Buffer buffer_C(CL_MEM_READ_WRITE, sizeof(int) * 10);
-
-	int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-	int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
-
-	cl::CommandQueue queue( cl::Context::getDefault(), cl::Device::getDefault() );
-
-	queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(int) * 10, A);
-	queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(int) * 10, B);
-
-	this->kernel.setArg(0, buffer_A);
-	this->kernel.setArg(1, buffer_B);
-	this->kernel.setArg(2, buffer_C);
-	queue.enqueueNDRangeKernel(this->kernel, cl::NullRange, cl::NDRange(h), cl::NullRange);
-	queue.finish();
-
-	int C[10];
-
-    //read result C from the device to array C
-    queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(int) * 10, C);
- 
-    std::cout<<" Hello from the GPU: \n";
-    for( int i=0; i<10; i++ ){
-        std::cout << C[i] << " ";
-    }
-	std::cout << "\n";
 	
-	const int samples = this->spp / 4;
-	const double rsamples = 1.0 / samples;
+	this->kernel.setArg(0, 4);
+	this->kernel.setArg(1, w);
+	this->kernel.setArg(2, this->buffer_texture);
+	this->queue.enqueueNDRangeKernel(this->kernel, cl::NullRange, cl::NDRange(h * w), cl::NullRange);
+	this->queue.finish();
 
-	// camera
-	Ray camera( glm::dvec3(50,52,295.6), glm::normalize(glm::dvec3(0, -0.042612, -1)) );
-
-	glm::dvec3 cx = glm::dvec3(w * .5135 / h, 0, 0);
-	glm::dvec3 cy = glm::normalize( glm::cross(cx, camera.d) )*.5135;
-	glm::dvec3 r;
-
-	// double image
-	glm::dvec3* image = new glm::dvec3[w * h];
-
-#	pragma omp parallel for schedule(dynamic, 1) private(r)
-	for( int y = 0; y < h; y ++ ) {
-
-		fprintf(stderr,"\rRendering (%d spp) %5.2f%%", samples * 4, 100.0 * y / (h-1)); 
-
-		// Loop cols 
-		for( unsigned short x = 0, Xi[3] = {0, 0, (short unsigned) (y*y*y)}; x < w; x ++ ) {
-
-			// 2x2 subpixel rows 
-			for( int sy = 0, i = y * w + x; sy < 2; sy ++ ) {
-
-				// 2x2 subpixel cols 
-				for( int sx = 0; sx<2; sx++, r=glm::dvec3()) {
-
-					for( int s = 0; s < samples; s ++ ){ 
-
-						double r1 = 2 * erand48(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1); 
-						double r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2); 
-
-						glm::dvec3 d = 	cx * ( ( (sx + .5 + dx) / 2 + x) / w - .5) + 
-										cy * ( ( (sy + .5 + dy) / 2 + y) / h - .5) + camera.d; 
-
-						r = r + radiance( Ray( camera.o + d * 140.0, d = glm::normalize(d) ), 0, Xi ) * rsamples; 
-						// Camera rays are pushed ^^^^^ forward to start in interior 
-
-					}
-
-					image[i] = image[i] + glm::dvec3(
-						Math::clamp(r.x), 
-						Math::clamp(r.y), 
-						Math::clamp(r.z)
-					) * 0.25;
-	
-				}
-			}
-		}
-	}
-	
-	// texture
-	byte* texture = Layer::allocate( w, h );
-
-	for( int i = 0; i < w*h; i ++ ) {
-		texture[i * 3 + 0] = toInt( image[i].x );
-		texture[i * 3 + 1] = toInt( image[i].y );
-		texture[i * 3 + 2] = toInt( image[i].z );
-	}
-	
-	delete[] image;
+    //read result from the device to array
+    this->queue.enqueueReadBuffer(this->buffer_texture, CL_TRUE, 0, sizeof(byte) * 1024 * 768 * 3, this->texture);
 
 	// draw to screen
-	layer.update( texture, w, h, true );
+	layer.update( this->texture, w, h );
 
 }
 

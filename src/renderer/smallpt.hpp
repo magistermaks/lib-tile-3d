@@ -40,6 +40,10 @@ class SimpleSpherePathTracer {
 		int spp;
 		
 		cl::Kernel kernel;
+		cl::Buffer buffer_texture;
+		cl::CommandQueue queue;
+
+		byte* texture;
 
 	public:
 

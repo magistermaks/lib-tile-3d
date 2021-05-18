@@ -1,8 +1,18 @@
 
 #require shader/smallpt/math.cl
 
-void kernel simple_add(global const int* A, global const int* B, global int* C) {
-	C[get_global_id(0)] = A[get_global_id(0)] + B[get_global_id(0)];
+//void kernel simple_add( const int spp, global const int* A, global const int* B, global int* C ) {
+//	C[get_global_id(0)] = A[get_global_id(0)] + B[get_global_id(0)];
+//}
+
+void kernel render( const int spp, const int width, global byte* image ) {
+
+	int off = get_global_id(0) * 3;
+
+	image[off + 0] = get_global_id(0);
+	image[off + 1] = 100;
+	image[off + 2] = 100;
+
 }
 
 //Ray::Ray( glm::dvec3 o, glm::dvec3 d ) : o(o), d(d) {}
