@@ -32,24 +32,26 @@ struct Sphere {
 
 }; 
 
-class SimpleSpherePathTracer {
+class PathTracer {
 
 	private:
 		
-		std::vector<Sphere> spheres;
-		int spp;
+		unsigned int spp, width, height, size;
 		
 		cl::Kernel kernel;
-		cl::Buffer buffer_texture;
+		cl::Buffer buffer, voxel_buffer, scene_buffer;
 		cl::CommandQueue queue;
+		cl::NDRange range;
 
-		byte* texture;
+		byte* texture = nullptr;
 
 	public:
 
-		SimpleSpherePathTracer( int, std::vector<Sphere> );
-		
-		void render( Layer&, int, int );
+		PathTracer( int, int, int );
+		~PathTracer();
+
+		void resize( int, int );
+		void render( Layer& );
 
 };
 

@@ -1,11 +1,10 @@
 
 #include "config.hpp"
 
-int main( void ) {
+int main() {
 
 	const int width = 1024;
 	const int height = 768;
-	bool building = false;
 
 	// print cwd, nice for debugging
 	{  
@@ -32,7 +31,7 @@ int main( void ) {
 	 
 	Region region;
 	Renderer renderer;
-	SimpleSpherePathTracer smallpt( 8, {} );
+	PathTracer tracer(8, 1024, 768);
 
 	Layer& layer = renderer.addLayer( 1 );
 
@@ -44,9 +43,6 @@ int main( void ) {
 		}
 	}
 
-	// get locations from shader program
-	GLuint texture_loc = program.location("canvas");
-
 	time_t last = 0;
 	long count = 0;
 
@@ -55,8 +51,6 @@ int main( void ) {
  
 	do {
 
-		glm::mat4 model = glm::mat4(1.0f);
-
 		if( last != time(0) ) {
 			std::string title = "LibTile3D | FPS: " + std::to_string(count);
 			glfwSetWindowTitle(window, title.c_str());
@@ -64,18 +58,10 @@ int main( void ) {
 			count = 0;
 		}
 
-		// clear the screen and depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		smallpt.render( layer, 1024, 768 );
+		tracer.render( layer );
 		renderer.render();
 
-		// Swap buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-		GLHelper::getError();
-
+		GLHelper::frame();
 		count ++;
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );

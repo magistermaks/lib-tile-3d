@@ -13,6 +13,14 @@ typedef struct {
 	real x, y, z;
 } vec3;
 
+// define scene object
+typedef struct {
+	vec3 camera_origin;
+	vec3 camera_direction;
+	vec3 ambient_light;
+	vec3 sky_light;
+} scene;
+
 // macro used for generic vector-vector math
 #define vvopt( ap, bp, out, opt ) \
 	(out)->x = (ap)->x opt (bp)->x; \
@@ -24,6 +32,21 @@ typedef struct {
 	(out)->x = (ap)->x opt b; \
 	(out)->y = (ap)->y opt b; \
 	(out)->z = (ap)->z opt b; \
+
+// load vector from float array
+void load_vec3( vec3* v, global float* arr ) {
+	v->x = (real) arr[0 * sizeof(float)];
+	v->y = (real) arr[1 * sizeof(float)];
+	v->z = (real) arr[2 * sizeof(float)];
+}
+
+// load scene from float array
+void load_scene( scene* s, global float* arr ) {
+	load_vec3( &(s->camera_origin),    arr + 0 * sizeof(float) );
+	load_vec3( &(s->camera_direction), arr + 3 * sizeof(float) );
+	load_vec3( &(s->ambient_light),    arr + 6 * sizeof(float) );
+	load_vec3( &(s->sky_light),        arr + 9 * sizeof(float) );
+}
 
 // add two vectors, and returns the resulting vector
 inline vec3 add( vec3* a, vec3* b ) {

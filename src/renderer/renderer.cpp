@@ -19,7 +19,7 @@ Layer::Layer( float z ) {
 Layer::~Layer() {
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
-	glDeleteTextures( 1, &tex );
+	glDeleteTextures(1, &tex);
 }
 
 void Layer::genBuffer( float z ) {
@@ -41,17 +41,21 @@ void Layer::genBuffer( float z ) {
 
 }
 
-void Layer::update( byte* buffer, int width, int height, bool free ) {
+void Layer::update( byte* buffer, int width, int height ) {
 	glActiveTexture( GL_TEXTURE0 );
 	glBindTexture( GL_TEXTURE_2D, tex );
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer );
 
-	if( free ) delete[] buffer;
+	if( this->fresh ) {
+		this->fresh = false;
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+	}else{
+		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+	}
 }
 
 void Layer::render() {
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, tex );
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, this->tex);
 	glBindVertexArray(this->vao);
 	glDrawArrays(GL_QUADS, 0, 4);
 }

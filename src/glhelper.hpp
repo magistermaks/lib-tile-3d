@@ -44,6 +44,8 @@ namespace GLHelper {
 	};
 
 	bool init(int, int, const char*);
+	void frame();
+
 	ShaderProgram loadShaders( std::string );
 
 }

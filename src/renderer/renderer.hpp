@@ -7,6 +7,7 @@ class Layer {
 	private:
 
 		GLuint vbo, vao, tex;
+		bool fresh = true;
 
 		void genBuffer( float );
 
@@ -15,7 +16,7 @@ class Layer {
 		Layer( float );
 		~Layer();
 	
-		void update( byte*, int, int, bool free = false );
+		void update( byte*, int, int );
 		void render();
 
 		static byte* allocate( int, int );

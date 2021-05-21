@@ -1,11 +1,11 @@
 
 #include "clhelper.hpp"
 
-void CLHelper::KernelProgram::addSource( std::string source ) {
+void CLHelper::KernelProgramBuilder::addSource( std::string source ) {
 	this->sources.push_back( {source.c_str(), source.length()} );
 }
 
-void CLHelper::KernelProgram::addFile( std::string path ) {
+void CLHelper::KernelProgramBuilder::addFile( std::string path ) {
 
 	std::string source;
 	std::ifstream ifile(path, std::ios::in);
@@ -26,8 +26,6 @@ void CLHelper::KernelProgram::addFile( std::string path ) {
 			}
 		}
 
-		//logger::info( source );
-
         // compile shader source
         this->addSource( source );
 	}else{
@@ -37,22 +35,23 @@ void CLHelper::KernelProgram::addFile( std::string path ) {
 
 }
 
-std::string CLHelper::KernelProgram::build() {
+std::string CLHelper::KernelProgramBuilder::build() {
+
+	if( failed ) {
+		return "Resource loading failed!";
+	}
 
 	this->program = cl::Program(sources);
     if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS) {
-		failed = true;
         return program.getBuildInfo<CL_PROGRAM_BUILD_LOG>( cl::Device::getDefault() );
     }
 
+	return "";
+
 }
 
-cl::Kernel CLHelper::KernelProgram::getKernel( const char* name ) {
+cl::Kernel CLHelper::KernelProgramBuilder::get( const char* name ) {
 	return cl::Kernel( program, name );
-}
-
-bool CLHelper::KernelProgram::isOk() {
-	return !failed;
 }
 
 bool CLHelper::init() {
@@ -105,15 +104,17 @@ bool CLHelper::init() {
 
 cl::Kernel CLHelper::loadKernel( std::string path, std::string kernel ) {
 
-	KernelProgram program;
-	program.addFile( "shader/" + path );
-	std::string log = program.build();
+	KernelProgramBuilder builder;
+	builder.addFile( "shader/opencl/" + path );
+	std::string log = builder.build();
 
-	if( !program.isOk() ) {
-		logger::error(log);
+	if( !log.empty() ) {
+		logger::fatal( "Failed to load kernel: " + log );
+	}else{
+		logger::info( "Loaded OpenCL kernel: '" + kernel + "' from: 'shader/opencl/" + path + "'" );
 	}
 
-	return program.getKernel( kernel.c_str() );
+	return builder.get( kernel.c_str() );
 
 }
 

@@ -60,7 +60,7 @@ typedef std::mt19937 rng_type;
 #include "world/region.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/material.hpp"
-#include "renderer/smallpt.hpp"
+#include "renderer/pathtracer.hpp"
 
 #ifdef WIN32 
 #	include <windows.h>

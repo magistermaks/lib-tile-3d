@@ -4,7 +4,7 @@
 
 namespace CLHelper {
 
-	class KernelProgram {
+	class KernelProgramBuilder {
 
 		private:
 			cl::Program::Sources sources;
@@ -16,7 +16,7 @@ namespace CLHelper {
 			void addFile( std::string );
 
 			std::string build();
-			cl::Kernel getKernel( const char* name );
+			cl::Kernel get( const char* name );
 
 			bool isOk();
 	};
