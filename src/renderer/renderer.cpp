@@ -62,8 +62,9 @@ Layer& Renderer::addLayer( float z ) {
 	return layers[ layers.size() - 1 ];
 }
 
-void Renderer::render() {
+void Renderer::render(byte* buffer, int width, int height) {
 	for( auto& layer : layers ) {
+		layer.update(buffer, width, height);
 		layer.render();
 	}
 }

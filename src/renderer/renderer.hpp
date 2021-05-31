@@ -29,6 +29,6 @@ class Renderer {
 	public:
 
 		Layer& addLayer( float );
-		void render();
+		void render(byte*, int, int);
 
 };

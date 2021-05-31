@@ -24,10 +24,10 @@ class Camera {
 		double deltaTime;
 
 		glm::mat4 orbit();
-		glm::mat4 fpv(GLFWwindow* glwindow);
+		glm::vec3 fpv(GLFWwindow* glwindow, glm::vec3* camrot);
 
 	public:
 		Camera(CameraMode cammode, GLFWwindow* glwindow);
-		glm::mat4 update(GLFWwindow* glwindow);
+		glm::vec3 update(GLFWwindow* glwindow, glm::vec3* camrot);
 
 };

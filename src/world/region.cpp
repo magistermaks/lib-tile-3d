@@ -64,33 +64,11 @@ Chunk* Region::chunk( ChunkPos& pos ) {
 
 /* deprecated */
 Voxel* Region::tile( int cx, int cy, int cz, int x, int y, int z ) {
-
-	if( x >= 64 ) {
-		cx ++;
-		x -= 64;
-	}else if( x < 0 ) {
-		cx --;
-		x += 64;
+	if (cx >= 0 && cy >= 0 && cz >= 0 && cx <= 0 && cy <= 0 && cz <= 0) {
+		Chunk* chunk = this->chunk(cx, cy, cz);
+		if (chunk != nullptr) return chunk->xyz(x, y, z); else nullptr;
 	}
-
-	if( y >= 64 ) {
-		cy ++;
-		y -= 64;
-	} else if( y < 0 ) {
-		cy --;
-		y += 64;
-	}
-
-	if( z >= 64 ) {
-		cz ++;
-		z -= 64;
-	} else if( z < 0 ) {
-		cz --;
-		z += 64;
-	}
-
-	Chunk* chunk = this->chunk( cx, cy, cz );
-	if( chunk != nullptr ) return chunk->xyz( x, y, z ); else nullptr;
+	return nullptr;
 
 }
 
