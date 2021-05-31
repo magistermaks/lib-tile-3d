@@ -100,8 +100,8 @@ void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei 
 GLHelper::ShaderProgram GLHelper::loadShaders( std::string name ) {
 
 	auto builder = GLHelper::ShaderProgram::make();
-	builder.compileFile( "shader/" + name + "/vertex.glsl", GL_VERTEX_SHADER );
-	builder.compileFile( "shader/" + name + "/fragment.glsl", GL_FRAGMENT_SHADER );
+	builder.compileFile( "C:/Users/mateu/Source/Repos/magistermaks/lib-tile-3d/shader/" + name + "/vertex.glsl", GL_VERTEX_SHADER );
+	builder.compileFile( "C:/Users/mateu/Source/Repos/magistermaks/lib-tile-3d/shader/" + name + "/fragment.glsl", GL_FRAGMENT_SHADER );
 	builder.link();
 
 	if( !builder.isOk() ) {
