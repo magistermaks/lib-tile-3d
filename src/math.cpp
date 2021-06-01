@@ -13,7 +13,7 @@ double Math::clamp( double value ) {
 	_mm_store_sd( &value, _mm_min_sd( _mm_max_sd( _mm_set_sd(value), _sse2_min_0), _sse2_max_1 ) );
 	return value;
 #else
-	return x < 0 ? 0 : x > 1 ? 1 : x; 
+	return value < 0 ? 0 : value > 1 ? 1 : value;
 #endif
 
 }

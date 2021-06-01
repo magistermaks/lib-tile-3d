@@ -27,6 +27,7 @@ if(INCLUDE_DISTRIB)
 endif(INCLUDE_DISTRIB)
 
 include_directories(
+	${OpenCL_INCLUDE_DIR}
 	external/glfw-3.1.2/include/
 	external/glm-0.9.7.1/
 	external/glew-1.13.0/include/
@@ -72,3 +73,4 @@ target_link_libraries(main
 	${ALL_LIBS}
 )
 
+file(COPY shader DESTINATION ${CMAKE_BINARY_DIR})

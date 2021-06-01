@@ -26,11 +26,11 @@ void CLHelper::KernelProgramBuilder::addFile( std::string path ) {
 			}
 		}
 
-        // compile shader source
-        this->addSource( source );
+		// compile shader source
+		this->addSource( source );
 	}else{
 		logger::error( "Failed to read kernel file: '" + path + "'!" );
-        failed = true;
+		failed = true;
 	}
 
 }
@@ -42,9 +42,9 @@ std::string CLHelper::KernelProgramBuilder::build() {
 	}
 
 	this->program = cl::Program(sources);
-    if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS) {
-        return program.getBuildInfo<CL_PROGRAM_BUILD_LOG>( cl::Device::getDefault() );
-    }
+	if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS) {
+		return program.getBuildInfo<CL_PROGRAM_BUILD_LOG>( cl::Device::getDefault() );
+	}
 
 	return "";
 
@@ -62,31 +62,29 @@ bool CLHelper::init() {
 
 	// search for platform supporting OpenCL 2.X
 	for( auto &p : platforms ) {
+		// TODO version check
 		std::string version = p.getInfo<CL_PLATFORM_VERSION>();
-
-		if( version.find("OpenCL 2.") != std::string::npos ) {
-			logger::info("Found OpenCL 2.0 platform: '" + version + "'");
-			platform = p;
-			break;
-		}
+		logger::info("Found OpenCL platform: '" + version + "'");
+		platform = p;
+		break;
 	}
 
 	// check is any platform was found
 	if( platform() == 0 ) {
-		logger::fatal("No OpenCL 2.0 platform found!");
+		logger::fatal("No OpenCL platform found!");
 		return false;
 	}
 
 	// get default device of the default platform
-    std::vector<cl::Device> devices;
-    platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+	std::vector<cl::Device> devices;
+	platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
 	size_t count = devices.size();
 
 	// check device count
-    if( count == 0 ) {
+	if( count == 0 ) {
 		logger::fatal("No GPU device found!");
-        return false;
-    }else{
+		return false;
+	}else{
 		logger::info("Found " + std::to_string(count) + " OpenCL GPU device(s)");
 	}
 
