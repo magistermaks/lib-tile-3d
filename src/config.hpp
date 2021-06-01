@@ -54,9 +54,8 @@ typedef std::mt19937 rng_type;
 #include "glhelper.hpp"
 #include "clhelper.hpp"
 #include "voxel.hpp"
-#include "world/mesh.hpp"
-#include "world/chunk.hpp"
 #include "camera.hpp"
+#include "world/chunk.hpp"
 #include "world/region.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/material.hpp"
@@ -73,12 +72,4 @@ typedef std::mt19937 rng_type;
 #	define CWD_MAX_PATH PATH_MAX
 #	define POSIX_GETCWD getcwd
 #endif
-
-// Settings:
-// primitive used for rendering, set to GL_QUADS or GL_TRIANGLES
-#define LT3D_PRIMITIVE GL_QUADS
-
-// maximum mesh buffer size, should be set to (64*64*64*6*<bytes per face>)/2
-#define LT3D_MAX_MESH_SIZE (64*64*64*3*(6*4))
-
 

@@ -53,7 +53,6 @@ add_executable(main
 	external/murmur-3/murmur.cpp
 	external/thread_pool/thread_pool.cpp
 
-	src/world/mesh.cpp
 	src/world/chunk.cpp
 	src/world/region.cpp
 

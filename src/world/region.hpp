@@ -21,34 +21,16 @@ namespace std {
 		inline std::size_t operator()( const ChunkPos& pos ) const;
 	};
 
-	std::string to_string( ChunkPos pos );
+	std::string to_string( const ChunkPos& pos );
 
 }
-
-class ChunkMeshUpdate {
-
-	private:
-		ChunkPos pos;
-		Mesh::StaticBuffer* data;
-
-	public:
-		ChunkMeshUpdate( ChunkPos pos, Mesh::StaticBuffer* data );
-		void apply( Region* region );
-
-};
 
 class Region {
 
 	private:
 		std::unordered_map< ChunkPos, Chunk* > map;
 
-		ThreadPool pool;
-		std::vector<ChunkMeshUpdate> mesh_updates;
-		std::mutex mesh_updates_mtx; 
-
 	public:
-
-		Region();
 
 		/// add chunk to region, expects chunk to be on the heap
 		void put( Voxel* chunk, int x, int y, int z );
@@ -60,30 +42,9 @@ class Region {
 		Chunk* chunk( int x, int y, int z );
 		Chunk* chunk( ChunkPos& pos );
 
-		/// get tile from world, relative to a chunk
-		Voxel* tile( int cx, int cy, int cz, int x, int y, int z );
-
 		/// remove (and free) all chunks from region
 		void clear();
 
-		/// render this region
-		void render( GLuint location );
-
-		/// build mesh
-		void build();
-
-		/// execute scheduled tasks
-		void update();
-
-		/// update chunk mesh
-		void update( int x, int y, int z );
-
-		/// Show off thread system
-		void discard();
-
-		/// add task to task queue
-		void synchronized( ChunkMeshUpdate update );
-		
 
 };
 
