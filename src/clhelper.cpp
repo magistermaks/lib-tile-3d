@@ -60,13 +60,17 @@ bool CLHelper::init() {
 	cl::Platform::get(&platforms);
 	cl::Platform platform;
 
-	// search for platform supporting OpenCL 2.X
-	for( auto &p : platforms ) {
-		// TODO version check
-		std::string version = p.getInfo<CL_PLATFORM_VERSION>();
-		logger::info("Found OpenCL platform: '" + version + "'");
-		platform = p;
-		break;
+	// search for platform supporting OpenCL >=2.0
+	for( auto &plat : platforms ) {
+
+		std::string version = plat.getInfo<CL_PLATFORM_VERSION>();
+		std::smatch match;
+
+		if( std::regex_search(version, match, std::regex("OpenCL (\\d+)", std::regex_constants::icase)) && std::stoi(match[1]) > 1 ) {
+			logger::info("Found OpenCL platform: '" + version + "'");
+			platform = plat;
+			break;
+		}
 	}
 
 	// check is any platform was found

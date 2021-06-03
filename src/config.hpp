@@ -37,6 +37,7 @@
 #include <mutex>
 #include <thread>
 #include <random>
+#include <regex>
 
 // C
 #include <stdio.h>

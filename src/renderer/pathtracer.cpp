@@ -38,7 +38,7 @@ void PathTracer::resize( int w, int h ) {
 	this->texture = Layer::allocate(w, h);
 
 	float scene[] = { 
-		-0.5, -0.5, -4.0, // camera_origin
+		-0.5, -0.5, -4.0, // camera origin
 		0, 0, 0, // camera direction
 		0, 0, 0, // sky light
 		0, 0, 0, // ambient light
@@ -50,7 +50,7 @@ void PathTracer::resize( int w, int h ) {
 
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, 3 * 4 * sizeof(float));
 
-	// TODO/INFO: size of the voxel buffer on the GPU, can be update, but it is expensive
+	// TODO/INFO: size of the (voxel) buffer on the GPU, can be update, but it's expensive
 	this->voxel_buffer = cl::Buffer(CL_MEM_READ_ONLY, 1 * sizeof(byte));
 
 	// no need to send this to GPU
@@ -62,7 +62,7 @@ void PathTracer::resize( int w, int h ) {
 	this->kernel.setArg(3, scene_buffer);
 	this->kernel.setArg(4, voxel_buffer);
 	
-	// TODO/INFO: set data in buffers, do this every time the data changes
+	// TODO/INFO: send data to buffers in the GPU, do this every time the data changes
 	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, 3 * 4 * sizeof(float), scene);
 	this->queue.enqueueWriteBuffer(voxel_buffer, CL_TRUE, 0, 1 * sizeof(byte), voxels);
  
