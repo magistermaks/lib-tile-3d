@@ -48,6 +48,8 @@ int main() {
 
 	// enable shader program
 	program.bind();
+
+	Camera camera(CameraMode::fpv, window);
  
 	do {
 
@@ -58,7 +60,8 @@ int main() {
 			count = 0;
 		}
 
-		tracer.render( layer );
+		camera.update( window );
+		tracer.render( layer, camera );
 		renderer.render();
 
 		GLHelper::frame();

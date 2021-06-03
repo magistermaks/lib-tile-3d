@@ -3,6 +3,7 @@
 #include "../config.hpp"
 
 class Layer;
+class Camera;
 
 struct Ray { 
 	glm::dvec3 o, d; 
@@ -51,7 +52,8 @@ class PathTracer {
 		~PathTracer();
 
 		void resize( int, int );
-		void render( Layer& );
+		void update_buffers( Camera& );
+		void render( Layer&, Camera& );
 
 };
 

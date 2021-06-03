@@ -68,13 +68,21 @@ void PathTracer::resize( int w, int h ) {
  
 }
 
-void PathTracer::render( Layer& layer ) {
+void PathTracer::update_buffers( Camera& camera  ) {
+	glm::vec3 cpos = camera.getPosition();
+	float scene[3] = { cpos.x, cpos.y, cpos.z };
+	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, 3 * 1 * sizeof(float), scene);
+}
+
+void PathTracer::render( Layer& layer, Camera& camera ) {
 
 	// add kernel execution to the queue
 	this->queue.enqueueNDRangeKernel(this->kernel, cl::NullRange, this->range, cl::NullRange);
 
     // read result from the device to the texture
     this->queue.enqueueReadBuffer(this->buffer, CL_TRUE, 0, this->size, this->texture);
+
+	this->update_buffers(camera);
 
 	// draw to screen
 	layer.update(this->texture, width, height);

@@ -8,7 +8,7 @@ glm::mat4 Camera::orbit() {
 	return view;
 }
 
-glm::mat4 Camera::fpv(GLFWwindow* glwindow) {
+glm::vec3 Camera::fpv(GLFWwindow* glwindow) {
 	double xpos = 0, ypos = 0;
 
 	glfwGetCursorPos(glwindow, &xpos, &ypos);
@@ -39,24 +39,24 @@ glm::mat4 Camera::fpv(GLFWwindow* glwindow) {
 	const float speed = movement_sensitivity * deltaTime;
 
 	//keyboard input
-	if (glfwGetKey(glwindow, GLFW_KEY_W) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_D) == GLFW_PRESS) {
 		pos.x += camrot.x * speed;
 		pos.y += camrot.y * speed;
 		pos.z += camrot.z * speed;
 	}
-	if (glfwGetKey(glwindow, GLFW_KEY_S) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_A) == GLFW_PRESS) {
 		pos.x -= camrot.x * speed;
 		pos.y -= camrot.y * speed;
 		pos.z -= camrot.z * speed;
 	}
-	if (glfwGetKey(glwindow, GLFW_KEY_A) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_S) == GLFW_PRESS) {
 		glm::vec3 rcamrot(camrot);
 		rcamrot = glm::normalize(glm::cross(rcamrot, glm::vec3(0, 1, 0)));
 		pos.x -= rcamrot.x * speed;
 		pos.y -= rcamrot.y * speed;
 		pos.z -= rcamrot.z * speed;
 	}
-	if (glfwGetKey(glwindow, GLFW_KEY_D) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_W) == GLFW_PRESS) {
 		glm::vec3 rcamrot(camrot);
 		rcamrot = glm::normalize(glm::cross(rcamrot, glm::vec3(0, 1, 0)));
 		pos.x += rcamrot.x * speed;
@@ -67,9 +67,7 @@ glm::mat4 Camera::fpv(GLFWwindow* glwindow) {
 	pos.y -= (glfwGetKey(glwindow, GLFW_KEY_Q) == GLFW_PRESS) ? speed : 0;
 	pos.y += (glfwGetKey(glwindow, GLFW_KEY_E) == GLFW_PRESS) ? speed : 0;
 
-
-	glm::mat4 view = glm::lookAt(pos, pos + camrot, glm::vec3(0.0, 1.0, 0.0));
-	return view;
+	return pos;
 }
 
 
@@ -77,25 +75,30 @@ Camera::Camera(CameraMode cammode, GLFWwindow* glwindow) {
 	mode = cammode;
 	cameraRot = glm::vec2(0);
 	cursorStartPos = glm::vec2(0);
-	pos = glm::vec3(0, 10, 0);
+	pos = glm::vec3(1, 1, -10);
 	double x, y;
 	glfwGetCursorPos(glwindow, &x, &y);
 	lastFrame = glfwGetTime();
 	prevCursorPos = glm::vec2(x, y);
 }
 
-glm::mat4 Camera::update(GLFWwindow* glwindow) {
+glm::vec3 Camera::update(GLFWwindow* glwindow) {
 	double cutime = glfwGetTime();
 	deltaTime = cutime - lastFrame;
 	lastFrame = cutime;
 
 	switch (mode) {
-		case CameraMode::orbit:
-			return orbit();
+	case CameraMode::orbit:
+		return glm::vec3(0); //orbit();
 
-		case CameraMode::fpv:
-			return fpv(glwindow);
+	case CameraMode::fpv:
+		return fpv(glwindow);
 	}
 
-	return glm::mat4(0);
+	return glm::vec3(0);
 }
+
+glm::vec3 Camera::getPosition() {
+	return this->pos;
+}
+
