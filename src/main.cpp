@@ -12,17 +12,6 @@ inline void setPixel(int x, int y, byte r, byte g, byte b, byte* img) {
 	img[i + 2] = b;
 }
 
-class Box3 {
-public:
-	Box3(const glm::vec3& vmin, const glm::vec3& vmax, const glm::vec3& _color) {
-		bounds[0] = vmin;
-		bounds[1] = vmax;
-		color = _color;
-	}
-	glm::vec3 bounds[2];
-	glm::vec3 color;
-};
-
 class Ray {
 public:
 	Ray(const glm::vec3& orig, const glm::vec3& dir) : orig(orig), dir(dir) {
@@ -47,13 +36,13 @@ public:
 	int sign[3];
 };
 
-bool intersect(const Ray& r, const Box3& box) {
+bool intersect(const Ray& r, const glm::vec3 bounds[2]) {
 	float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
-	tmin = (box.bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
-	tmax = (box.bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
-	tymin = (box.bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
-	tymax = (box.bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
+	tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
+	tmax = (bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
+	tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
+	tymax = (bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
 
 	if ((tmin > tymax) || (tymin > tmax))
 		return false;
@@ -62,8 +51,8 @@ bool intersect(const Ray& r, const Box3& box) {
 	if (tymax < tmax)
 		tmax = tymax;
 
-	tzmin = (box.bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
-	tzmax = (box.bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
+	tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
+	tzmax = (bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
 
 	if ((tmin > tzmax) || (tzmin > tmax))
 		return false;
@@ -79,69 +68,71 @@ struct Node {
 	byte r = 0xff, g = 0xff, b = 0xff, a = 0xff;
 };
 
-inline float vdist(glm::vec3& origin, Box3& box, int csize) {
-	const glm::vec3 pivot((float)csize * 0.5f);
-	float d = glm::distance(origin, box.bounds[0] + pivot);
+inline float vdist(glm::vec3& origin, glm::vec3 bounds[2], int csize) {
+	glm::vec3 pivot((float)csize * 0.5f);
+	pivot += bounds[0];
+	pivot -= origin;
+	const float d = pivot.x * pivot.x + pivot.y * pivot.y + pivot.z * pivot.z;
 	return d;
 }
 
-inline byte test_octree(Box3& box, int csize, std::vector<Node*>& octree, int depth, Ray& ray, int x, int y, int z, byte id, int globalid, float* dist, glm::vec3* origin) {
+inline byte test_octree(glm::vec3 bounds[2], int csize, std::vector<Node*>& octree, int depth, Ray& ray, int x, int y, int z, byte id, int globalid, float* dist, glm::vec3* origin) {
 	byte vid = 255;
 	float tmpdist;
-	box.bounds[0].x = x;
-	box.bounds[0].y = y;
-	box.bounds[0].z = z;
-	box.bounds[1].x = csize + x;
-	box.bounds[1].y = csize + y;
-	box.bounds[1].z = csize + z;
+	bounds[0].x = x;
+	bounds[0].y = y;
+	bounds[0].z = z;
+	bounds[1].x = csize + x;
+	bounds[1].y = csize + y;
+	bounds[1].z = csize + z;
 	if ((octree[depth][globalid + id]).a > 128)
-		if (intersect(ray, box)) {
-			tmpdist = vdist(*origin, box, csize);
+		if (intersect(ray, bounds)) {
+			tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id;
 				*dist = tmpdist;
 			}
 		}
 
-	box.bounds[0].x = csize + x;
+	bounds[0].x = csize + x;
 	//box.bounds[0].y = y;
 	//box.bounds[0].z = z;
-	box.bounds[1].x = csize * 2 + x;
+	bounds[1].x = csize * 2 + x;
 	//box.bounds[1].y = csize * 0.5f + y;
 	//box.bounds[1].z = csize * 0.5f + z;
 	if ((octree[depth][globalid + 1 + id]).a > 128)
-		if (intersect(ray, box)) {
-			tmpdist = vdist(*origin, box, csize);
+		if (intersect(ray, bounds)) {
+			tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id + 1;
 				*dist = tmpdist;
 			}
 		}
 
-	box.bounds[0].x = csize + x;
+	bounds[0].x = csize + x;
 	//box.bounds[0].y = y;
-	box.bounds[0].z = csize + z;
+	bounds[0].z = csize + z;
 	//box.bounds[1].x = csize + x;
 	//box.bounds[1].y = csize * 0.5f + y;
-	box.bounds[1].z = csize * 2 + z;
+	bounds[1].z = csize * 2 + z;
 	if ((octree[depth][globalid + 2 + id]).a > 128)
-		if (intersect(ray, box)) {
-			tmpdist = vdist(*origin, box, csize);
+		if (intersect(ray, bounds)) {
+			tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id + 2;
 				*dist = tmpdist;
 			}
 		}
 
-	box.bounds[0].x = x;
+	bounds[0].x = x;
 	//box.bounds[0].y = y;
 	//box.bounds[0].z = csize * 0.5f + z;
-	box.bounds[1].x = csize + x;
+	bounds[1].x = csize + x;
 	//box.bounds[1].y = csize * 0.5f + y;
 	//box.bounds[1].z = csize + z;
 	if ((octree[depth][globalid + 3 + id]).a > 128)
-		if (intersect(ray, box)) {
-			tmpdist = vdist(*origin, box, csize);
+		if (intersect(ray, bounds)) {
+			tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id + 3;
 				*dist = tmpdist;
@@ -156,11 +147,11 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 	float sy = 1.0f / (float)height;
 
 	int csize = 64;
-
+	glm::vec3 bounds[2];
 	glm::vec3 dir(1, 1, 1);
 	Ray ray(*origin, dir);
 	glm::vec3 color(0, 0, 0);
-	Box3 box(glm::vec3(0), glm::vec3(1), glm::vec3(255));
+	//Box3 box(glm::vec3(0), glm::vec3(1), glm::vec3(255));
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			dir.x = (float)x * sx - 0.5f;
@@ -178,8 +169,8 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 			for ( ; depth <= 6; depth++) {
 				dist = 0xffffff;
 				csize /= 2;
-				oc = test_octree(box, csize, octree, depth, ray, xo, yo, zo, 0, globalid, &dist, origin);
-				byte oc1 = test_octree(box, csize, octree, depth, ray, xo, yo + csize, zo, 4, globalid, &dist, origin);
+				oc = test_octree(bounds, csize, octree, depth, ray, xo, yo, zo, 0, globalid, &dist, origin);
+				byte oc1 = test_octree(bounds, csize, octree, depth, ray, xo, yo + csize, zo, 4, globalid, &dist, origin);
 				if (oc1 != 255) oc = oc1;
 
 				
@@ -311,7 +302,7 @@ void set_voxel(int x, int y, int z, std::vector<Node*>& octree, int octree_depth
 
 int main(void) {
 
-	std::vector <Box3> boxes;
+	//std::vector <Box3> boxes;
 	bool building = false;
 
 	const int octree_depth = 6;
