@@ -3,7 +3,6 @@
 
 const int width = 1024;
 const int height = 768;
-const int ray_max = 128;
 
 inline void setPixel(int x, int y, byte r, byte g, byte b, byte* img) {
 	int i = y * width * 3 + x * 3;
@@ -12,26 +11,8 @@ inline void setPixel(int x, int y, byte r, byte g, byte b, byte* img) {
 	img[i + 2] = b;
 }
 
-class Ray {
-public:
-	Ray(const glm::vec3& orig, const glm::vec3& dir) : orig(orig), dir(dir) {
-		invdir.x = 1 / dir.x;
-		invdir.y = 1 / dir.y;
-		invdir.z = 1 / dir.z;
-		sign[0] = (invdir.x < 0);
-		sign[1] = (invdir.y < 0);
-		sign[2] = (invdir.z < 0);
-	}
-
-	void update(const glm::vec3& dir) {
-		invdir.x = 1 / dir.x;
-		invdir.y = 1 / dir.y;
-		invdir.z = 1 / dir.z;
-		sign[0] = (invdir.x < 0);
-		sign[1] = (invdir.y < 0);
-		sign[2] = (invdir.z < 0);
-	}
-	glm::vec3 orig, dir;
+struct Ray {
+	glm::vec3 orig;
 	glm::vec3 invdir;
 	int sign[3];
 };
@@ -76,7 +57,7 @@ inline float vdist(glm::vec3& origin, glm::vec3 bounds[2], int csize) {
 	return d;
 }
 
-inline byte test_octree(glm::vec3 bounds[2], int csize, std::vector<Node*>& octree, int depth, Ray& ray, int x, int y, int z, byte id, int globalid, float* dist, glm::vec3* origin) {
+inline byte test_octree(glm::vec3 bounds[2], int csize, Node** octree, int depth, Ray& ray, int x, int y, int z, byte id, int globalid, float* dist, glm::vec3* origin) {
 	byte vid = 255;
 	float tmpdist;
 	bounds[0].x = x;
@@ -95,11 +76,11 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, std::vector<Node*>& octr
 		}
 
 	bounds[0].x = csize + x;
-	//box.bounds[0].y = y;
-	//box.bounds[0].z = z;
+	//bounds[0].y = y;
+	//bounds[0].z = z;
 	bounds[1].x = csize * 2 + x;
-	//box.bounds[1].y = csize * 0.5f + y;
-	//box.bounds[1].z = csize * 0.5f + z;
+	//bounds[1].y = csize * 0.5f + y;
+	//bounds[1].z = csize * 0.5f + z;
 	if ((octree[depth][globalid + 1 + id]).a > 128)
 		if (intersect(ray, bounds)) {
 			tmpdist = vdist(*origin, bounds, csize);
@@ -110,10 +91,10 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, std::vector<Node*>& octr
 		}
 
 	bounds[0].x = csize + x;
-	//box.bounds[0].y = y;
+	//bounds[0].y = y;
 	bounds[0].z = csize + z;
-	//box.bounds[1].x = csize + x;
-	//box.bounds[1].y = csize * 0.5f + y;
+	//bounds[1].x = csize + x;
+	//bounds[1].y = csize * 0.5f + y;
 	bounds[1].z = csize * 2 + z;
 	if ((octree[depth][globalid + 2 + id]).a > 128)
 		if (intersect(ray, bounds)) {
@@ -125,11 +106,11 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, std::vector<Node*>& octr
 		}
 
 	bounds[0].x = x;
-	//box.bounds[0].y = y;
-	//box.bounds[0].z = csize * 0.5f + z;
+	//bounds[0].y = y;
+	//bounds[0].z = csize * 0.5f + z;
 	bounds[1].x = csize + x;
-	//box.bounds[1].y = csize * 0.5f + y;
-	//box.bounds[1].z = csize + z;
+	//bounds[1].y = csize * 0.5f + y;
+	//bounds[1].z = csize + z;
 	if ((octree[depth][globalid + 3 + id]).a > 128)
 		if (intersect(ray, bounds)) {
 			tmpdist = vdist(*origin, bounds, csize);
@@ -142,31 +123,45 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, std::vector<Node*>& octr
 	return vid;
 }
 
-void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, glm::vec3* direction, std::vector<Node*>& octree) {
+void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, glm::vec3* direction, Node** octree, int octree_depth, const int _csize) {
 	float sx = 1.0f / (float)width;
 	float sy = 1.0f / (float)height;
 
-	int csize = 64;
 	glm::vec3 bounds[2];
 	glm::vec3 dir(1, 1, 1);
-	Ray ray(*origin, dir);
+
+	Ray ray;
+	ray.orig = *origin;
+	ray.invdir.x = 1 / dir.x;
+	ray.invdir.y = 1 / dir.y;
+	ray.invdir.z = 1 / dir.z;
+	ray.sign[0] = (ray.invdir.x < 0);
+	ray.sign[1] = (ray.invdir.y < 0);
+	ray.sign[2] = (ray.invdir.z < 0);
+
 	glm::vec3 color(0, 0, 0);
-	//Box3 box(glm::vec3(0), glm::vec3(1), glm::vec3(255));
+
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			dir.x = (float)x * sx - 0.5f;
 			dir.y = (float)y * sy - 0.5f;
 			glm::normalize(dir);
 			color.r = 0;  color.g = 0; color.b = 0;
-			ray.update(dir);
+
+			ray.invdir.x = 1 / dir.x;
+			ray.invdir.y = 1 / dir.y;
+			ray.invdir.z = 1 / dir.z;
+			ray.sign[0] = (ray.invdir.x < 0);
+			ray.sign[1] = (ray.invdir.y < 0);
+			ray.sign[2] = (ray.invdir.z < 0);
+
 			float dist = 0xffffff;
 			byte oc = 255;
-			//auto it = boxes.s
 			int xo = 0, yo = 0, zo = 0;
-			csize = 64;
+			int csize = _csize;
 			int globalid = 0;
 			int depth = 1;
-			for ( ; depth <= 6; depth++) {
+			for ( ; depth <= octree_depth; depth++) {
 				dist = 0xffffff;
 				csize /= 2;
 				oc = test_octree(bounds, csize, octree, depth, ray, xo, yo, zo, 0, globalid, &dist, origin);
@@ -220,10 +215,10 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 				else break;
 			}
 
-			if (depth >= 7 && octree[6][globalid].a > 128) {
-				color.r = octree[6][globalid].r;
-				color.g = octree[6][globalid].g;
-				color.b = octree[6][globalid].b;
+			if (depth >= octree_depth + 1 && octree[octree_depth][globalid].a > 128) {
+				color.r = octree[octree_depth][globalid].r;
+				color.g = octree[octree_depth][globalid].g;
+				color.b = octree[octree_depth][globalid].b;
 			}
 			setPixel(x, y, (byte)color.x, (byte)color.y, (byte)color.z, img);
 		}
@@ -239,14 +234,10 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 	//|	 0-------1 
 	//=====>x
 
-void set_voxel(int x, int y, int z, std::vector<Node*>& octree, int octree_depth, byte r, byte g, byte b) {
-	/*octree[octree_depth][x].r = r;
-	octree[octree_depth][x].g = g;
-	octree[octree_depth][x].b = b;*/
-	int csize = 64;
+void set_voxel(int x, int y, int z, Node** octree, int octree_depth, byte r, byte g, byte b, int csize) {
 	int globalid = 0;
 	int xo = 0, yo = 0, zo = 0;
-	for (int depth = 1; depth <= 6; depth++) {
+	for (int depth = 1; depth <= octree_depth; depth++) {
 		csize /= 2;
 		octree[depth - 1][globalid].a = 255;
 		if (x < xo + csize) {
@@ -305,9 +296,8 @@ int main(void) {
 	//std::vector <Box3> boxes;
 	bool building = false;
 
-	const int octree_depth = 6;
-	std::vector<Node*> octree;
-	octree.reserve(octree_depth);
+	const int octree_depth = 4;
+	Node** octree = new Node*[octree_depth + 1];
 
 	for (int i = 0; i <= octree_depth; i++) {
 		int size = std::pow(8, i);
@@ -319,13 +309,15 @@ int main(void) {
 			//if(i == octree_depth)
 			node[n].a = 255;// randomByte();
 		}
-		octree.push_back(node);
+		octree[i] = node;
 	}
 
-	for (int x = 0; x < 64; x++)
-		for (int y = 0; y < 64; y++)
-			for (int z = 0; z < 64; z++)
-				set_voxel(x, y, z, octree, octree_depth, x * 4, y * 4, z * 4);
+	const int csize = std::pow(2, octree_depth);
+	const int cm = 256 / csize;
+	for (int x = 0; x < csize; x++)
+		for (int y = 0; y < csize; y++)
+			for (int z = 0; z < csize; z++)
+				set_voxel(x, y, z, octree, octree_depth, x * cm, y * cm, z * cm, csize);
 
 	// print cwd, nice for debugging
 	{
@@ -366,15 +358,6 @@ int main(void) {
 		}
 	}
 
-	//Box3 b()
-	/*for (int x = 0; x < 4; x++) {
-		for (int y = 0; y < 4; y++) {
-			for (int z = 0; z < 4; z++) {
-				boxes.emplace_back(glm::vec3(x * 2, y * 2, z * 2), glm::vec3(x * 2 + 1, y * 2 + 1, z * 2 + 1), glm::vec3(randomByte(), randomByte(), randomByte()));
-			}
-		}
-	}*/
-
 	// get locations from shader program
 	GLuint texture_loc = program.location("canvas");
 
@@ -402,7 +385,7 @@ int main(void) {
 
 
 		origin = camera.update(window, &rot);
-		draw(width, height, img, &region, &origin, &rot, octree);
+		draw(width, height, img, &region, &origin, &rot, octree, octree_depth, csize);
 
 		// clear the screen and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
