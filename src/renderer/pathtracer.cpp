@@ -38,7 +38,7 @@ void PathTracer::resize( int w, int h ) {
 	this->texture = Layer::allocate(w, h);
 
 	float scene[] = { 
-		0, 0, 0, // camera_origin
+		-0.5, -0.5, -4.0, // camera_origin
 		0, 0, 0, // camera direction
 		0, 0, 0, // sky light
 		0, 0, 0, // ambient light

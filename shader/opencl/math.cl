@@ -35,9 +35,9 @@ typedef struct {
 
 // load vector from float array
 void load_vec3( vec3* v, global float* arr ) {
-	v->x = (real) arr[0 * sizeof(float)];
-	v->y = (real) arr[1 * sizeof(float)];
-	v->z = (real) arr[2 * sizeof(float)];
+	v->x = (real) arr[0];
+	v->y = (real) arr[1];
+	v->z = (real) arr[2];
 }
 
 // load scene from float array
