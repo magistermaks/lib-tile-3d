@@ -43,7 +43,7 @@ inline float vdist(vec3 origin, vec3 bounds[2], int csize) {
 	return d;
 }
 
-inline byte test_octree(vec3 bounds[2], int csize, byte* octree, int layerid, struct Ray* ray, int x, int y, int z, int id, int globalid, float* dist) {
+inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, struct Ray* ray, int x, int y, int z, int id, int globalid, float* dist) {
 	byte vid = 255;
 	float tmpdist;
 	layerid += globalid;
