@@ -20,9 +20,10 @@ class Chunk {
 		Chunk( Voxel*, Region*, int, int, int );
 		~Chunk();
 
-		Voxel* xyz(byte x, byte y, byte z);
+		Voxel* xyz( byte x, byte y, byte z );
+		static void set_voxel( int x, int y, int z, byte* octree, int octree_depth, byte r, byte g, byte b, int csize );
 
-		static Voxel* allocate();
+		static byte* allocate( int octree_depth );
 
 		// TODO: move this stuff to worldgen
 		static void genBall( Voxel* arr, byte air, int radius  );

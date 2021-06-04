@@ -5,6 +5,7 @@ int main() {
 
 	const int width = 1024;
 	const int height = 768;
+	const int octree_depth = 4; //(value)3 - (edge length)8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
 
 	// print cwd, nice for debugging
 	{  
@@ -21,8 +22,8 @@ int main() {
 
 	logger::info("Generating voxel data...");
 
-	Voxel* arr1 = Chunk::allocate();
-	Chunk::genBall( arr1, 0, 40 );
+	byte* arr1 = Chunk::allocate( octree_depth );
+	//Chunk::genBall( arr1, 0, 40 );
 
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
@@ -31,17 +32,17 @@ int main() {
 	 
 	Region region;
 	Renderer renderer;
-	PathTracer tracer(8, 1024, 768);
+	PathTracer tracer( 8, 1024, 768, arr1, octree_depth );
 
 	Layer& layer = renderer.addLayer( 1 );
 
-	for( int x = 0; x < 8; x ++ ) {
+	/*for( int x = 0; x < 8; x ++ ) {
 		for( int y = 0; y < 1; y ++ ) {
 			for( int z = 0; z < 8; z ++ ) {
 				region.put( arr1, x, y, z );
 			}
 		}
-	}
+	}*/
 
 	time_t last = 0;
 	long count = 0;

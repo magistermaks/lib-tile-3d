@@ -6,8 +6,10 @@
 #include "pathtracer.hpp"
 
 
-PathTracer::PathTracer( int spp, int w, int h ) {
+PathTracer::PathTracer( int spp, int w, int h, byte* chunk, int octree_depth ) {
 	this->spp = spp;
+	this->octree = chunk;
+	this->octree_depth = octree_depth;
 
 	// load the path-tracing kernel, and create OpenCl task queue
 	this->kernel = CLHelper::loadKernel( "trace.cl", "render" );
@@ -44,19 +46,17 @@ void PathTracer::resize( int w, int h ) {
 		0, 0, 0, // ambient light
 	};
 
-	byte voxels[] = {
-		0
-	};
-
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, 3 * 4 * sizeof(float));
 
 	// TODO/INFO: size of the (voxel) buffer on the GPU, can be update, but it's expensive
-	this->voxel_buffer = cl::Buffer(CL_MEM_READ_ONLY, 1 * sizeof(byte));
+	const int len = (1 - pow(8, (this->octree_depth + 1))) / -7;
+	this->voxel_buffer = cl::Buffer(CL_MEM_READ_ONLY, len * 4 * sizeof(byte));
 
 	// no need to send this to GPU
 	this->kernel.setArg(0, this->spp);
 	this->kernel.setArg(1, w);
 	this->kernel.setArg(2, this->buffer);
+	this->kernel.setArg(5, this->octree_depth);
 	
 	// those ones need to be send every time they change
 	this->kernel.setArg(3, scene_buffer);
@@ -64,7 +64,7 @@ void PathTracer::resize( int w, int h ) {
 	
 	// TODO/INFO: send data to buffers in the GPU, do this every time the data changes
 	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, 3 * 4 * sizeof(float), scene);
-	this->queue.enqueueWriteBuffer(voxel_buffer, CL_TRUE, 0, 1 * sizeof(byte), voxels);
+	this->queue.enqueueWriteBuffer(voxel_buffer, CL_TRUE, 0, len * 4 * sizeof(byte), this->octree);
  
 }
 
