@@ -3,7 +3,7 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 // select floating point value to use, float or double
-#define real double
+#define real float
 
 // define byte type for convenience
 typedef unsigned char byte;
@@ -19,6 +19,7 @@ typedef struct {
 	vec3 camera_direction;
 	vec3 ambient_light;
 	vec3 sky_light;
+	vec3 background;
 } scene;
 
 // macro used for generic vector-vector math
@@ -42,10 +43,11 @@ void load_vec3( vec3* v, global float* arr ) {
 
 // load scene from float array
 void load_scene( scene* s, global float* arr ) {
-	load_vec3( &(s->camera_origin),    arr + 0 * sizeof(float) );
-	load_vec3( &(s->camera_direction), arr + 3 * sizeof(float) );
-	load_vec3( &(s->ambient_light),    arr + 6 * sizeof(float) );
-	load_vec3( &(s->sky_light),        arr + 9 * sizeof(float) );
+	load_vec3( &(s->camera_origin),    arr + 0 * 3 );
+	load_vec3( &(s->camera_direction), arr + 1 * 3 );
+	load_vec3( &(s->ambient_light),    arr + 2 * 3 );
+	load_vec3( &(s->sky_light),        arr + 3 * 3 );
+	load_vec3( &(s->background),       arr + 4 * 3 );
 }
 
 // add two vectors, and returns the resulting vector

@@ -1,38 +1,31 @@
 
 #require shader/opencl/math.cl
 
-struct Ray {
+typedef struct {
 	vec3 orig;
 	vec3 invdir;
 	int sign[3];
-};
+} Ray;
 
-bool intersect(const struct Ray* r, const vec3 bounds[2]) {
-	float tmin, tmax, tymin, tymax, tzmin, tzmax;
-	bool hit = true;
-	tmin = (bounds[r->sign[0]].x - r->orig.x) * r->invdir.x;
-	tmax = (bounds[1 - r->sign[0]].x - r->orig.x) * r->invdir.x;
-	tymin = (bounds[r->sign[1]].y - r->orig.y) * r->invdir.y;
-	tymax = (bounds[1 - r->sign[1]].y - r->orig.y) * r->invdir.y;
+bool intersect(const Ray* r, const vec3 bounds[2]) {
 
-	if ((tmin > tymax) || (tymin > tmax))
-		hit = false;
-	if (tymin > tmin)
-		tmin = tymin;
-	if (tymax < tmax)
-		tmax = tymax;
+	real txmin, txmax, tymin, tymax, tzmin, tzmax;
 
-	tzmin = (bounds[r->sign[2]].z - r->orig.z) * r->invdir.z;
-	tzmax = (bounds[1 - r->sign[2]].z - r->orig.z) * r->invdir.z;
+	txmin = ( bounds[    r->sign[0]].x - r->orig.x ) * r->invdir.x;
+	txmax = ( bounds[1 - r->sign[0]].x - r->orig.x ) * r->invdir.x;
+	tymin = ( bounds[    r->sign[1]].y - r->orig.y ) * r->invdir.y;
+	tymax = ( bounds[1 - r->sign[1]].y - r->orig.y ) * r->invdir.y;
 
-	if ((tmin > tzmax) || (tzmin > tmax))
-		hit = false;
-	if (tzmin > tmin)
-		tmin = tzmin;
-	if (tzmax < tmax)
-		tmax = tzmax;
+	if( (txmin > tymax) || (tymin > txmax) ) return false;
 
-	return hit;
+	txmin = max( txmin, tymin );
+	txmax = min( txmax, tymax );
+
+	tzmin = ( bounds[    r->sign[2]].z - r->orig.z ) * r->invdir.z;
+	tzmax = ( bounds[1 - r->sign[2]].z - r->orig.z ) * r->invdir.z;
+
+	return (txmin <= tzmax) && (tzmin <= txmax);
+
 }
 
 inline float vdist(vec3 origin, vec3 bounds[2], int csize) {
@@ -43,7 +36,7 @@ inline float vdist(vec3 origin, vec3 bounds[2], int csize) {
 	return d;
 }
 
-inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, struct Ray* ray, int x, int y, int z, int id, int globalid, float* dist) {
+inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist) {
 	byte vid = 255;
 	float tmpdist;
 	layerid += globalid;
@@ -128,12 +121,15 @@ void kernel render(const int spp, const int width, global byte* imgb, global flo
 	dir.y = (float)get_global_id(1) * sy - 0.5f;
 	dir.z = 1.0f;
 
-	vec3 color = { 50, 0, 0 };
-	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
-
-	struct Ray ray;
 	scene _scene;
 	load_scene(&_scene, scnf);
+
+	vec3 color = _scene.background;
+	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
+
+
+
+	Ray ray;
 	ray.orig = _scene.camera_origin;
 
 	ray.invdir.x = 1 / dir.x;

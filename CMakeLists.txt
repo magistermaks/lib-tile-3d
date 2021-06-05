@@ -59,6 +59,7 @@ add_executable(main
 
 	src/renderer/renderer.cpp
 	src/renderer/pathtracer.cpp
+	src/renderer/scene.cpp
 	
 	src/math.cpp
 	src/main.cpp

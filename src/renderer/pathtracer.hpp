@@ -4,6 +4,7 @@
 
 class Layer;
 class Camera;
+class Scene;
 
 class PathTracer {
 
@@ -20,13 +21,15 @@ class PathTracer {
 		byte* octree;
 		int octree_depth = 6;
 
+		Scene* scene;
+
 	public:
 
 		PathTracer( int spp, int w, int h, byte* chunk, int octree_depth );
 		~PathTracer();
 
 		void resize( int, int );
-		void update_buffers( Camera& );
+		void updateCamera( Camera& );
 		void render( Layer&, Camera& );
 
 };
