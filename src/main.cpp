@@ -164,18 +164,13 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 			for ( ; depth <= octree_depth; depth++) {
 				dist = 0xffffff;
 				csize /= 2;
-
-				oc = test_octree(bounds, csize, octree, layerindex - 1, ray, xo, yo, zo, 0, globalid, &dist, origin);
-				byte oc1 = test_octree(bounds, csize, octree, layerindex - 1, ray, xo, yo + csize, zo, 4, globalid, &dist, origin);
+				globalid = globalid * 8;
+				oc = test_octree(bounds, csize, octree, layerindex, ray, xo, yo, zo, 0, globalid, &dist, origin);
+				byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo, yo + csize, zo, 4, globalid, &dist, origin);
 
 				if (oc1 != 255) oc = oc1;
-				
+				globalid += oc;
 				if (oc != 255) {
-					globalid = globalid * 8 + oc;
-					
-					layerindex += pow8;
-					pow8 *= 8;
-
 					switch (oc) {
 					case 1:
 						xo += csize;
@@ -214,13 +209,23 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 						break;
 					}
 
+					/*int a = (layerindex + globalid) * 4;
+					//if (octree[a + 3] > 128) {
+						color.r = octree[a];
+						color.g = octree[a + 1];
+						color.b = octree[a + 2];
+					//}*/
+
 					
+
+					pow8 *= 8;
+					layerindex += pow8;
 					
 				}
 				else break;
 			}
 
-			const int index = ((1 - pow(8, (octree_depth))) / -7 + globalid - 1) * 4;
+			const int index = ((1 - pow8) / -7 + globalid) * 4;
 			if (depth >= octree_depth + 1 && octree[index + 3] > 128) {
 				color.r = octree[index];
 				color.g = octree[index + 1];
@@ -244,27 +249,29 @@ void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte
 	int globalid = 0;
 	int xo = 0, yo = 0, zo = 0;
 	int layerindex = 1;
+	int pow8 = 1;
 	for (int depth = 1; depth <= octree_depth; depth++) {
 		csize /= 2;
-		octree[layerindex + globalid * 4 + 3] = 255;
-		layerindex += pow(8, depth - 1);
+		
+		globalid *= 8;
+
 		if (x < xo + csize) {
 			if (y < yo + csize) {
 				if (z < zo + csize) {
-					globalid = globalid * 8 + 0;
+					globalid += 0;
 				}
 				else {
-					globalid = globalid * 8 + 3;
+					globalid += 3;
 					zo += csize;
 				}
 			}
 			else {
 				yo += csize;
 				if(z < zo + csize) {
-					globalid = globalid * 8 + 4;
+					globalid += 4;
 				}
 				else {
-					globalid = globalid * 8 + 7;
+					globalid += 7;
 					zo += csize;
 				}
 			}
@@ -273,27 +280,32 @@ void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte
 			xo += csize;
 			if (y < yo + csize) {
 				if (z < zo + csize) {
-					globalid = globalid * 8 + 1;					
+					globalid += 1;					
 				}
 				else {
-					globalid = globalid * 8 + 2;
+					globalid += 2;
 					zo += csize;
 				}
 			}
 			else {
 				yo += csize;
 				if (z < zo + csize) {
-					globalid = globalid * 8 + 5;
+					globalid += 5;
 				}
 				else {
-					globalid = globalid * 8 + 6;
+					globalid += 6;
 					zo += csize;
 				}
 			}
 		}
 
+		int a = (layerindex + globalid) * 4;
+		octree[a + 3] = 255;
+		pow8 *= 8;
+		layerindex += pow8;
+
 	}
-	const int index = ((1 - pow(8, (octree_depth))) / -7 + globalid - 1) * 4;
+	const int index = ((1 - pow(8, (octree_depth))) / -7 + globalid) * 4;
 	octree[index] = r;
 	octree[index + 1] = g;
 	octree[index + 2] = b;
@@ -302,7 +314,6 @@ void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte
 
 int main(void) {
 
-	//std::vector <Box3> boxes;
 	bool building = false;
 
 	const int octree_depth = 4;
@@ -312,26 +323,42 @@ int main(void) {
 	int index = 0;
 	for (int i = 0; i <= octree_depth; i++) {
 		int size = std::pow(8, i);
-		byte* node = octree + (index * 4); //r g b a
-		index += size;
+		byte* node = octree + index; //r g b a
+		index += size * 4;
 		for (int n = 0; n < size * 4; n += 4) {
-			node[n] = 255;//randomByte();
-			node[n + 1] = 255;//randomByte();
-			node[n + 2] = 255;//randomByte();
-			//if(i == octree_depth)
-			node[n + 3] = 255;// randomByte();
+			node[n] = 255;
+			node[n + 1] = 255;
+			node[n + 2] = 255;
+			/*if (i < octree_depth - 2)
+				node[n + 3] = 255;// randomByte();
+			else
+				node[n + 3] = 0;*/
 		}
-		//octree[i] = node;
 	}
-
 	//std::fill_n(octree, len * 4, 0xff);
 
 	const int csize = std::pow(2, octree_depth);
 	const int cm = 256 / csize;
-	for (int x = 0; x < csize; x++)
+	/*for (int x = 0; x < csize; x++)
 		for (int y = 0; y < csize; y++)
 			for (int z = 0; z < csize; z++)
-				set_voxel(x, y, z, octree, octree_depth, x * cm, y * cm, z * cm, csize);
+				set_voxel(x, y, z, octree, octree_depth, x * cm, y * cm, z * cm, csize);*/
+
+	const int c = csize/2;
+	
+	for (int x = 0; x < csize; x++) {
+		for (int y = 0; y < csize; y++) {
+			for (int z = 0; z < csize; z++) {
+
+				float A = c - x, B = c - y, C = c - z;
+				if(sqrt(A * A + B * B + C * C) < 12) {
+					set_voxel(x, y, z, octree, octree_depth, x * cm, y * cm, z * cm, csize);
+				}
+			}
+		}
+	}
+
+
 
 	// print cwd, nice for debugging
 	{
@@ -363,14 +390,6 @@ int main(void) {
 	std::memset(img, 0, width * height * 3);
 
 	renderer.addLayer(1).update(img, width, height);
-
-	/*for (int x = 0; x < 8; x++) {
-		for (int y = 0; y < 1; y++) {
-			for (int z = 0; z < 8; z++) {
-				region.put(arr1, x, y, z);
-			}
-		}
-	}*/
 
 	// get locations from shader program
 	GLuint texture_loc = program.location("canvas");
