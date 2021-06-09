@@ -107,13 +107,13 @@ bool CLHelper::init() {
 cl::Kernel CLHelper::loadKernel( std::string path, std::string kernel ) {
 
 	KernelProgramBuilder builder;
-	builder.addFile( "shader/opencl/" + path );
+	builder.addFile( "assets/opencl/" + path );
 	std::string log = builder.build();
 
 	if( !log.empty() ) {
 		logger::fatal( "Failed to load kernel: " + log );
 	}else{
-		logger::info( "Loaded OpenCL kernel: '" + kernel + "' from: 'shader/opencl/" + path + "'" );
+		logger::info( "Loaded OpenCL kernel: '" + kernel + "' from: 'assets/opencl/" + path + "'" );
 	}
 
 	return builder.get( kernel.c_str() );

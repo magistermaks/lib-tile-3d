@@ -14,6 +14,10 @@ PathTracer::PathTracer( int spp, int w, int h, byte* chunk, int octree_depth ) {
 	this->kernel = CLHelper::loadKernel( "trace.cl", "render" );
 	this->queue = cl::CommandQueue( cl::Context::getDefault(), cl::Device::getDefault() );	
 	this->scene = new Scene();
+	this->canvas = nullptr;
+
+	// init scene
+	scene->setBackground( 0, 0, 102 );
 
 	// initialize all size dependent components
 	resize( w, h );
@@ -25,6 +29,7 @@ PathTracer::~PathTracer() {
 	}
 
 	delete this->scene;
+	delete this->canvas;
 }
 
 void PathTracer::resize( int w, int h ) {
@@ -33,15 +38,20 @@ void PathTracer::resize( int w, int h ) {
 		delete[] this->texture;
 	}
 
+	if( this->canvas != nullptr ) {
+		delete this->canvas;
+	}
+
 	this->width = w;
 	this->height = h;
 	this->size = w * h * 3 * sizeof(byte);
 
 	this->buffer = cl::Buffer(CL_MEM_WRITE_ONLY, this->size);
 	this->range = cl::NDRange(w, h);
-	this->texture = Layer::allocate(w, h);
 
-	scene->setBackground( 0, 0, 102 );
+	// texture to draw on
+	this->texture = Canvas::allocate(w, h);
+	this->canvas = new Canvas(w, h);
 
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, scene->size());
 
@@ -74,7 +84,7 @@ void PathTracer::updateCamera( Camera& camera ) {
 	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, scene->size(), scene->ptr());
 }
 
-void PathTracer::render( Layer& layer, Camera& camera ) {
+void PathTracer::render( Camera& camera ) {
 
 	// update camera
 	this->updateCamera(camera);
@@ -85,8 +95,11 @@ void PathTracer::render( Layer& layer, Camera& camera ) {
     // read result from the device to the texture
     this->queue.enqueueReadBuffer(this->buffer, CL_TRUE, 0, this->size, this->texture);
 
-	// draw to screen
-	layer.update(this->texture, width, height);
+	// update texture
+	this->canvas->update(this->texture);
+
+	// draw
+	RenderSystem::instance().drawScreen(*canvas);
 
 }
 

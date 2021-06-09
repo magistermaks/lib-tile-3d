@@ -12,6 +12,7 @@
 #pragma GCC diagnostic ignored "-Wignored-attributes"
 
 // external
+#include <stb/image.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -20,6 +21,8 @@
 #include <murmur-3/murmur.hpp>
 #include <thread_pool/thread_pool.hpp>
 #include <opencl/opencl.hpp>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 // C++
 #include <vector>
@@ -56,6 +59,9 @@ typedef std::mt19937 rng_type;
 #include "clhelper.hpp"
 #include "voxel.hpp"
 #include "camera.hpp"
+#include "util/buffer.hpp"
+#include "util/trait.hpp"
+#include "util/charset.hpp"
 #include "world/chunk.hpp"
 #include "world/region.hpp"
 #include "renderer/scene.hpp"

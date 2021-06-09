@@ -2,7 +2,7 @@
 
 #include "../config.hpp"
 
-class Layer;
+class Canvas;
 class Camera;
 class Scene;
 
@@ -22,6 +22,7 @@ class PathTracer {
 		int octree_depth = 6;
 
 		Scene* scene;
+		Canvas* canvas;
 
 	public:
 
@@ -30,7 +31,7 @@ class PathTracer {
 
 		void resize( int, int );
 		void updateCamera( Camera& );
-		void render( Layer&, Camera& );
+		void render( Camera& );
 
 };
 

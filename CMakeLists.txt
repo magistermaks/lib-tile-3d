@@ -6,6 +6,9 @@ project(LibTile3D)
 find_package(OpenGL REQUIRED)
 find_package(OpenCL REQUIRED)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
     message( FATAL_ERROR "Please select another Build Directory!" )
 endif()
@@ -31,6 +34,7 @@ include_directories(
 	external/glfw-3.1.2/include/
 	external/glm-0.9.7.1/
 	external/glew-1.13.0/include/
+	external/freetype-2.10.4/include/
 	external/
     .
 )
@@ -40,6 +44,7 @@ set(ALL_LIBS
 	${OpenCL_LIBRARY}
 	glfw
 	GLEW_1130
+	freetype
 )
 
 add_definitions(
@@ -54,13 +59,15 @@ add_executable(main
 	external/murmur-3/murmur.cpp
 	external/thread_pool/thread_pool.cpp
 
+	src/util/charset.cpp
+
 	src/world/chunk.cpp
 	src/world/region.cpp
 
 	src/renderer/renderer.cpp
 	src/renderer/pathtracer.cpp
 	src/renderer/scene.cpp
-	
+
 	src/math.cpp
 	src/main.cpp
 	src/logger.cpp
@@ -74,4 +81,5 @@ target_link_libraries(main
 	${ALL_LIBS}
 )
 
-file(COPY shader DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+

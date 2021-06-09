@@ -1,6 +1,9 @@
 
 #include "config.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/image.h>
+
 int main() {
 
 	const int width = 1024;
@@ -14,7 +17,7 @@ int main() {
 	}
 
 	// initilize GLFW, GLEW, and OpenGL
-	if( !GLHelper::init(width, height, "LibTile3D | FPS: 0") ) {
+	if( !GLHelper::init(width, height, "lib-tile-3d") ) {
 		return -1;
 	}
 	
@@ -31,10 +34,9 @@ int main() {
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
 	Region region;
-	Renderer renderer;
 	PathTracer tracer( 8, 1024, 768, arr1, octree_depth );
 
-	Layer& layer = renderer.addLayer( 1 );
+	Charset charset( "assets/8x8font.png" );
 
 	/*for( int x = 0; x < 8; x ++ ) {
 		for( int y = 0; y < 1; y ++ ) {
@@ -45,28 +47,33 @@ int main() {
 	}*/
 
 	time_t last = 0;
-	long count = 0;
+	long count = 0, fps = 0, ms = 0;
 
 	// enable shader program
-	program.bind();
+	auto& rs = RenderSystem::instance();
+	rs.setShader(program);
 
 	Camera camera(CameraMode::fpv, window);
  
 	do {
 
+		auto start = Clock::now();
+
 		if( last != time(0) ) {
-			std::string title = "LibTile3D | FPS: " + std::to_string(count);
-			glfwSetWindowTitle(window, title.c_str());
 			last = time(0);
+			fps = count;
 			count = 0;
 		}
 
 		camera.update( window );
-		tracer.render( layer, camera );
-		renderer.render();
+		tracer.render( camera );
+
+		rs.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
 
 		GLHelper::frame();
 		count ++;
+
+		ms = (ms + std::chrono::duration_cast<milliseconds>( Clock::now() - start ).count())/2;
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 

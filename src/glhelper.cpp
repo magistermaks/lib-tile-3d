@@ -67,6 +67,9 @@ bool GLHelper::init(int width, int height, const char* name) {
 	// it's not 100% relible on all systems/drivers
 	glfwSwapInterval(0);
 
+	// stb image config
+	stbi_set_flip_vertically_on_load(true);  
+
 	// initialize OpenCL 2.X
 	return CLHelper::init();
 
@@ -118,15 +121,15 @@ void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei 
 GLHelper::ShaderProgram GLHelper::loadShaders( std::string name ) {
 
 	auto builder = GLHelper::ShaderProgram::make();
-	builder.compileFile( "shader/" + name + "/vertex.glsl", GL_VERTEX_SHADER );
-	builder.compileFile( "shader/" + name + "/fragment.glsl", GL_FRAGMENT_SHADER );
+	builder.compileFile( "assets/" + name + "/vertex.glsl", GL_VERTEX_SHADER );
+	builder.compileFile( "assets/" + name + "/fragment.glsl", GL_FRAGMENT_SHADER );
 	builder.link();
 
 	if( !builder.isOk() ) {
 		glfwTerminate();
 		exit(-1);
 	}else{
-		logger::info( "Loaded OpenGL shader program from: 'shader/" + name + "'" );
+		logger::info( "Loaded OpenGL shader program from: 'assets/" + name + "'" );
 	}
 
 	// let's hope that the return will be optimized, otherwise things will break (the destructor must not be called!)

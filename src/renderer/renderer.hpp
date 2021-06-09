@@ -2,36 +2,62 @@
 
 #include "../config.hpp"
 
-class Layer {
+// :angry_bread:
+namespace GLHelper { class ShaderProgram; }
+class Charset;
+
+class Canvas {
 
 	private:
 
-		GLuint vbo, vao, tex;
-		bool fresh = true;
-
-		void genBuffer( float );
+		int width, height;
+		bool fresh;
+		GLuint tex;
 
 	public:
 
-		Layer( float );
-		~Layer();
-	
-		void update( byte*, int, int );
-		void render();
+		Canvas( int, int );
+		~Canvas();
+
+		void update( byte* data );
+		GLuint id();
 
 		static byte* allocate( int, int );
 
 };
 
-class Renderer {
+class RenderSystem {
 
 	private:
+		
+		ReusableBuffer<float> vertices;
+		GLuint vbo, vao, tex;
+		GLHelper::ShaderProgram* shader;
 
-		std::vector<Layer> layers;
+		RenderSystem();
 
 	public:
 
-		Layer& addLayer( float );
-		void render();
+		~RenderSystem();
+
+		// singleton pattern
+		RenderSystem( RenderSystem& ) = delete;
+		void operator=( const RenderSystem& ) = delete;
+
+		// modify renderer state
+		void setTexture( GLuint );
+		void setShader( GLHelper::ShaderProgram& );
+		void vertex( float, float, float, float );
+
+		// render specific elements
+		void drawText( const std::string&, float, float, float, Charset& );
+		void drawScreen( Canvas& );
+
+		// draw queued quads
+		void draw();
+
+		// get instance of RenderSystem
+		static RenderSystem& instance();
 
 };
+
