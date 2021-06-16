@@ -8,7 +8,7 @@ int main() {
 
 	const int width = 1024;
 	const int height = 768;
-	const int octree_depth = 4; //(value)3 - (edge length)8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
+	const int octree_depth = 6; //(value)3 - (edge length)8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
 
 	// print cwd, nice for debugging
 	{  
@@ -34,7 +34,7 @@ int main() {
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
 	Region region;
-	PathTracer tracer( 8, 1024, 768, arr1, octree_depth );
+	PathTracer tracer( 8, width, height, arr1, octree_depth );
 
 	Charset charset( "assets/8x8font.png" );
 
