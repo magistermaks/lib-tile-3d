@@ -17,34 +17,27 @@ struct Ray {
 	int sign[3];
 };
 
-bool intersect(const Ray& r, const glm::vec3 bounds[2]) {
-	float tmin, tmax, tymin, tymax, tzmin, tzmax;
+bool intersect(const Ray* r, const glm::vec3 bounds[2], float* dist) {
+	float txmin, txmax, tymin, tymax, tzmin, tzmax;
 
-	tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
-	tmax = (bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
-	tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
-	tymax = (bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
+	txmin = (bounds[r->sign[0]].x - r->orig.x) * r->invdir.x;
+	txmax = (bounds[1 - r->sign[0]].x - r->orig.x) * r->invdir.x;
+	tymin = (bounds[r->sign[1]].y - r->orig.y) * r->invdir.y;
+	tymax = (bounds[1 - r->sign[1]].y - r->orig.y) * r->invdir.y;
 
-	if ((tmin > tymax) || (tymin > tmax))
-		return false;
-	if (tymin > tmin)
-		tmin = tymin;
-	if (tymax < tmax)
-		tmax = tymax;
+	if ((txmin > tymax) || (tymin > txmax)) return false;
 
-	tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
-	tzmax = (bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
+	txmin = std::max(txmin, tymin);
+	txmax = std::min(txmax, tymax);
 
-	if ((tmin > tzmax) || (tzmin > tmax))
-		return false;
-	if (tzmin > tmin)
-		tmin = tzmin;
-	if (tzmax < tmax)
-		tmax = tzmax;
+	tzmin = (bounds[r->sign[2]].z - r->orig.z) * r->invdir.z;
+	tzmax = (bounds[1 - r->sign[2]].z - r->orig.z) * r->invdir.z;
 
-	return true;
+	*dist = std::max(txmin, tzmin);
+
+	return (tzmax >= 0) && (txmin <= tzmax) && (tzmin <= txmax);
 }
-
+//3 - 4 start,  2 - 3 middle
 inline float vdist(glm::vec3& origin, glm::vec3 bounds[2], int csize) {
 	glm::vec3 pivot((float)csize * 0.5f);
 	pivot += bounds[0];
@@ -65,8 +58,8 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	bounds[1].y = csize + y;
 	bounds[1].z = csize + z;
 	if ((octree[(layerid) * 4 + 3]) > 128 && ((*mask >> id) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(*origin, bounds, csize);
+		if (intersect(&ray, bounds, &tmpdist)) {
+			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id;
 				*dist = tmpdist;
@@ -81,8 +74,8 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	//bounds[1].y = csize * 0.5f + y;
 	//bounds[1].z = csize * 0.5f + z;
 	if ((octree[(layerid + 1) * 4 + 3]) > 128 && ((*mask >> (id + 1)) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(*origin, bounds, csize);
+		if (intersect(&ray, bounds, &tmpdist)) {
+			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id + 1;
 				*dist = tmpdist;
@@ -97,8 +90,8 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	//bounds[1].y = csize * 0.5f + y;
 	bounds[1].z = csize * 2 + z;
 	if ((octree[(layerid + 2) * 4 + 3]) > 128 && ((*mask >> (id + 2)) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(*origin, bounds, csize);
+		if (intersect(&ray, bounds, &tmpdist)) {
+			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id + 2;
 				*dist = tmpdist;
@@ -113,8 +106,8 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	//bounds[1].y = csize * 0.5f + y;
 	//bounds[1].z = csize + z;
 	if ((octree[(layerid + 3) * 4 + 3]) > 128 && ((*mask >> (id + 3)) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(*origin, bounds, csize);
+		if (intersect(&ray, bounds, &tmpdist)) {
+			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
 				vid = id + 3;
 				*dist = tmpdist;
@@ -135,6 +128,38 @@ struct Data {
 	byte mask = 0b11111111;
 };
 
+float cosCamX = 0, sinCamX = 0;
+float cosCamY = 0, sinCamY = 0;
+float cosCamZ = 0, sinCamZ = 0;
+
+void setRotation(glm::vec3 angle) {
+	cosCamX = cos(angle.x);
+	cosCamY = cos(angle.y);
+	cosCamZ = cos(angle.z);
+	sinCamX = sin(angle.x);
+	sinCamY = sin(angle.y);
+	sinCamZ = sin(angle.z);
+}
+
+void rotateWorld(glm::vec3* vec) {
+	glm::vec3 p = *vec;
+	glm::vec3 rotated(cosCamY * vec->x - sinCamY * vec->z, vec->y, sinCamY * vec->x + cosCamY * vec->z);
+	*vec = rotated;
+	/*glm::vec2 rotated(p.x * cosCamZ + p.y * sinCamZ, p.y * cosCamZ - p.x * sinCamZ);
+	vec->x = rotated.x;
+	vec->y = rotated.y;
+
+	rotated.x = vec->x * cosCamY + p.z * sinCamY;
+	rotated.y = p.z * cosCamY - vec->x * sinCamY;
+	vec->x = rotated.x;
+	vec->z = rotated.y;
+
+	rotated.x = vec->z * cosCamX + vec->y * sinCamX;
+	rotated.y = vec->y * cosCamX - vec->z * sinCamX;
+	vec->z = rotated.x;
+	vec->y = rotated.y;*/
+}
+
 void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, glm::vec3* direction, byte* octree, const int octree_depth, const int _csize) {
 	float sx = 1.0f / (float)width;
 	float sy = 1.0f / (float)height;
@@ -150,16 +175,24 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 	Data* alt_data = new Data[octree_depth + 1];
 	//std::vector<Data> alt_data(octree_depth + 1);
 
+	float scale = 0.8f;
+	float imageAspectRatio = width / (float)height;
+	setRotation(glm::vec3(0.0f, direction->x, 0.0f));
+
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
-			dir.x = (float)x * sx - 0.5f;
-			dir.y = (float)y * sy - 0.5f;
-			glm::normalize(dir);
+			dir.z = 1;
+			dir.x = (2.0f * x / (float)width - 1.0f) * imageAspectRatio * scale; //(float)x * sx - 0.5f;
+			dir.y = (2.0f * y / (float)height - 1.0f) * scale; //(float)y * sy - 0.5f;
+			//dir = glm::normalize(dir);
+
+			rotateWorld(&dir);
+
 			color.r = 0;  color.g = 0; color.b = 0;
 
-			ray.invdir.x = 1 / dir.x;
-			ray.invdir.y = 1 / dir.y;
-			ray.invdir.z = 1 / dir.z;
+			ray.invdir.x = 1.0f / dir.x;
+			ray.invdir.y = 1.0f / dir.y;
+			ray.invdir.z = 1.0f / dir.z;
 			ray.sign[0] = (ray.invdir.x < 0);
 			ray.sign[1] = (ray.invdir.y < 0);
 			ray.sign[2] = (ray.invdir.z < 0);
