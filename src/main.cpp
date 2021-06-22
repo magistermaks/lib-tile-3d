@@ -142,22 +142,18 @@ void setRotation(glm::vec3 angle) {
 }
 
 void rotateWorld(glm::vec3* vec) {
-	glm::vec3 p = *vec;
-	glm::vec3 rotated(cosCamY * vec->x - sinCamY * vec->z, vec->y, sinCamY * vec->x + cosCamY * vec->z);
-	*vec = rotated;
-	/*glm::vec2 rotated(p.x * cosCamZ + p.y * sinCamZ, p.y * cosCamZ - p.x * sinCamZ);
-	vec->x = rotated.x;
-	vec->y = rotated.y;
-
-	rotated.x = vec->x * cosCamY + p.z * sinCamY;
-	rotated.y = p.z * cosCamY - vec->x * sinCamY;
-	vec->x = rotated.x;
-	vec->z = rotated.y;
-
-	rotated.x = vec->z * cosCamX + vec->y * sinCamX;
-	rotated.y = vec->y * cosCamX - vec->z * sinCamX;
-	vec->z = rotated.x;
+	float rotated;// (p.x * cosCamZ + p.y * sinCamZ, p.y * cosCamZ - p.x * sinCamZ);
+	/*vec->x = rotated.x;
 	vec->y = rotated.y;*/
+	rotated = vec->z * cosCamX + vec->y * sinCamX;
+	vec->y = vec->y * cosCamX - vec->z * sinCamX;
+	vec->z = rotated;
+
+	rotated = vec->x * cosCamY - vec->z * sinCamY;
+	vec->z = vec->z * cosCamY + vec->x * sinCamY;
+	vec->x = rotated;
+
+
 }
 
 void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, glm::vec3* direction, byte* octree, const int octree_depth, const int _csize) {
@@ -177,7 +173,7 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 
 	float scale = 0.8f;
 	float imageAspectRatio = width / (float)height;
-	setRotation(glm::vec3(0.0f, direction->x, 0.0f));
+	setRotation(glm::vec3(direction->y, direction->x, 0.0f));
 
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {

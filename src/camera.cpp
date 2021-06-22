@@ -31,38 +31,38 @@ glm::vec3 Camera::fpv(GLFWwindow* glwindow, glm::vec3* camrot) {
 
 	xpos = glm::radians(xpos);
 	ypos = glm::radians(ypos);
-	camrot->x = xpos;
+	camrot->x = xpos + glm::radians(-90.0f);
 	camrot->y = ypos;
 
 
 	//vector representing where the camera is currently pointing
 	glm::vec3 vcamrot;
 	vcamrot.x = cos(xpos) * cos(ypos);
-	vcamrot.y = sin(ypos);
+	vcamrot.y = -sin(ypos);
 	vcamrot.z = sin(xpos) * cos(ypos);
 	vcamrot = glm::normalize(vcamrot);
 
 	const float speed = movement_sensitivity * deltaTime;
 
 	//keyboard input
-	if (glfwGetKey(glwindow, GLFW_KEY_D) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_W) == GLFW_PRESS) {
 		pos.x += vcamrot.x * speed;
 		pos.y += vcamrot.y * speed;
 		pos.z += vcamrot.z * speed;
 	}
-	if (glfwGetKey(glwindow, GLFW_KEY_A) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_S) == GLFW_PRESS) {
 		pos.x -= vcamrot.x * speed;
 		pos.y -= vcamrot.y * speed;
 		pos.z -= vcamrot.z * speed;
 	}
-	if (glfwGetKey(glwindow, GLFW_KEY_S) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_D) == GLFW_PRESS) {
 		glm::vec3 rcamrot(vcamrot);
 		rcamrot = glm::normalize(glm::cross(rcamrot, glm::vec3(0, 1, 0)));
 		pos.x -= rcamrot.x * speed;
 		pos.y -= rcamrot.y * speed;
 		pos.z -= rcamrot.z * speed;
 	}
-	if (glfwGetKey(glwindow, GLFW_KEY_W) == GLFW_PRESS) {
+	if (glfwGetKey(glwindow, GLFW_KEY_A) == GLFW_PRESS) {
 		glm::vec3 rcamrot(vcamrot);
 		rcamrot = glm::normalize(glm::cross(rcamrot, glm::vec3(0, 1, 0)));
 		pos.x += rcamrot.x * speed;
