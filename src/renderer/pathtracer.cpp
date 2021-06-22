@@ -77,8 +77,10 @@ void PathTracer::resize( int w, int h ) {
 void PathTracer::updateCamera( Camera& camera ) {
 
 	// update origin
-	glm::vec3 cpos = camera.getPosition();
-	scene->setCameraOrigin( cpos.x, cpos.y, cpos.z );
+	glm::vec3 cam = camera.getPosition();
+	scene->setCameraOrigin( cam.x, cam.y, cam.z );
+	cam = camera.getRotation();
+	scene->setCameraDirection( cam.x, cam.y, cam.z );
 
 	// send to GPU
 	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, scene->size(), scene->ptr());

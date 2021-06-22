@@ -19,7 +19,7 @@ typedef struct {
 	byte mask;
 } Data;
 
-bool intersect(const Ray* r, const vec3 bounds[2]) {
+bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 	real txmin, txmax, tymin, tymax, tzmin, tzmax;
 
@@ -36,17 +36,10 @@ bool intersect(const Ray* r, const vec3 bounds[2]) {
 	tzmin = (bounds[r->sign[2]].z - r->orig.z) * r->invdir.z;
 	tzmax = (bounds[1 - r->sign[2]].z - r->orig.z) * r->invdir.z;
 
+	*dist = max(txmin, tzmin);
+
 	return (tzmax >= 0) && (txmin <= tzmax) && (tzmin <= txmax);
 
-}
-
-//distance from the camera to the cube
-inline float vdist(vec3 origin, vec3 bounds[2], int csize) {
-	vec3 pivot = { (float)csize * 0.5f, (float)csize * 0.5f, (float)csize * 0.5f };
-	pivot = add(&pivot, &bounds[0]);
-	pivot = sub(&pivot, &origin);
-	const float d = pivot.x * pivot.x + pivot.y * pivot.y + pivot.z * pivot.z;
-	return d;
 }
 
 inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist, byte* mask) {
@@ -62,8 +55,7 @@ inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int laye
 	bounds[1].z = csize + z;
 
 	if ((octree[(layerid) * 4 + 3]) > 128 && ((*mask >> id) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(ray->orig, bounds, csize);
+		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
 				*dist = tmpdist;
@@ -74,8 +66,7 @@ inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int laye
 	bounds[1].x = csize * 2 + x;
 
 	if ((octree[(layerid + 1) * 4 + 3]) > 128 && ((*mask >> (id + 1)) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(ray->orig, bounds, csize);
+		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
 				*dist = tmpdist;
@@ -87,8 +78,7 @@ inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int laye
 	bounds[1].z = csize * 2 + z;
 
 	if ((octree[(layerid + 2) * 4 + 3]) > 128 && ((*mask >> (id + 2)) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(ray->orig, bounds, csize);
+		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 2;
 				*dist = tmpdist;
@@ -99,8 +89,7 @@ inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int laye
 	bounds[1].x = csize + x;
 
 	if ((octree[(layerid + 3) * 4 + 3]) > 128 && ((*mask >> (id + 3)) & 1) == 1)
-		if (intersect(ray, bounds)) {
-			tmpdist = vdist(ray->orig, bounds, csize);
+		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 3;
 				*dist = tmpdist;
@@ -110,6 +99,27 @@ inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int laye
 	return vid;
 }
 
+void setRotation(vec3* vec, vec3* rotation) {
+	float rotated;
+	float cosCamX = cos(rotation->x);
+	float cosCamY = cos(rotation->y);
+	//float cosCamZ = cos(angle.z);
+	float sinCamX = sin(rotation->x);
+	float sinCamY = sin(rotation->y);
+	//float sinCamZ = sin(angle.z);
+
+	/*(p.x * cosCamZ + p.y * sinCamZ, p.y * cosCamZ - p.x * sinCamZ);
+	vec->x = rotated.x;
+	vec->y = rotated.y;*/
+
+	rotated = vec->z * cosCamX + vec->y * sinCamX;
+	vec->y = vec->y * cosCamX - vec->z * sinCamX;
+	vec->z = rotated;
+
+	rotated = vec->x * cosCamY - vec->z * sinCamY;
+	vec->z = vec->z * cosCamY + vec->x * sinCamY;
+	vec->x = rotated;
+}
 
 void kernel render(const int spp, const int width, global byte* imgb, global float* scnf, global byte* voxsoct, const int octree_depth) {
 	//TODO: get it as an argument
@@ -130,15 +140,13 @@ void kernel render(const int spp, const int width, global byte* imgb, global flo
 	//pixel id
 	int off = get_global_id(0) * 3 + get_global_id(1) * width * 3;
 
-	//image scaling, in order to maintain constant aspect ratio (not working as it should)
-	float sx = 1.0f / (float)width;
-	float sy = 1.0f / (float)height;
-
 	//calculating ray direction based on pixel coordinates
+	const float scale = 0.8f;
+	const float imageAspectRatio = (float)width / (float)height;
 	vec3 dir;
-	dir.x = (float)get_global_id(0) * sx - 0.5f;
-	dir.y = (float)get_global_id(1) * sy - 0.5f;
-	dir.z = 1.0f;
+	dir.x = (2.0f * get_global_id(0) / (float)width - 1.0f) * imageAspectRatio * scale;
+	dir.y = (2.0f * get_global_id(1) / (float)height - 1.0f) * scale;
+	dir.z = 1;
 
 	//loading scene data
 	scene _scene;
@@ -146,6 +154,10 @@ void kernel render(const int spp, const int width, global byte* imgb, global flo
 
 	//background color
 	vec3 color = _scene.background;
+
+	//set the rotation of the camera rays 
+	vec3 rotation = { _scene.camera_direction.y, _scene.camera_direction.x, 0.0f };
+	setRotation(&dir, &rotation);
 
 	//preparing ray
 	Ray ray;
