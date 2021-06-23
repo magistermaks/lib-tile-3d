@@ -56,6 +56,8 @@ cl::Kernel CLHelper::KernelProgramBuilder::get( const char* name ) {
 
 bool CLHelper::init() {
 
+	using cl_ctxprop = cl_context_properties;
+
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
 	cl::Platform platform;
@@ -79,6 +81,14 @@ bool CLHelper::init() {
 		return false;
 	}
 
+	// OpenCL/OpenGL shared context properties
+	cl_ctxprop properties[] = {
+		CL_GL_CONTEXT_KHR, GLHelper::getContext(),
+		CL_GLX_DISPLAY_KHR, GLHelper::getDisplay(),
+		CL_CONTEXT_PLATFORM, (cl_ctxprop) (cl_platform_id) platform(),
+		0
+	};
+
 	// get default device of the default platform
 	std::vector<cl::Device> devices;
 	platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
@@ -92,7 +102,7 @@ bool CLHelper::init() {
 		logger::info("Found " + std::to_string(count) + " OpenCL GPU device(s)");
 	}
 
-	cl::Context context( {devices[0]} );
+	cl::Context context( {devices[0]}, properties );
 
 	// set created context as default
 	if( cl::Context::setDefault(context) != context || cl::Device::setDefault(devices[0]) != devices[0] ) {
@@ -100,7 +110,53 @@ bool CLHelper::init() {
 		return false;
 	}
 
+	// check device extensions
+	getExtensions(true);
+
 	return true;
+
+}
+
+CLHelper::Extensions CLHelper::getExtensions( bool scan ) {
+	
+	static Extensions exts;
+
+	if( scan ) {
+
+		int used = 0, supported = 0;
+		bool success = true;
+		std::string list;
+
+		auto extension = [&] ( std::string& str, bool& ext, std::string name, bool required ) {
+			supported ++;
+		
+			if( ext = stx::includes( str, name ) ) {
+				used ++;
+				list += name + " ";
+			}else if(required) {
+				logger::error( "Required extension '" + name + "' not supported!" );
+				success = false;
+			}
+
+		};
+
+		cl::Device device = cl::Device::getDefault();
+		std::string str = device.getInfo<CL_DEVICE_EXTENSIONS>();
+
+		// test extensions
+		extension( str, exts.ext_khr_gl_sharing, "cl_khr_gl_sharing", true );
+
+		// print status
+		if( success ) {
+			logger::info( "Using " + std::to_string(used) + " extension(s): " + list );
+		}else{
+			logger::fatal( "Some required extensions are missing!" );
+			throw std::runtime_error("Unsupported extensions!");
+		}
+
+	}
+
+	return exts;
 
 }
 

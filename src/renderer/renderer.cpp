@@ -21,8 +21,7 @@ Canvas::~Canvas() {
 }
 
 void Canvas::update( byte* buffer ) {
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, tex );
+	this->bind();
 
 	/* C++20: [[unlikely]] */ 
 	if( this->fresh ) {
@@ -36,6 +35,11 @@ void Canvas::update( byte* buffer ) {
 
 GLuint Canvas::id() {
 	return this->tex;
+}
+
+void Canvas::bind() {
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D, this->tex );
 }
 
 byte* Canvas::allocate( int width, int height ) {
@@ -103,7 +107,6 @@ void RenderSystem::drawScreen( Canvas& canvas ) {
 	this->vertex(  1,  1,  1,  1 );
 	this->vertex( -1,  1,  0,  1 );
 	this->draw();
-
 }
 
 void RenderSystem::draw() {
@@ -129,6 +132,13 @@ void RenderSystem::draw() {
 		vertices.clear();
 
 	}
+}
+
+void RenderSystem::flush() {
+
+	// glFlush() can also be used on SOME drivers,
+	// not flushing at all can work but depends on undefined behaviour.
+	glFinish();
 
 }
 

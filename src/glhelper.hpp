@@ -46,6 +46,10 @@ namespace GLHelper {
 	bool init(int, int, const char*);
 	void frame();
 
+	// platform specific
+	cl_context_properties getContext();
+	cl_context_properties getDisplay();
+
 	ShaderProgram loadShaders( std::string );
 
 }

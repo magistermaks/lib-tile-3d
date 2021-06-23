@@ -19,7 +19,7 @@ private:
 	glm::vec3 camrot;
 	float mouse_sensivity = 0.2f;
 	float movement_sensitivity = 15.0f;
-	float invertX = -1.0f, invertY = 1.0f;
+	float invertX = 1.0f, invertY = -1.0f;
 
 	double lastFrame;
 	double deltaTime;
@@ -30,7 +30,7 @@ private:
 public:
 	Camera( CameraMode cammode, GLFWwindow* glwindow );
 	glm::vec3 update( GLFWwindow* glwindow );
-	glm::vec3 getPosition();
-	glm::vec3 getRotation();
+	glm::vec3& getPosition();
+	glm::vec3& getRotation();
 
 };

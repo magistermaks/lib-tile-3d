@@ -7,22 +7,44 @@
 // OpenCL
 //#define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 200
+#define CL_USE_DEPRECATED_OPENCL_1_1_APIS
 
 // OpenCL is a little broken
 #pragma GCC diagnostic ignored "-Wignored-attributes"
+
+// This is concern
+#ifdef __linux__
+#	define GLFW_EXPOSE_NATIVE_GLX
+#	define GLFW_EXPOSE_NATIVE_X11
+#	define Region RegionX11
+#	define Glyph GlyphX11
+#endif
+
+#ifdef _WIN32
+#	define GLFW_EXPOSE_NATIVE_WGL
+#	define GLFW_EXPOSE_NATIVE_WIN32
+#endif
+
+#include <opencl/opencl.hpp>
 
 // external
 #include <stb/image.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <murmur-3/murmur.hpp>
 #include <thread_pool/thread_pool.hpp>
-#include <opencl/opencl.hpp>
+#include <stx/string.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#ifdef __linux__
+#	undef Region
+#	undef Glyph
+#endif
 
 // C++
 #include <vector>

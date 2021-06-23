@@ -58,6 +58,7 @@ add_definitions(
 add_executable(main 
 	external/murmur-3/murmur.cpp
 	external/thread_pool/thread_pool.cpp
+	external/stx/string.cpp
 
 	src/util/charset.cpp
 

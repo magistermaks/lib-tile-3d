@@ -29,7 +29,7 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 	windowHandle = glfwCreateWindow( width, height, name, NULL, NULL);
 
-	//glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
+	glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetInputMode(windowHandle, GLFW_STICKY_KEYS, GL_TRUE);
 
 	if( windowHandle == NULL ) {
@@ -89,6 +89,32 @@ void GLHelper::frame() {
 	// clear the screen and depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+}
+
+cl_context_properties GLHelper::getContext() {
+	#ifdef __linux__
+		return (cl_context_properties) glXGetCurrentContext();
+	#endif
+
+	#ifdef _WIN32
+		return (cl_context_properties) wglGetCurrentContext();
+	#endif
+
+	logger::fatal("Unable to get OpenGL context on unsupported system!");
+	throw std::runtime_error("Unsupported OS!");
+}
+
+cl_context_properties GLHelper::getDisplay() {
+	#ifdef __linux__
+		return (cl_context_properties) glXGetCurrentDisplay();
+	#endif
+
+	#ifdef _WIN32
+		return (cl_context_properties) wglGetCurrentDC();
+	#endif
+
+	logger::fatal("Unable to get display context on unsupported system!");
+	throw std::runtime_error("Unsupported OS!");
 }
 
 void GLHelper::getError( const char* origin ) {

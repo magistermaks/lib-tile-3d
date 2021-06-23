@@ -38,7 +38,7 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 	*dist = max(txmin, tzmin);
 
-	return (tzmax >= 0) && (txmin <= tzmax) && (tzmin <= txmax);
+	return (txmax >= 0) && (tzmax >= 0) && (txmin <= tzmax) && (tzmin <= txmax);
 
 }
 
@@ -121,18 +121,18 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-void kernel render(const int spp, const int width, global byte* imgb, global float* scnf, global byte* voxsoct, const int octree_depth) {
-	//TODO: get it as an argument
-	int height = 768;
+void kernel render(const int spp, const int width, const int height, write_only image2d_t imgb, global float* scnf, global byte* voxsoct, const int octree_depth) {
 
 	// Epic ChadRayFrameworkX
 	//   pixel x : get_global_id(0)
 	//   pixel y : get_global_id(1)
+	//   samples : spp
 	//   width   : width
+	//   height  : height
 	//   texture : imgb
 	//   scene   : scnf
-	//   samples : spp
 	//   voxels  : voxsoct
+	//   depth   : octree_depth
 
 	//chunk size, cannot be smaller than 2^octree_depth
 	//TODO: automate
@@ -297,7 +297,12 @@ void kernel render(const int spp, const int width, global byte* imgb, global flo
 		color.z = voxsoct[index + 2];
 	}
 
-	imgb[off + 0] = (byte)color.x;
-	imgb[off + 1] = (byte)color.y;
-	imgb[off + 2] = (byte)color.z;
+	int2 coor = { get_global_id(0), get_global_id(1) };
+	float4 colr = { color.x / 255.0, color.y / 255.0, color.z / 255.0, 0 };
+
+	write_imagef( imgb, coor, colr );
+
+//	imgb[off + 0] = (byte)color.x;
+//	imgb[off + 1] = (byte)color.y;
+//	imgb[off + 2] = (byte)color.z;
 }

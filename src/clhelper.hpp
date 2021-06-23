@@ -21,7 +21,13 @@ namespace CLHelper {
 			bool isOk();
 	};
 
+	struct Extensions {
+		bool ext_khr_gl_sharing;
+	};
+
 	bool init();
+	Extensions getExtensions( bool scan = false );
+
 	cl::Kernel loadKernel( std::string, std::string );
 
 }

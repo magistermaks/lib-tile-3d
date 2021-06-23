@@ -105,11 +105,11 @@ glm::vec3 Camera::update(GLFWwindow* glwindow) {
 	return glm::vec3(0);
 }
 
-glm::vec3 Camera::getPosition() {
+glm::vec3& Camera::getPosition() {
 	return this->pos;
 }
 
-glm::vec3 Camera::getRotation() {
+glm::vec3& Camera::getRotation() {
 	return this->camrot;
 }
 

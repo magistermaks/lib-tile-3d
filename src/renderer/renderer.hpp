@@ -20,6 +20,7 @@ class Canvas {
 		~Canvas();
 
 		void update( byte* data );
+		void bind();
 		GLuint id();
 
 		static byte* allocate( int, int );
@@ -55,6 +56,9 @@ class RenderSystem {
 
 		// draw queued quads
 		void draw();
+
+		// wait for opengl
+		void flush();
 
 		// get instance of RenderSystem
 		static RenderSystem& instance();

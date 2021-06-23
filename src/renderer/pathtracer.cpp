@@ -45,13 +45,12 @@ void PathTracer::resize( int w, int h ) {
 	this->width = w;
 	this->height = h;
 	this->size = w * h * 3 * sizeof(byte);
-
-	this->buffer = cl::Buffer(CL_MEM_WRITE_ONLY, this->size);
 	this->range = cl::NDRange(w, h);
 
 	// texture to draw on
 	this->texture = Canvas::allocate(w, h);
 	this->canvas = new Canvas(w, h);
+	this->canvas->update(this->texture);
 
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, scene->size());
 
@@ -59,15 +58,19 @@ void PathTracer::resize( int w, int h ) {
 	const int len = (1 - pow(8, (this->octree_depth + 1))) / -7;
 	this->voxel_buffer = cl::Buffer(CL_MEM_READ_ONLY, len * 4 * sizeof(byte));
 
+	this->image_buffer = cl::Image2DGL( cl::Context::getDefault(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, this->canvas->id() );
+	this->object_array = { this->image_buffer };
+
 	// static args
 	this->kernel.setArg(0, this->spp);
 	this->kernel.setArg(1, w);
-	this->kernel.setArg(2, this->buffer);
-	this->kernel.setArg(5, this->octree_depth);
+	this->kernel.setArg(2, h);
+	this->kernel.setArg(3, this->image_buffer);
+	this->kernel.setArg(6, this->octree_depth);
 	
 	// those ones need to be send every time they change
-	this->kernel.setArg(3, scene_buffer);
-	this->kernel.setArg(4, voxel_buffer);
+	this->kernel.setArg(4, scene_buffer);
+	this->kernel.setArg(5, voxel_buffer);
 	
 	// send data to buffers in the GPU, do this every time the data changes
 	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, scene->size(), scene->ptr());
@@ -76,31 +79,36 @@ void PathTracer::resize( int w, int h ) {
 
 void PathTracer::updateCamera( Camera& camera ) {
 
-	// update origin
-	glm::vec3 cam = camera.getPosition();
-	scene->setCameraOrigin( cam.x, cam.y, cam.z );
-	cam = camera.getRotation();
-	scene->setCameraDirection( cam.x, cam.y, cam.z );
+	auto& pos = camera.getPosition();
+	scene->setCameraOrigin( pos.x, pos.y, pos.z );
 
-	// send to GPU
+	auto& rot = camera.getRotation();
+	scene->setCameraDirection( rot.x, rot.y, rot.z );
+
+	// send to kernel
 	this->queue.enqueueWriteBuffer(scene_buffer, CL_TRUE, 0, scene->size(), scene->ptr());
 }
 
 void PathTracer::render( Camera& camera ) {
 
+	auto& renderer = RenderSystem::instance();
+
+	// make sure OpenGL won't try reading from buffers while we modify them
+	renderer.flush();
+
 	// update camera
 	this->updateCamera(camera);
+
+	// acquire texture handle
+	this->queue.enqueueAcquireGLObjects(&object_array);
 
 	// add kernel execution to the queue
 	this->queue.enqueueNDRangeKernel(this->kernel, cl::NullRange, this->range, cl::NullRange);
 
-    // read result from the device to the texture
-    this->queue.enqueueReadBuffer(this->buffer, CL_TRUE, 0, this->size, this->texture);
+    // release texture handle
+	this->queue.enqueueReleaseGLObjects(&object_array);
 
-	// update texture
-	this->canvas->update(this->texture);
-
-	// draw
+	// draw to screen
 	RenderSystem::instance().drawScreen(*canvas);
 
 }
