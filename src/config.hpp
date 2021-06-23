@@ -16,6 +16,7 @@
 #ifdef __linux__
 #	define GLFW_EXPOSE_NATIVE_GLX
 #	define GLFW_EXPOSE_NATIVE_X11
+#	define CL_DISPLAY_KHR CL_GLX_DISPLAY_KHR
 #	define Region RegionX11
 #	define Glyph GlyphX11
 #endif
@@ -23,6 +24,7 @@
 #ifdef _WIN32
 #	define GLFW_EXPOSE_NATIVE_WGL
 #	define GLFW_EXPOSE_NATIVE_WIN32
+#	define CL_DISPLAY_KHR CL_WGL_HDC_KHR
 #endif
 
 #include <opencl/opencl.hpp>

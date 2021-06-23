@@ -84,7 +84,7 @@ bool CLHelper::init() {
 	// OpenCL/OpenGL shared context properties
 	cl_ctxprop properties[] = {
 		CL_GL_CONTEXT_KHR, GLHelper::getContext(),
-		CL_GLX_DISPLAY_KHR, GLHelper::getDisplay(),
+		CL_DISPLAY_KHR, GLHelper::getDisplay(),
 		CL_CONTEXT_PLATFORM, (cl_ctxprop) (cl_platform_id) platform(),
 		0
 	};
@@ -103,6 +103,11 @@ bool CLHelper::init() {
 	}
 
 	cl::Context context( {devices[0]}, properties );
+
+	if( context() == 0 ) {
+		logger::fatal("Failed to create OpenCL context!");
+		return false;
+	}
 
 	// set created context as default
 	if( cl::Context::setDefault(context) != context || cl::Device::setDefault(devices[0]) != devices[0] ) {
