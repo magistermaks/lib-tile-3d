@@ -4,6 +4,7 @@
 Canvas::Canvas( int width, int height ) {
 	this->width = width;
 	this->height = height;
+	this->fresh = true;
 
 	glGenTextures(1, &tex);  
 
@@ -28,8 +29,9 @@ void Canvas::update( byte* buffer ) {
 		this->fresh = false;
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer );
 	}else{
-		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
 	}
+
 }
 
 GLuint Canvas::id() {
@@ -92,7 +94,6 @@ void RenderSystem::drawText( const std::string& text, float x, float y, float si
 	}
 
 	this->draw();
-
 }
 
 void RenderSystem::drawScreen( Canvas& canvas ) {
@@ -102,6 +103,7 @@ void RenderSystem::drawScreen( Canvas& canvas ) {
 	this->vertex(  1,  1,  1,  1 );
 	this->vertex( -1,  1,  0,  1 );
 	this->draw();
+
 }
 
 void RenderSystem::draw() {
@@ -127,6 +129,7 @@ void RenderSystem::draw() {
 		vertices.clear();
 
 	}
+
 }
 
 RenderSystem& RenderSystem::instance() {

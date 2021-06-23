@@ -91,7 +91,7 @@ void GLHelper::frame() {
 
 }
 
-void GLHelper::getError() {
+void GLHelper::getError( const char* origin ) {
 	GLenum err = glGetError();
 
 	std::string name;
@@ -108,8 +108,10 @@ void GLHelper::getError() {
 		default: name = "UNKNOWN";
 	}
 
+	std::string location = origin == nullptr ? "" : std::string(". from: ") + origin;
+
 	if( err != GL_NO_ERROR ) {
-		logger::warn( "OpenGL Error: " + std::to_string(err) + ", " + name + "!" );
+		logger::warn( "OpenGL Error: " + std::to_string(err) + ", " + name + location + "!" );
 	}
 }
 
