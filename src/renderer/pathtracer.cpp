@@ -91,6 +91,23 @@ void PathTracer::updateCamera( Camera& camera ) {
 
 void PathTracer::render( Camera& camera ) {
 
+	static bool pressed = false;
+
+	if( glfwGetKey(GLHelper::window(), GLFW_KEY_TAB) == GLFW_PRESS ) {
+		if( !pressed ) {
+			if( octree_depth > 1 ) {
+				octree_depth --;
+			}else{
+				octree_depth = 6;
+			}
+
+			this->kernel.setArg(6, this->octree_depth);
+			pressed = true;
+		}
+	}else{
+		pressed = false;
+	}
+
 	auto& renderer = RenderSystem::instance();
 
 	// make sure OpenGL won't try reading from buffers while we modify them

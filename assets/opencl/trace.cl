@@ -54,7 +54,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[1].y = csize + y;
 	bounds[1].z = csize + z;
 
-	if ((octree[(layerid) * 4 + 3]) > 128 && ((*mask >> id) & 1) == 1)
+	if ((octree[(layerid) * 4 + 3]) > 0 && ((*mask >> id) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
@@ -65,7 +65,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].x = csize + x;
 	bounds[1].x = csize * 2 + x;
 
-	if ((octree[(layerid + 1) * 4 + 3]) > 128 && ((*mask >> (id + 1)) & 1) == 1)
+	if ((octree[(layerid + 1) * 4 + 3]) > 0 && ((*mask >> (id + 1)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
@@ -77,7 +77,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].z = csize + z;
 	bounds[1].z = csize * 2 + z;
 
-	if ((octree[(layerid + 2) * 4 + 3]) > 128 && ((*mask >> (id + 2)) & 1) == 1)
+	if ((octree[(layerid + 2) * 4 + 3]) > 0 && ((*mask >> (id + 2)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 2;
@@ -88,7 +88,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].x = x;
 	bounds[1].x = csize + x;
 
-	if ((octree[(layerid + 3) * 4 + 3]) > 128 && ((*mask >> (id + 3)) & 1) == 1)
+	if ((octree[(layerid + 3) * 4 + 3]) > 0 && ((*mask >> (id + 3)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 3;
@@ -303,7 +303,7 @@ void kernel render(const int spp, const int width, const int height, write_only 
 	}
 
 	const int index = ((1 - pow8) / -7 + globalid) * 4;
-	if (depth >= octree_depth + 1 && voxsoct[index + 3] > 128) {
+	if (depth >= octree_depth + 1 && voxsoct[index + 3] > 0) {
 		color.x = voxsoct[index];
 		color.y = voxsoct[index + 1];
 		color.z = voxsoct[index + 2];

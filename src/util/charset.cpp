@@ -1,21 +1,6 @@
 
 #include "charset.hpp"
 
-// ugly but whatever
-//FT_Library& freetype_get() {
-//	static FT_Library library;
-//	static bool uninitialized = true;
-//	
-//	if( uninitialized ) {
-//		if( FT_Init_FreeType( &library ) ) {
-//			logger::error( "Could not initialize FreeType library!" );
-//		}
-//	}
-//
-//	uninitialized = false;
-//	return library;
-//}
-
 Charset::Charset( const char* path, int size ) {
 	
 	int w, h, n;

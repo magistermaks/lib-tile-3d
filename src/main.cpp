@@ -8,7 +8,7 @@ int main() {
 
 	const int width = 1024;
 	const int height = 768;
-	const int octree_depth = 6; // (value) 3 - (edge length) 8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
+	int octree_depth = 6; // (value) 3 - (edge length) 8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
 
 	// print cwd, nice for debugging
 	char tmp[ CWD_MAX_PATH ];
@@ -23,8 +23,20 @@ int main() {
 
 	logger::info("Generating voxel data...");
 
-	byte* arr1 = Chunk::allocate( octree_depth );
+	//byte* arr1 = Chunk::allocate( octree_depth );
 	//Chunk::genBall( arr1, 0, 40 );
+
+	VoxelTree tree(6);
+	tree.set(0,0,0,{255, 0, 0, 255});
+	tree.set(1,1,0,{0, 255, 0, 255});
+	tree.set(2,2,0,{0, 0, 255, 255});
+	//tree.set(2,2,0,{0, 0, 255, 0});
+
+	tree.set(3,3,0,{255, 255, 0, 255});
+	tree.set(4,4,0,{0, 255, 255, 255});
+	tree.set(5,5,0,{255, 0, 255, 255});
+
+	byte* arr1 = tree.data();
 
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
