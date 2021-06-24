@@ -116,52 +116,23 @@ bool CLHelper::init() {
 	}
 
 	// check device extensions
-	getExtensions(true);
-
-	return true;
-
-}
-
-CLHelper::Extensions CLHelper::getExtensions( bool scan ) {
-	
-	static Extensions exts;
-
-	if( scan ) {
-
-		int used = 0, supported = 0;
-		bool success = true;
-		std::string list;
-
-		auto extension = [&] ( std::string& str, bool& ext, std::string name, bool required ) {
-			supported ++;
-		
-			if( ext = stx::includes( str, name ) ) {
-				used ++;
-				list += name + " ";
-			}else if(required) {
-				logger::error( "Required extension '" + name + "' not supported!" );
-				success = false;
-			}
-
-		};
-
-		cl::Device device = cl::Device::getDefault();
-		std::string str = device.getInfo<CL_DEVICE_EXTENSIONS>();
-
-		// test extensions
-		extension( str, exts.ext_khr_gl_sharing, "cl_khr_gl_sharing", true );
-
-		// print status
-		if( success ) {
-			logger::info( "Using " + std::to_string(used) + " extension(s): " + list );
-		}else{
-			logger::fatal( "Some required extensions are missing!" );
-			throw std::runtime_error("Unsupported extensions!");
+	bool success = true;
+	auto extension = [&] ( std::string& str, std::string name ) {
+		if( !stx::includes( str, name ) ) {
+			logger::error( "Required extension '" + name + "' not supported!" );
+			success = false;
 		}
+	};
 
+	std::string extensions = devices[0].getInfo<CL_DEVICE_EXTENSIONS>();
+	extension( extensions, "cl_khr_gl_sharing" );
+
+	if( !success ) {
+		logger::fatal( "Some required extensions are missing!" );
+		return false;
 	}
 
-	return exts;
+	return true;
 
 }
 

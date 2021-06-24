@@ -2,34 +2,29 @@
 
 #include "config.hpp"
 
-enum CameraMode {
-	orbit,
-	fpv
-};
-
 class Camera {
 
 private:
-	CameraMode mode;
-
-	glm::vec2 prevCursorPos;
-	glm::vec2 cameraRot;
-	glm::vec2 cursorStartPos;
+	glm::vec2 angle;
+	glm::vec2 cursor;
 	glm::vec3 pos;
-	glm::vec3 camrot;
-	float mouse_sensivity = 0.2f;
-	float movement_sensitivity = 15.0f;
-	float invertX = 1.0f, invertY = -1.0f;
+	glm::vec3 rotation;
 
-	double lastFrame;
-	double deltaTime;
+	float sensivity;
+	float speed;
 
-	glm::mat4 orbit();
-	glm::vec3 fpv( GLFWwindow* glwindow );
+	double last_frame;
+	double delta_time;
+
+	void updateTime();
+	static void getCursorPos( float* x, float* y );
 
 public:
-	Camera( CameraMode cammode, GLFWwindow* glwindow );
-	glm::vec3 update( GLFWwindow* glwindow );
+	Camera( float sensivity = 0.2f, float speed = 15.0f );
+
+	void move( const glm::vec3&	pos );
+	void update();
+
 	glm::vec3& getPosition();
 	glm::vec3& getRotation();
 

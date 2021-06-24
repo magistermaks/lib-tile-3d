@@ -40,8 +40,6 @@
 #include <murmur-3/murmur.hpp>
 #include <thread_pool/thread_pool.hpp>
 #include <stx/string.hpp>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 
 #ifdef __linux__
 #	undef Region

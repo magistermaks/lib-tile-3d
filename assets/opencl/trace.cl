@@ -42,7 +42,7 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 }
 
-inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist, byte* mask) {
+byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist, byte* mask) {
 	byte vid = 255;
 	float tmpdist;
 	layerid += globalid + id;
@@ -101,16 +101,12 @@ inline byte test_octree(vec3 bounds[2], int csize, global byte* octree, int laye
 
 void setRotation(vec3* vec, vec3* rotation) {
 	float rotated;
+
 	float cosCamX = cos(rotation->x);
 	float cosCamY = cos(rotation->y);
-	//float cosCamZ = cos(angle.z);
+
 	float sinCamX = sin(rotation->x);
 	float sinCamY = sin(rotation->y);
-	//float sinCamZ = sin(angle.z);
-
-	/*(p.x * cosCamZ + p.y * sinCamZ, p.y * cosCamZ - p.x * sinCamZ);
-	vec->x = rotated.x;
-	vec->y = rotated.y;*/
 
 	rotated = vec->z * cosCamX + vec->y * sinCamX;
 	vec->y = vec->y * cosCamX - vec->z * sinCamX;
@@ -121,7 +117,7 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-void kernel render(const int spp, const int width, const int height, write_only image2d_t imgb, global float* scnf, global byte* voxsoct, const int octree_depth) {
+void kernel render(const int spp, const int width, const int height, write_only image2d_t img, global float* scnf, global byte* voxsoct, const int octree_depth) {
 
 	// Epic ChadRayFrameworkX
 	//   pixel x : get_global_id(0)
@@ -129,37 +125,40 @@ void kernel render(const int spp, const int width, const int height, write_only 
 	//   samples : spp
 	//   width   : width
 	//   height  : height
-	//   texture : imgb
+	//   texture : img
 	//   scene   : scnf
 	//   voxels  : voxsoct
 	//   depth   : octree_depth
 
-	//chunk size, cannot be smaller than 2^octree_depth
-	//TODO: automate
+	// chunk size, cannot be smaller than 2^octree_depth
+	// TODO: automate
 	int _csize = 128;
-	//pixel id
-	int off = get_global_id(0) * 3 + get_global_id(1) * width * 3;
 
-	//calculating ray direction based on pixel coordinates
+	int2 pos = { 
+		get_global_id(0),
+		get_global_id(1) 
+	};
+
+	// calculating ray direction based on pixel coordinates
 	const float scale = 0.8f;
 	const float imageAspectRatio = (float)width / (float)height;
 	vec3 dir;
-	dir.x = (2.0f * get_global_id(0) / (float)width - 1.0f) * imageAspectRatio * scale;
-	dir.y = (2.0f * get_global_id(1) / (float)height - 1.0f) * scale;
+	dir.x = (2.0f * pos.x / (float) width - 1.0f) * imageAspectRatio * scale;
+	dir.y = (2.0f * pos.y / (float) height - 1.0f) * scale;
 	dir.z = 1;
 
-	//loading scene data
+	// loading scene data
 	scene _scene;
 	load_scene(&_scene, scnf);
 
-	//background color
+	// background color
 	vec3 color = _scene.background;
 
-	//set the rotation of the camera rays 
+	// set the rotation of the camera rays 
 	vec3 rotation = { _scene.camera_direction.y, _scene.camera_direction.x, 0.0f };
 	setRotation(&dir, &rotation);
 
-	//preparing ray
+	// preparing ray
 	Ray ray;
 	ray.orig = _scene.camera_origin;
 	ray.invdir.x = 1 / dir.x;
@@ -169,66 +168,79 @@ void kernel render(const int spp, const int width, const int height, write_only 
 	ray.sign[1] = (ray.invdir.y < 0);
 	ray.sign[2] = (ray.invdir.z < 0);
 
-	//some variables used later
+	// some variables used later
 	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
-	//distance to the nearest voxel (computed while octree traversal)
+
+	// distance to the nearest voxel (computed while octree traversal)
 	float dist = 0xffffff;
-	//id of hit voxel (from 0 to 7, 255 = miss)
+
+	// id of hit voxel (from 0 to 7, 255 = miss)
 	byte oc = 255;
-	//coordinates of the currently tested octant
+
+	// coordinates of the currently tested octant
 	int xo = 0, yo = 0, zo = 0;
-	//size of the currently tested octant
+
+	// size of the currently tested octant
 	int csize = _csize;
-	//id of tested voxel relative to the start of the currently tested level
+
+	// id of tested voxel relative to the start of the currently tested level
 	int globalid = 0;
-	//id of the first element in the currently tested level
+
+	// id of the first element in the currently tested level
 	int layerindex = 1;
-	//the power of 8 calculated progressively
+
+	// the power of 8 calculated progressively
 	int pow8 = 1;
 
-	//store alternate nodes in case of ray miss
+	// store alternate nodes in case of ray miss
 	Data alt_data[10];
 	for (int d = 0; d <= octree_depth; d++) {
 		alt_data[d].mask = 0b11111111;
 	}
 
-	//currently tested level
+	// currently tested level
 	int depth = 1;
 	for (; depth <= octree_depth; depth++) {
-		//get a data container that corresponds to the level of tested node 
+
+		// get a data container that corresponds to the level of tested node 
 		Data* ad = &(alt_data[depth]);
 
-		//store variables in case of having to choose a different path 
+		// store variables in case of having to choose a different path 
 		ad->globalid = globalid;
 		ad->csize = csize;
 		ad->layerindex = layerindex;
 
-		//clearing the closest distance to the voxel
+		// clearing the closest distance to the voxel
 		dist = 0xffffff;
-		//decreasing octant size
+
+		// decreasing octant size
 		csize /= 2;
-		//entry to the area where children will be tested
+
+		// entry to the area where children will be tested
 		globalid = globalid * 8;
 
-		//test first 4 octants
+		// test first 4 octants
 		oc = test_octree(bounds, csize, voxsoct, layerindex, &ray, xo, yo, zo, 0, globalid, &dist, &(ad->mask));
-		//test next 4 octants
+
+		// test next 4 octants
 		byte oc1 = test_octree(bounds, csize, voxsoct, layerindex, &ray, xo, yo + csize, zo, 4, globalid, &dist, &(ad->mask));
 
-		//store variables in case of having to choose a different path 
+		// store variables in case of having to choose a different path 
 		ad->pow8 = pow8;
 		ad->xo = xo;
 		ad->yo = yo;
 		ad->zo = zo;
 
-		//checking if ray from the second test hit anything
+		// checking if ray from the second test hit anything
 		if (oc1 != 255) oc = oc1;
-		//move to the next child (by the id of the one that got intersected)
+
+		// move to the next child (by the id of the one that got intersected)
 		globalid += oc;
 
-		//if intersected anything
+		// if intersected anything
 		if (oc != 255) {
-			//move coordinates of the currently tested octant
+
+			// move coordinates of the currently tested octant
 			switch (oc) {
 				case 1:
 					xo += csize;
@@ -297,12 +309,13 @@ void kernel render(const int spp, const int width, const int height, write_only 
 		color.z = voxsoct[index + 2];
 	}
 
-	int2 coor = { get_global_id(0), get_global_id(1) };
-	float4 colr = { color.x / 255.0, color.y / 255.0, color.z / 255.0, 0 };
+	float4 colr = { 
+		color.x * (1.0f / 255.0f), 
+		color.y * (1.0f / 255.0f), 
+		color.z * (1.0f / 255.0f), 
+		0 
+	};
 
-	write_imagef( imgb, coor, colr );
+	write_imagef( img, pos, colr );
 
-//	imgb[off + 0] = (byte)color.x;
-//	imgb[off + 1] = (byte)color.y;
-//	imgb[off + 2] = (byte)color.z;
 }

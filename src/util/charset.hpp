@@ -2,8 +2,6 @@
 
 #include "../config.hpp"
 
-FT_Library& freetype();
-
 struct Glyph {
 
 	// Offset to advance to next glyph
@@ -17,8 +15,6 @@ struct Glyph {
 
 	// Offset from baseline to left/top of glyph
 	//glm::ivec2 bearing;
-
-
 
 };
 

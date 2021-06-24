@@ -8,15 +8,13 @@ int main() {
 
 	const int width = 1024;
 	const int height = 768;
-	const int octree_depth = 6; //(value)3 - (edge length)8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
+	const int octree_depth = 6; // (value) 3 - (edge length) 8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
 
 	// print cwd, nice for debugging
-	{  
-		char temp[ CWD_MAX_PATH ];
-		logger::info( "Current working directory: '" + std::string( POSIX_GETCWD(temp, sizeof(temp)) ? temp : "" ) + "'" );
-	}
+	char tmp[ CWD_MAX_PATH ];
+	logger::info("Current working directory: '" + std::string( POSIX_GETCWD(tmp, sizeof(tmp)) ? tmp : "" ) + "'");
 
-	// initilize GLFW, GLEW, and OpenGL
+	// initilize GLFW, GLEW, OpenGL, and OpenCL
 	if( !GLHelper::init(width, height, "lib-tile-3d") ) {
 		return -1;
 	}
@@ -50,25 +48,29 @@ int main() {
 	long count = 0, fps = 0, ms = 0;
 
 	// enable shader program
-	auto& rs = RenderSystem::instance();
-	rs.setShader(program);
+	auto& renderer = RenderSystem::instance();
+	renderer.setShader(program);
 
-	Camera camera(CameraMode::fpv, window);
+	Camera camera;
+
+	// move the camera so that we don't start inside a black cube
+	camera.move( glm::vec3(1, 1, -10) );
  
 	do {
 
 		auto start = Clock::now();
 
+		// update the fps count
 		if( last != time(0) ) {
 			last = time(0);
 			fps = count;
 			count = 0;
 		}
 
-		camera.update( window );
+		camera.update();
 		tracer.render( camera );
 
-		rs.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
+		renderer.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
 
 		GLHelper::frame();
 		count ++;

@@ -1,3 +1,4 @@
+
 #include "glhelper.hpp"
 
 GLFWwindow* windowHandle = NULL;
