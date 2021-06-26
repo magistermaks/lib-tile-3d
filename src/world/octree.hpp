@@ -25,7 +25,12 @@ class VoxelTree {
 		VoxelTreeNode* buffer;
 
 		const int depth, size;
+		bool modified;
 
+		// mark a spot in the tree as dirty (modified)
+		void mark( size_t pos );
+		void unmark();
+	
 	public:
 
 		VoxelTree( const int depth );
@@ -37,7 +42,8 @@ class VoxelTree {
 		// set voxel in tree
 		void set( const int x, const int y, const int z, const VoxelTreeNode& node );
 
-		// get data pointer
+		// data getters
+		bool dirty();
 		byte* data();
 
 };

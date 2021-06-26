@@ -13,6 +13,9 @@ VoxelTree::VoxelTree( const int depth ) : depth(depth), size( std::pow(2, depth)
 	// clear allocated tree buffer
 	memset(this->buffer, 0, length * sizeof(VoxelTreeNode));
 
+	// update range
+	this->modified = true;
+
 }
 
 VoxelTree::~VoxelTree() {
@@ -75,8 +78,7 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 			}
 		}
 
-		if( sign != 0 ) nodes[i - 1] = buffer + layerindex + globalid;
-
+		nodes[i - 1] = buffer + layerindex + globalid;
 		pow8 *= 8;
 		layerindex += pow8;
 
@@ -91,7 +93,7 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 
 	// apply sign changes to affected branches
 	if( sign != 0 && (node->empty() ? -1 : +1) != sign ) {
-		int v = sign == -1 ? 1 : 0;
+		const int v = sign == -1 ? 1 : 0;
 
 		for( int i = this->depth - 2; i >= 0; i -- ) {
 			auto* node = nodes[i];
@@ -105,7 +107,7 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 		}
 	}
 
-	delete nodes;
+	delete[] nodes;
 
 	// return node pointer
 	return node;
@@ -113,13 +115,22 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 
 void VoxelTree::set( const int x, const int y, const int z, const VoxelTreeNode& node ) {
 
-	VoxelTreeNode* ptr = get(x, y, z, node.empty() ? -1 : +1 );
+	VoxelTreeNode* ptr = get(x, y, z, node.empty() ? -1 : +1);
 
 	// copy given node into the tree
 	memcpy( ptr, &node, sizeof(VoxelTreeNode) );
 
+	this->modified = true;
+
+}
+
+bool VoxelTree::dirty() {
+	bool flag = this->modified;
+	this->modified = false;
+	return flag;
 }
 
 byte* VoxelTree::data() {
 	return (byte*) this->buffer;
 }
+

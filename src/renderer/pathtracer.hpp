@@ -5,6 +5,7 @@
 class Canvas;
 class Camera;
 class Scene;
+class VoxelTree;
 
 class PathTracer {
 
@@ -16,6 +17,7 @@ class PathTracer {
 
 		cl::Buffer voxel_buffer;
 		cl::Buffer scene_buffer;
+		cl::Buffer chunk_buffer;
 		cl::Image2DGL image_buffer; 
 		std::vector<cl::Memory> object_array;
 
@@ -23,16 +25,19 @@ class PathTracer {
 		cl::NDRange range;
 
 		byte* texture = nullptr;
-		byte* octree;
-		int octree_depth = 6;
+		int octree_depth = 6, chunk_count = 0;
 
 		Scene* scene;
 		Canvas* canvas;
 
 	public:
 
-		PathTracer( int spp, int w, int h, byte* chunk, int octree_depth );
+		PathTracer( int spp, int w, int h, int octree_depth );
 		~PathTracer();
+
+		void resizeVoxels( size_t size );
+		void updateVoxels( size_t offset, size_t count, byte* ptr );
+		void updateChunks( size_t count, float* ptr );
 
 		void resize( int, int );
 		void updateCamera( Camera& );

@@ -36,15 +36,19 @@ int main() {
 	tree.set(4,4,0,{0, 255, 255, 255});
 	tree.set(5,5,0,{255, 0, 255, 255});
 
-	byte* arr1 = tree.data();
-
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
-	Region region;
-	PathTracer tracer( 8, width, height, arr1, octree_depth );
+	PathTracer tracer( 8, width, height, 6 );
+	ChunkManager manager( tracer );
+
+	Region region( manager );
+	region.put( nullptr, 0, 0, 0 );
+	//region.put( nullptr, 1, 0, 0 );
+
+	region.chunk(0,0,0)->tree = &tree;
 
 	Charset charset( "assets/8x8font.png" );
 
@@ -68,9 +72,17 @@ int main() {
 	// move the camera so that we don't start inside a black cube
 	camera.move( glm::vec3(1, 1, -10) );
  
+	//size_t c = 0;
+
 	do {
 
 		auto start = Clock::now();
+
+		//if( c < 100 * 10 ) {
+		tree.set( rand() % 65, rand() % 65, rand() % 65, {
+			((byte) rand()), ((byte) rand()), ((byte) rand()), 255
+		} ); 
+		//c ++; }
 
 		// update the fps count
 		if( last != time(0) ) {
@@ -79,6 +91,7 @@ int main() {
 			count = 0;
 		}
 
+		manager.update();
 		camera.update();
 		tracer.render( camera );
 
