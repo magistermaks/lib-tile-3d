@@ -4,7 +4,6 @@
 Canvas::Canvas( int width, int height ) {
 	this->width = width;
 	this->height = height;
-	this->fresh = true;
 
 	glGenTextures(1, &tex);  
 
@@ -14,6 +13,9 @@ Canvas::Canvas( int width, int height ) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// initialize an empty texture
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
 }
 
 Canvas::~Canvas() {
@@ -22,15 +24,7 @@ Canvas::~Canvas() {
 
 void Canvas::update( byte* buffer ) {
 	this->bind();
-
-	/* C++20: [[unlikely]] */ 
-	if( this->fresh ) {
-		this->fresh = false;
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer );
-	}else{
-		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
-	}
-
+	glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
 }
 
 GLuint Canvas::id() {

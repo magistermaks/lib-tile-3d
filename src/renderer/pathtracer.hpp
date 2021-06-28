@@ -11,7 +11,7 @@ class PathTracer {
 
 	private:
 		
-		unsigned int spp, width, height, size;
+		unsigned int spp, width, height;
 		
 		cl::Kernel kernel;
 
@@ -24,7 +24,6 @@ class PathTracer {
 		cl::CommandQueue queue;
 		cl::NDRange range;
 
-		byte* texture = nullptr;
 		int octree_depth = 6, chunk_count = 0;
 
 		Scene* scene;

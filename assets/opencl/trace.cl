@@ -117,7 +117,7 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-void kernel render( const int spp, const int width, const int height, write_only image2d_t img, global float* scnf, global byte* voxsoct, global float* chunks, const int octree_depth, const int chunk_count ) {
+void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t img, global float* scnf, global byte* voxsoct, global float* chunks ) {
 
 	// Epic ChadRayFrameworkX
 	//   pixel x : get_global_id(0)

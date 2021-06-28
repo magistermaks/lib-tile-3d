@@ -26,10 +26,6 @@ class VoxelTree {
 
 		const int depth, size;
 		bool modified;
-
-		// mark a spot in the tree as dirty (modified)
-		void mark( size_t pos );
-		void unmark();
 	
 	public:
 

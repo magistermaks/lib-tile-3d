@@ -8,7 +8,6 @@ int main() {
 
 	const int width = 1024;
 	const int height = 768;
-	int octree_depth = 6; // (value) 3 - (edge length) 8, 4 - 16, 5 - 32, 6 - 64, 7 - 128, 8 - 256
 
 	// print cwd, nice for debugging
 	char tmp[ CWD_MAX_PATH ];
@@ -21,34 +20,28 @@ int main() {
 	
 	GLFWwindow* window = GLHelper::window();
 
-	logger::info("Generating voxel data...");
-
-	//byte* arr1 = Chunk::allocate( octree_depth );
-	//Chunk::genBall( arr1, 0, 40 );
-
-	VoxelTree tree(6);
-	tree.set(0,0,0,{255, 0, 0, 255});
-	tree.set(1,1,0,{0, 255, 0, 255});
-	tree.set(2,2,0,{0, 0, 255, 255});
-	//tree.set(2,2,0,{0, 0, 255, 0});
-
-	tree.set(3,3,0,{255, 255, 0, 255});
-	tree.set(4,4,0,{0, 255, 255, 255});
-	tree.set(5,5,0,{255, 0, 255, 255});
-
 	// compile GLSL program from the shaders
 	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
+	logger::info("Generating voxel data...");
+
 	PathTracer tracer( 8, width, height, 6 );
 	ChunkManager manager( tracer );
 
 	Region region( manager );
 	region.put( nullptr, 0, 0, 0 );
-	//region.put( nullptr, 1, 0, 0 );
+	region.put( nullptr, 1, 0, 0 );
 
-	region.chunk(0,0,0)->tree = &tree;
+	VoxelTree& tree = *region.chunk(0, 0, 0)->tree;
+
+	tree.set(0,0,0,{255, 0, 0, 255});
+	tree.set(1,1,0,{0, 255, 0, 255});
+	tree.set(2,2,0,{0, 0, 255, 255});
+	tree.set(3,3,0,{255, 255, 0, 255});
+	tree.set(4,4,0,{0, 255, 255, 255});
+	tree.set(5,5,0,{255, 0, 255, 255});
 
 	Charset charset( "assets/8x8font.png" );
 

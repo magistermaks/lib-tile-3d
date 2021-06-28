@@ -27,6 +27,15 @@
 #	define CL_DISPLAY_KHR CL_WGL_HDC_KHR
 #endif
 
+// set to CL_TRUE or CL_FALSE
+// defines if OpenCL implementation should copy the given buffer before 
+// sending it to the GPU. it sounds like a really cpu and memory heavy
+// operation but I haven't observed any significant performance
+// impact so i disabled it for the time being, as it can introduce
+// problems if the buffer to be sent is modified (or deleted) between
+// issuing the copy command and the execution of the OpenCL kernel
+#define OPENCL_COPY_ON_WRITE CL_TRUE
+
 #include <opencl/opencl.hpp>
 
 // external
