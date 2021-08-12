@@ -25,12 +25,20 @@ std::string std::to_string( const ChunkPos& pos ) {
 	return std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z);
 }
 
-void Region::put( Voxel* chunk, int x, int y, int z ) {
-	this->map[ ChunkPos(x, y, z) ] = new Chunk(chunk, this, x, y, z);
+Region::Region( ChunkManager& manager ) : manager(manager) {
+
+}
+
+void Region::put( Voxel* __unused__, int x, int y, int z ) {
+	Chunk* chunk = new Chunk(this, x, y, z);
+	this->map[ ChunkPos(x, y, z) ] = chunk;
+	this->manager.add( chunk );
 }
 
 void Region::remove( int x, int y, int z ) {
-	this->map.erase( ChunkPos(x, y, z) );
+	ChunkPos pos = ChunkPos(x, y, z);
+	this->manager.remove( this->map[ pos ] );
+	this->map.erase( pos );
 }
 
 Chunk* Region::chunk( int x, int y, int z ) {
@@ -52,5 +60,7 @@ void Region::clear() {
 	}
 
 	this->map.clear();
+	this->manager.clear();
+	this->manager.shrink();
 }
 

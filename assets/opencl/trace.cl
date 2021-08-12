@@ -54,7 +54,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[1].y = csize + y;
 	bounds[1].z = csize + z;
 
-	if ((octree[(layerid) * 4 + 3]) > 128 && ((*mask >> id) & 1) == 1)
+	if ((octree[(layerid) * 4 + 3]) > 0 && ((*mask >> id) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
@@ -65,7 +65,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].x = csize + x;
 	bounds[1].x = csize * 2 + x;
 
-	if ((octree[(layerid + 1) * 4 + 3]) > 128 && ((*mask >> (id + 1)) & 1) == 1)
+	if ((octree[(layerid + 1) * 4 + 3]) > 0 && ((*mask >> (id + 1)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
@@ -77,7 +77,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].z = csize + z;
 	bounds[1].z = csize * 2 + z;
 
-	if ((octree[(layerid + 2) * 4 + 3]) > 128 && ((*mask >> (id + 2)) & 1) == 1)
+	if ((octree[(layerid + 2) * 4 + 3]) > 0 && ((*mask >> (id + 2)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 2;
@@ -88,7 +88,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].x = x;
 	bounds[1].x = csize + x;
 
-	if ((octree[(layerid + 3) * 4 + 3]) > 128 && ((*mask >> (id + 3)) & 1) == 1)
+	if ((octree[(layerid + 3) * 4 + 3]) > 0 && ((*mask >> (id + 3)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 3;
@@ -117,61 +117,11 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-void kernel render(const int spp, const int width, const int height, write_only image2d_t img, global float* scnf, global byte* voxsoct, const int octree_depth) {
-
-	// Epic ChadRayFrameworkX
-	//   pixel x : get_global_id(0)
-	//   pixel y : get_global_id(1)
-	//   samples : spp
-	//   width   : width
-	//   height  : height
-	//   texture : img
-	//   scene   : scnf
-	//   voxels  : voxsoct
-	//   depth   : octree_depth
-
-	// chunk size, cannot be smaller than 2^octree_depth
-	// TODO: automate
-	int _csize = 128;
-
-	int2 pos = { 
-		get_global_id(0),
-		get_global_id(1) 
-	};
-
-	// calculating ray direction based on pixel coordinates
-	const float scale = 0.8f;
-	const float imageAspectRatio = (float)width / (float)height;
-	vec3 dir;
-	dir.x = (2.0f * pos.x / (float) width - 1.0f) * imageAspectRatio * scale;
-	dir.y = (2.0f * pos.y / (float) height - 1.0f) * scale;
-	dir.z = 1;
-
-	// loading scene data
-	scene _scene;
-	load_scene(&_scene, scnf);
-
-	// background color
-	vec3 color = _scene.background;
-
-	// set the rotation of the camera rays 
-	vec3 rotation = { _scene.camera_direction.y, _scene.camera_direction.x, 0.0f };
-	setRotation(&dir, &rotation);
-
-	// preparing ray
-	Ray ray;
-	ray.orig = _scene.camera_origin;
-	ray.invdir.x = 1 / dir.x;
-	ray.invdir.y = 1 / dir.y;
-	ray.invdir.z = 1 / dir.z;
-	ray.sign[0] = (ray.invdir.x < 0);
-	ray.sign[1] = (ray.invdir.y < 0);
-	ray.sign[2] = (ray.invdir.z < 0);
+void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth ) {
 
 	// some variables used later
 	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
 
-	// distance to the nearest voxel (computed while octree traversal)
 	float dist = 0xffffff;
 
 	// id of hit voxel (from 0 to 7, 255 = miss)
@@ -181,7 +131,9 @@ void kernel render(const int spp, const int width, const int height, write_only 
 	int xo = 0, yo = 0, zo = 0;
 
 	// size of the currently tested octant
-	int csize = _csize;
+	// chunk size, cannot be smaller than 2^octree_depth
+	// TODO: do something smart with this
+	int csize = 128;
 
 	// id of tested voxel relative to the start of the currently tested level
 	int globalid = 0;
@@ -220,10 +172,10 @@ void kernel render(const int spp, const int width, const int height, write_only 
 		globalid = globalid * 8;
 
 		// test first 4 octants
-		oc = test_octree(bounds, csize, voxsoct, layerindex, &ray, xo, yo, zo, 0, globalid, &dist, &(ad->mask));
+		oc = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + cy, zo + cz, 0, globalid, &dist, &(ad->mask));
 
 		// test next 4 octants
-		byte oc1 = test_octree(bounds, csize, voxsoct, layerindex, &ray, xo, yo + csize, zo, 4, globalid, &dist, &(ad->mask));
+		byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + csize + cy, zo + cz, 4, globalid, &dist, &(ad->mask));
 
 		// store variables in case of having to choose a different path 
 		ad->pow8 = pow8;
@@ -273,7 +225,7 @@ void kernel render(const int spp, const int width, const int height, write_only 
 				case 7:
 					yo += csize;
 					zo += csize;
-					break;
+						break;
 
 				default:
 					break;
@@ -284,8 +236,7 @@ void kernel render(const int spp, const int width, const int height, write_only 
 			pow8 *= 8;
 			layerindex += pow8;
 
-		}
-		else {
+		} else {
 			if (alt_data[1].mask == 0 || depth == 1)
 				break;
 
@@ -302,11 +253,87 @@ void kernel render(const int spp, const int width, const int height, write_only 
 		}
 	}
 
-	const int index = ((1 - pow8) / -7 + globalid) * 4;
-	if (depth >= octree_depth + 1 && voxsoct[index + 3] > 128) {
-		color.x = voxsoct[index];
-		color.y = voxsoct[index + 1];
-		color.z = voxsoct[index + 2];
+	if( dist < *max_dist ) {
+		*max_dist = dist;
+
+		const int index = ((1 - pow8) / -7 + globalid) * 4;
+		if (depth >= octree_depth + 1 && octree[index + 3] > 0) {
+			output->x = octree[index];
+			output->y = octree[index + 1];
+			output->z = octree[index + 2];
+		}
+	}
+}
+
+void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
+
+	// Epic ChadRayFrameworkX
+	//   pixel x       : get_global_id(0)
+	//   pixel y       : get_global_id(1)
+	//   samples/pixel : spp
+	//   width         : image width
+	//   height        : image height
+	//   output image  : image
+	//   scene         : scnf
+	//   octree array  : octrees 
+	//   depth         : octree_depth (<= 6)
+	//   chunk count   : chunk_count
+	//   chunk offsets : chunks 
+
+	int2 pos = { 
+		get_global_id(0),
+		get_global_id(1) 
+	};
+
+	// calculating ray direction based on pixel coordinates
+	const float scale = 0.8f;
+	const float aspect_ratio = (float) width / (float) height;
+
+	vec3 dir;
+	dir.x = (2.0f * pos.x / (float) width - 1.0f) * aspect_ratio * scale;
+	dir.y = (2.0f * pos.y / (float) height - 1.0f) * scale;
+	dir.z = 1;
+
+	// load scene data
+	Scene scene;
+	load_scene(&scene, scnf);
+
+	// background color
+	vec3 color = scene.background;
+
+	// set the rotation of the camera rays 
+	vec3 rotation = { scene.camera_direction.y, scene.camera_direction.x, 0.0f };
+	setRotation(&dir, &rotation);
+
+	// preparing ray
+	Ray ray;
+	ray.orig = scene.camera_origin;
+	ray.invdir.x = 1 / dir.x;
+	ray.invdir.y = 1 / dir.y;
+	ray.invdir.z = 1 / dir.z;
+	ray.sign[0] = (ray.invdir.x < 0);
+	ray.sign[1] = (ray.invdir.y < 0);
+	ray.sign[2] = (ray.invdir.z < 0);
+
+	float max_dist = 0xffffff;
+
+	// iterate all chunks
+	for( int chunk = 0; chunk < chunk_count; chunk ++ ) {
+		
+		// read chunk offset from chunks array
+		float cx = chunks[chunk * 3 + 0] * 2;
+		float cy = chunks[chunk * 3 + 1] * 2;
+		float cz = chunks[chunk * 3 + 2] * 2;
+
+		// get pointer to octree of given chunk
+		// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
+		global byte* octree = octrees + (chunk * 299593 * 4);
+
+		// render the chunk
+		// internally updates `max_dist`
+		// TODO: test if chunk intersects with ray
+		render_chunk( cx, cy, cz, &ray, octree, &max_dist, &color, octree_depth );
+
 	}
 
 	float4 colr = { 
@@ -316,6 +343,6 @@ void kernel render(const int spp, const int width, const int height, write_only 
 		0 
 	};
 
-	write_imagef( img, pos, colr );
+	write_imagef( image, pos, colr );
 
 }

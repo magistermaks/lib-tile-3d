@@ -4,7 +4,8 @@
 
 class Chunk;
 class Region;
-
+class ChunkManager;
+	
 struct ChunkPos {
 	int x, y, z;
 
@@ -29,8 +30,11 @@ class Region {
 
 	private:
 		std::unordered_map< ChunkPos, Chunk* > map;
+		ChunkManager& manager;
 
 	public:
+
+		Region( ChunkManager& );
 
 		/// add chunk to region, expects chunk to be on the heap
 		void put( Voxel* chunk, int x, int y, int z );

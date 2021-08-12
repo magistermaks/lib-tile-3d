@@ -11,7 +11,6 @@ class Canvas {
 	private:
 
 		int width, height;
-		bool fresh;
 		GLuint tex;
 
 	public:

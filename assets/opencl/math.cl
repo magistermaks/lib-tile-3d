@@ -20,7 +20,7 @@ typedef struct {
 	vec3 ambient_light;
 	vec3 sky_light;
 	vec3 background;
-} scene;
+} Scene;
 
 // macro used for generic vector-vector math
 #define vvopt( ap, bp, out, opt ) \
@@ -42,7 +42,7 @@ void load_vec3( vec3* v, global float* arr ) {
 }
 
 // load scene from float array
-void load_scene( scene* s, global float* arr ) {
+void load_scene( Scene* s, global float* arr ) {
 	load_vec3( &(s->camera_origin),    arr + 0 * 3 );
 	load_vec3( &(s->camera_direction), arr + 1 * 3 );
 	load_vec3( &(s->ambient_light),    arr + 2 * 3 );
