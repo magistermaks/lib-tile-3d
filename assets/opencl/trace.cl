@@ -174,140 +174,167 @@ void kernel render( const int spp, const int width, const int height, const int 
 	// distance to the nearest voxel (computed while octree traversal)
 	float dist = 0xffffff;
 
-	// id of hit voxel (from 0 to 7, 255 = miss)
-	byte oc = 255;
+	// length of the buffer used to store one octree
+	// derived from: `Sn = (1 - q^n) / (1 - q)`
+//	const int octree_chunk_size = (1 - pow(8, (octree_depth + 1))) / -7;
+	const int octree_chunk_size = 299593;
 
-	// coordinates of the currently tested octant
-	int xo = 0, yo = 0, zo = 0;
+//	chunk_count = 2;
+	float cdist = 0xffffff;
 
-	// size of the currently tested octant
-	int csize = _csize;
+	// iterate all chunks
+	for( int chunk = 0; chunk < chunk_count; chunk ++ ) {
+		
+		// get chunk offset
+		float cx = chunks[chunk * 3 + 0] * 2;
+		float cy = chunks[chunk * 3 + 1] * 2;
+		float cz = chunks[chunk * 3 + 2] * 2;
 
-	// id of tested voxel relative to the start of the currently tested level
-	int globalid = 0;
+		// octree of given chunk
+		global byte* octree = voxsoct + (chunk * 4 * octree_chunk_size);
 
-	// id of the first element in the currently tested level
-	int layerindex = 1;
+		// id of hit voxel (from 0 to 7, 255 = miss)
+		byte oc = 255;
 
-	// the power of 8 calculated progressively
-	int pow8 = 1;
+		// coordinates of the currently tested octant
+		int xo = 0, yo = 0, zo = 0;
 
-	// store alternate nodes in case of ray miss
-	Data alt_data[10];
-	for (int d = 0; d <= octree_depth; d++) {
-		alt_data[d].mask = 0b11111111;
-	}
+		// size of the currently tested octant
+		int csize = _csize;
 
-	// currently tested level
-	int depth = 1;
-	for (; depth <= octree_depth; depth++) {
+		// id of tested voxel relative to the start of the currently tested level
+		int globalid = 0;
 
-		// get a data container that corresponds to the level of tested node 
-		Data* ad = &(alt_data[depth]);
+		// id of the first element in the currently tested level
+		int layerindex = 1;
 
-		// store variables in case of having to choose a different path 
-		ad->globalid = globalid;
-		ad->csize = csize;
-		ad->layerindex = layerindex;
+		// the power of 8 calculated progressively
+		int pow8 = 1;
 
-		// clearing the closest distance to the voxel
-		dist = 0xffffff;
+		//dist = 0xffffff;
 
-		// decreasing octant size
-		csize /= 2;
+		// store alternate nodes in case of ray miss
+		Data alt_data[10];
+		for (int d = 0; d <= octree_depth; d++) {
+			alt_data[d].mask = 0b11111111;
+		}
 
-		// entry to the area where children will be tested
-		globalid = globalid * 8;
+		// currently tested level
+		int depth = 1;
+		for (; depth <= octree_depth; depth++) {
 
-		// test first 4 octants
-		oc = test_octree(bounds, csize, voxsoct, layerindex, &ray, xo, yo, zo, 0, globalid, &dist, &(ad->mask));
+			// get a data container that corresponds to the level of tested node 
+			Data* ad = &(alt_data[depth]);
 
-		// test next 4 octants
-		byte oc1 = test_octree(bounds, csize, voxsoct, layerindex, &ray, xo, yo + csize, zo, 4, globalid, &dist, &(ad->mask));
+			// store variables in case of having to choose a different path 
+			ad->globalid = globalid;
+			ad->csize = csize;
+			ad->layerindex = layerindex;
 
-		// store variables in case of having to choose a different path 
-		ad->pow8 = pow8;
-		ad->xo = xo;
-		ad->yo = yo;
-		ad->zo = zo;
+			// clearing the closest distance to the voxel
+			dist = 0xffffff;
 
-		// checking if ray from the second test hit anything
-		if (oc1 != 255) oc = oc1;
+			// decreasing octant size
+			csize /= 2;
 
-		// move to the next child (by the id of the one that got intersected)
-		globalid += oc;
+			// entry to the area where children will be tested
+			globalid = globalid * 8;
 
-		// if intersected anything
-		if (oc != 255) {
+			// test first 4 octants
+			oc = test_octree(bounds, csize, octree, layerindex, &ray, xo + cx, yo + cy, zo + cz, 0, globalid, &dist, &(ad->mask));
 
-			// move coordinates of the currently tested octant
-			switch (oc) {
-				case 1:
-					xo += csize;
+			// test next 4 octants
+			byte oc1 = test_octree(bounds, csize, octree, layerindex, &ray, xo + cx, yo + csize + cy, zo + cz, 4, globalid, &dist, &(ad->mask));
+
+			// store variables in case of having to choose a different path 
+			ad->pow8 = pow8;
+			ad->xo = xo;
+			ad->yo = yo;
+			ad->zo = zo;
+
+			// checking if ray from the second test hit anything
+			if (oc1 != 255) oc = oc1;
+
+			// move to the next child (by the id of the one that got intersected)
+			globalid += oc;
+
+			// if intersected anything
+			if (oc != 255) {
+
+				// move coordinates of the currently tested octant
+				switch (oc) {
+					case 1:
+						xo += csize;
+						break;
+
+					case 2:
+						xo += csize;
+						zo += csize;
+						break;
+
+					case 3:
+						zo += csize;
+						break;
+
+					case 4:
+						yo += csize;
+						break;
+
+					case 5:
+						xo += csize;
+						yo += csize;
+						break;
+
+					case 6:
+						xo += csize;
+						yo += csize;
+						zo += csize;
+						break;
+
+					case 7:
+						yo += csize;
+						zo += csize;
+						break;
+
+					default:
+						break;
+				}
+
+				ad->mask &= ~(1 << oc);
+				ad->oc = oc;
+				pow8 *= 8;
+				layerindex += pow8;
+
+			} else {
+				if (alt_data[1].mask == 0 || depth == 1)
 					break;
 
-				case 2:
-					xo += csize;
-					zo += csize;
-					break;
-
-				case 3:
-					zo += csize;
-					break;
-
-				case 4:
-					yo += csize;
-					break;
-
-				case 5:
-					xo += csize;
-					yo += csize;
-					break;
-
-				case 6:
-					xo += csize;
-					yo += csize;
-					zo += csize;
-					break;
-
-				case 7:
-					yo += csize;
-					zo += csize;
-					break;
-
-				default:
-					break;
+				ad->mask = 0b11111111;
+				ad = &(alt_data[depth - 1]);
+				pow8 = ad->pow8;
+				layerindex = ad->layerindex;
+				globalid = ad->globalid;
+				csize = ad->csize;
+				xo = ad->xo;
+				yo = ad->yo;
+				zo = ad->zo;
+				depth -= 2;
 			}
-
-			ad->mask &= ~(1 << oc);
-			ad->oc = oc;
-			pow8 *= 8;
-			layerindex += pow8;
-
 		}
-		else {
-			if (alt_data[1].mask == 0 || depth == 1)
-				break;
 
-			ad->mask = 0b11111111;
-			ad = &(alt_data[depth - 1]);
-			pow8 = ad->pow8;
-			layerindex = ad->layerindex;
-			globalid = ad->globalid;
-			csize = ad->csize;
-			xo = ad->xo;
-			yo = ad->yo;
-			zo = ad->zo;
-			depth -= 2;
+		if( dist < cdist ) {
+			cdist = dist;
+
+			const int index = ((1 - pow8) / -7 + globalid) * 4;
+			if (depth >= octree_depth + 1 && octree[index + 3] > 0) {
+				color.x = octree[index];
+				color.y = octree[index + 1];
+				color.z = octree[index + 2];
+			}
 		}
+
 	}
 
-	const int index = ((1 - pow8) / -7 + globalid) * 4;
-	if (depth >= octree_depth + 1 && voxsoct[index + 3] > 0) {
-		color.x = voxsoct[index];
-		color.y = voxsoct[index + 1];
-		color.z = voxsoct[index + 2];
-	}
 
 	float4 colr = { 
 		color.x * (1.0f / 255.0f), 

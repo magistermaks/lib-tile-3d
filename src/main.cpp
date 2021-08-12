@@ -43,6 +43,16 @@ int main() {
 	tree.set(4,4,0,{0, 255, 255, 255});
 	tree.set(5,5,0,{255, 0, 255, 255});
 
+	VoxelTree& tree2 = *region.chunk(1, 0, 0)->tree;
+
+	for( int x = 0; x < 64; x ++ ) {
+		for( int y = 0; y < 64; y ++ ) {
+			for( int z = 0; z < 64; z ++ ) {
+				tree2.set(x, y, z, {255, 255, 255, 255});
+			}
+		}
+	}
+
 	Charset charset( "assets/8x8font.png" );
 
 	/*for( int x = 0; x < 8; x ++ ) {
@@ -75,6 +85,7 @@ int main() {
 		tree.set( rand() % 65, rand() % 65, rand() % 65, {
 			((byte) rand()), ((byte) rand()), ((byte) rand()), 255
 		} ); 
+
 		//c ++; }
 
 		// update the fps count

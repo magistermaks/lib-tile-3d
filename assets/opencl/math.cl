@@ -98,3 +98,11 @@ inline real sclamp( real x ){
 	return x < 0 ? 0 : x > 1 ? 1 : x; 
 }
 
+inline real xyz_distance( real x1, real y1, real z1, real x2, real y2, real z2 ) {
+	real a = (x1 - x2);
+	real b = (y1 - y2);
+	real c = (z1 - z2);
+
+	return sqrt( a*a + b*b + c*c );
+}
+
