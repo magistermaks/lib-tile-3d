@@ -6,5 +6,3 @@ Voxel Engine
 python3 build.py --run
 ```
 
-### TODO
-- Path tracing on OpenCL/Compute Shaders
