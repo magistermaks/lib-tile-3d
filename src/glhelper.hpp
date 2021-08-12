@@ -9,7 +9,7 @@ namespace GLHelper {
 	GLFWwindow* window();
 
 	void vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size, GLboolean normalize = GL_FALSE );
-	void getError();
+	void getError( const char* name = nullptr );
 
 	class ShaderProgramBuilder {
 
@@ -44,7 +44,13 @@ namespace GLHelper {
 	};
 
 	bool init(int, int, const char*);
-	ShaderProgram loadShaders();
+	void frame();
+
+	// platform specific
+	cl_context_properties getContext();
+	cl_context_properties getDisplay();
+
+	ShaderProgram loadShaders( std::string );
 
 }
 

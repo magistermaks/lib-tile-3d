@@ -1,105 +1,125 @@
 
 #include "config.hpp"
 
-int main( void ) {
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/image.h>
+
+void gen_chunk(Region& region, int x, int y, int z) {
+	
+	region.put( nullptr, x, y, z );
+	VoxelTree& tree = *region.chunk(x, y, z)->tree;
+
+	for( int x = 0; x < 64; x ++ ) {
+		for( int y = 0; y < 50; y ++ ) {
+			for( int z = 0; z < 64; z ++ ) {
+				tree.set(x, y, z, {
+					((byte) rand()), ((byte) rand()), ((byte) rand()), 255
+				});
+			}
+		}
+	}
+
+
+}
+
+int main() {
 
 	const int width = 1024;
 	const int height = 768;
-	bool building = false;
 
 	// print cwd, nice for debugging
-	{  
-		char temp[ CWD_MAX_PATH ];
-		logger::info( "Current working directory: '" + std::string( POSIX_GETCWD(temp, sizeof(temp)) ? temp : "" ) + "'" );
-	}
+	char tmp[ CWD_MAX_PATH ];
+	logger::info("Current working directory: '" + std::string( POSIX_GETCWD(tmp, sizeof(tmp)) ? tmp : "" ) + "'");
 
-	// initilize GLFW, GLEW, and OpenGL
-	if( !GLHelper::init(width, height, "LibTile3D | FPS: 0") ) {
+	// initilize GLFW, GLEW, OpenGL, and OpenCL
+	if( !GLHelper::init(width, height, "lib-tile-3d") ) {
 		return -1;
 	}
 	
 	GLFWwindow* window = GLHelper::window();
 
-	logger::info("Generating voxel data...");
-
-	Voxel* arr1 = Chunk::allocate();
-	Chunk::genBall( arr1, 0, 40 );
-
 	// compile GLSL program from the shaders
-	GLHelper::ShaderProgram program = GLHelper::loadShaders();
+	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
-	Region region;
+	logger::info("Generating voxel data...");
 
-	for( int x = 0; x < 8; x ++ ) {
-		for( int y = 0; y < 1; y ++ ) {
-			for( int z = 0; z < 8; z ++ ) {
-				region.put( arr1, x, y, z );
-			}
+	PathTracer tracer( 8, width, height, 6 );
+	ChunkManager manager( tracer );
+
+	Region region( manager );
+	region.put( nullptr, 0, 0, 0 );
+
+	VoxelTree& tree = *region.chunk(0, 0, 0)->tree;
+
+	tree.set(0,0,0,{255, 0, 0, 255});
+	tree.set(1,1,0,{0, 255, 0, 255});
+	tree.set(2,2,0,{0, 0, 255, 255});
+	tree.set(3,3,0,{255, 255, 0, 255});
+	tree.set(4,4,0,{0, 255, 255, 255});
+	tree.set(5,5,0,{255, 0, 255, 255});
+
+	for( int x = -2; x <= 2; x ++ ) {
+		for( int z = -2; z <= 2; z ++ ) {
+			if( z ==  1 && x ==  0 ) continue;
+			if( x ==  0 && z ==  0 ) continue;
+			if( z == -1 && x ==  0 ) continue;
+			if( z ==  1 && x ==  1 ) continue;
+			if( z == -1 && x ==  1 ) continue;
+			if( z ==  1 && x == -1 ) continue;
+			if( z == -1 && x == -1 ) continue;
+			if( z ==  0 && x == -1 ) continue;
+			if( z ==  0 && x ==  1 ) continue;
+			
+			gen_chunk(region, x, 0, z);
 		}
 	}
 
-	logger::info("Generating vertex data...");
-	region.build();
-
-	// get locations from shader program
-	GLuint modelLoc = program.location("model");
-	GLuint viewLoc = program.location("view");
-	GLuint projectionLoc = program.location("projection");
+	Charset charset( "assets/8x8font.png" );
 
 	time_t last = 0;
-	long count = 0;
+	long count = 0, fps = 0, ms = 0;
 
 	// enable shader program
-	program.bind();
-	
-	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	auto& renderer = RenderSystem::instance();
+	renderer.setShader(program);
 
-	Camera camera(CameraMode::fpv, window);
+	Camera camera;
+
+	// move the camera so that we don't start inside a black cube
+	camera.move( glm::vec3(1, 150, 1) );
  
+	//size_t c = 0;
+
 	do {
 
-		region.update();
+		auto start = Clock::now();
 
-		glm::mat4 model = glm::mat4(1.0f);
+		//if( c < 100 * 10 ) {
+		tree.set( rand() % 65, rand() % 65, rand() % 65, {
+			((byte) rand()), ((byte) rand()), ((byte) rand()), 255
+		} ); 
 
+		//c ++; }
+
+		// update the fps count
 		if( last != time(0) ) {
-			std::string title = "LibTile3D | FPS: " + std::to_string(count);
-			glfwSetWindowTitle(window, title.c_str());
 			last = time(0);
+			fps = count;
 			count = 0;
 		}
 
-		// fancy location
-		glm::mat4 view = camera.update(window);
+		manager.update();
+		camera.update();
+		tracer.render( camera );
 
-		// clear the screen and depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		renderer.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
 
-		// pass matricies to GPU
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-		region.render( modelLoc );
-
-		// Swap buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-		GLHelper::getError();
-
+		GLHelper::frame();
 		count ++;
 
-		if( glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS ) {
-			if( !building ) {
-				logger::info("Generating vertex data...");
-				region.discard();
-				region.build();
-				building = true;
-			}
-		}else{
-			building = false;
-		}
+		ms = (ms + std::chrono::duration_cast<milliseconds>( Clock::now() - start ).count())/2;
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 

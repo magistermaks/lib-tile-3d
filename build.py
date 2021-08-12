@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 # load stuff
 import os
@@ -27,7 +28,7 @@ try:
 	os.remove(main)
 except:
 	pass
-os.system("cd build && make")
+os.system("cd build && make -j 4")
 
 if args.run:
 	print( "\nRunning Target..." )

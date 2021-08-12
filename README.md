@@ -6,6 +6,3 @@ Voxel Engine
 python3 build.py --run
 ```
 
-### TODO
-- Frustum chunk culling  
-- Lighting 
