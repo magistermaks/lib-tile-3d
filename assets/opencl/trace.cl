@@ -117,7 +117,7 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth ) {
+void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, int csize ) {
 
 	// some variables used later
 	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
@@ -129,11 +129,6 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 
 	// coordinates of the currently tested octant
 	int xo = 0, yo = 0, zo = 0;
-
-	// size of the currently tested octant
-	// chunk size, cannot be smaller than 2^octree_depth
-	// TODO: do something smart with this
-	int csize = 128;
 
 	// id of tested voxel relative to the start of the currently tested level
 	int globalid = 0;
@@ -289,6 +284,11 @@ void kernel render( const int spp, const int width, const int height, const int 
 	const float scale = 0.8f;
 	const float aspect_ratio = (float) width / (float) height;
 
+	// size of the currently tested octant
+	// chunk size, cannot be smaller than 2^octree_depth
+	// TODO: do something smart with this
+	const int csize = 128;
+
 	vec3 dir;
 	dir.x = (2.0f * pos.x / (float) width - 1.0f) * aspect_ratio * scale;
 	dir.y = (2.0f * pos.y / (float) height - 1.0f) * scale;
@@ -325,15 +325,19 @@ void kernel render( const int spp, const int width, const int height, const int 
 		float cy = chunks[chunk * 3 + 1] * 2;
 		float cz = chunks[chunk * 3 + 2] * 2;
 
-		// get pointer to octree of given chunk
-		// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
-		global byte* octree = octrees + (chunk * 299593 * 4);
+		vec3 bounds[2] = { { cx, cy, cz }, { cx + csize, cy + csize, cz + csize } };
+		float useless_distance = 0;
 
-		// render the chunk
-		// internally updates `max_dist`
-		// TODO: test if chunk intersects with ray
-		render_chunk( cx, cy, cz, &ray, octree, &max_dist, &color, octree_depth );
+		if ( intersect(&ray, bounds, &useless_distance )) {
 
+			// get pointer to octree of given chunk
+			// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
+			global byte* octree = octrees + (chunk * 299593 * 4);
+
+			// render the chunk
+			// internally updates `max_dist`
+			render_chunk( cx, cy, cz, &ray, octree, &max_dist, &color, octree_depth, csize );
+		}
 	}
 
 	float4 colr = { 
