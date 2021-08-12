@@ -20,7 +20,7 @@ typedef struct {
 	vec3 ambient_light;
 	vec3 sky_light;
 	vec3 background;
-} scene;
+} Scene;
 
 // macro used for generic vector-vector math
 #define vvopt( ap, bp, out, opt ) \
@@ -42,7 +42,7 @@ void load_vec3( vec3* v, global float* arr ) {
 }
 
 // load scene from float array
-void load_scene( scene* s, global float* arr ) {
+void load_scene( Scene* s, global float* arr ) {
 	load_vec3( &(s->camera_origin),    arr + 0 * 3 );
 	load_vec3( &(s->camera_direction), arr + 1 * 3 );
 	load_vec3( &(s->ambient_light),    arr + 2 * 3 );
@@ -96,13 +96,5 @@ inline real vdot( vec3* a, vec3* b ) {
 // clamps given real to range [0-1]
 inline real sclamp( real x ){ 
 	return x < 0 ? 0 : x > 1 ? 1 : x; 
-}
-
-inline real xyz_distance( real x1, real y1, real z1, real x2, real y2, real z2 ) {
-	real a = (x1 - x2);
-	real b = (y1 - y2);
-	real c = (z1 - z2);
-
-	return sqrt( a*a + b*b + c*c );
 }
 
