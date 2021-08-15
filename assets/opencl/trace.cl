@@ -7,18 +7,6 @@ typedef struct {
 	int sign[3];
 } Ray;
 
-typedef struct {
-	int xo;
-	int yo;
-	int zo;
-	int csize;
-	int globalid;
-	int layerindex;
-	int pow8;
-	byte oc;
-	byte mask;
-} Data;
-
 bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 	real txmin, txmax, tymin, tymax, tzmin, tzmax;
@@ -42,63 +30,6 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 }
 
-byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist, byte* mask) {
-	byte vid = 255;
-	float tmpdist;
-	layerid += globalid + id;
-
-	bounds[0].x = x;
-	bounds[0].y = y;
-	bounds[0].z = z;
-	bounds[1].x = csize + x;
-	bounds[1].y = csize + y;
-	bounds[1].z = csize + z;
-
-	if ((octree[(layerid) * 4 + 3]) > 0 && ((*mask >> id) & 1) == 1)
-		if (intersect(ray, bounds, &tmpdist)) {
-			if (*dist >= tmpdist) {
-				vid = id;
-				*dist = tmpdist;
-			}
-		}
-
-	bounds[0].x = csize + x;
-	bounds[1].x = csize * 2 + x;
-
-	if ((octree[(layerid + 1) * 4 + 3]) > 0 && ((*mask >> (id + 1)) & 1) == 1)
-		if (intersect(ray, bounds, &tmpdist)) {
-			if (*dist >= tmpdist) {
-				vid = id + 1;
-				*dist = tmpdist;
-			}
-		}
-
-	bounds[0].x = csize + x;
-	bounds[0].z = csize + z;
-	bounds[1].z = csize * 2 + z;
-
-	if ((octree[(layerid + 2) * 4 + 3]) > 0 && ((*mask >> (id + 2)) & 1) == 1)
-		if (intersect(ray, bounds, &tmpdist)) {
-			if (*dist >= tmpdist) {
-				vid = id + 2;
-				*dist = tmpdist;
-			}
-		}
-
-	bounds[0].x = x;
-	bounds[1].x = csize + x;
-
-	if ((octree[(layerid + 3) * 4 + 3]) > 0 && ((*mask >> (id + 3)) & 1) == 1)
-		if (intersect(ray, bounds, &tmpdist)) {
-			if (*dist >= tmpdist) {
-				vid = id + 3;
-				*dist = tmpdist;
-			}
-		}
-
-	return vid;
-}
-
 void setRotation(vec3* vec, vec3* rotation) {
 	float rotated;
 
@@ -115,149 +46,6 @@ void setRotation(vec3* vec, vec3* rotation) {
 	rotated = vec->x * cosCamY - vec->z * sinCamY;
 	vec->z = vec->z * cosCamY + vec->x * sinCamY;
 	vec->x = rotated;
-}
-
-void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, int csize ) {
-
-	// some variables used later
-	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
-
-	float dist = 0xffffff;
-
-	// id of hit voxel (from 0 to 7, 255 = miss)
-	byte oc = 255;
-
-	// coordinates of the currently tested octant
-	int xo = 0, yo = 0, zo = 0;
-
-	// id of tested voxel relative to the start of the currently tested level
-	int globalid = 0;
-
-	// id of the first element in the currently tested level
-	int layerindex = 1;
-
-	// the power of 8 calculated progressively
-	int pow8 = 1;
-
-	// store alternate nodes in case of ray miss
-	Data alt_data[10];
-	for (int d = 0; d <= octree_depth; d++) {
-		alt_data[d].mask = 0b11111111;
-	}
-
-	// currently tested level
-	int depth = 1;
-	for (; depth <= octree_depth; depth++) {
-
-		// get a data container that corresponds to the level of tested node 
-		Data* ad = &(alt_data[depth]);
-
-		// store variables in case of having to choose a different path 
-		ad->globalid = globalid;
-		ad->csize = csize;
-		ad->layerindex = layerindex;
-
-		// clearing the closest distance to the voxel
-		dist = 0xffffff;
-
-		// decreasing octant size
-		csize /= 2;
-
-		// entry to the area where children will be tested
-		globalid = globalid * 8;
-
-		// test first 4 octants
-		oc = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + cy, zo + cz, 0, globalid, &dist, &(ad->mask));
-
-		// test next 4 octants
-		byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + csize + cy, zo + cz, 4, globalid, &dist, &(ad->mask));
-
-		// store variables in case of having to choose a different path 
-		ad->pow8 = pow8;
-		ad->xo = xo;
-		ad->yo = yo;
-		ad->zo = zo;
-
-		// checking if ray from the second test hit anything
-		if (oc1 != 255) oc = oc1;
-
-		// move to the next child (by the id of the one that got intersected)
-		globalid += oc;
-
-		// if intersected anything
-		if (oc != 255) {
-
-			// move coordinates of the currently tested octant
-			switch (oc) {
-				case 1:
-					xo += csize;
-					break;
-
-				case 2:
-					xo += csize;
-					zo += csize;
-					break;
-
-				case 3:
-					zo += csize;
-					break;
-
-				case 4:
-					yo += csize;
-					break;
-
-				case 5:
-					xo += csize;
-					yo += csize;
-					break;
-
-				case 6:
-					xo += csize;
-					yo += csize;
-					zo += csize;
-					break;
-
-				case 7:
-					yo += csize;
-					zo += csize;
-						break;
-
-				default:
-					break;
-			}
-
-			ad->mask &= ~(1 << oc);
-			ad->oc = oc;
-			pow8 *= 8;
-			layerindex += pow8;
-
-		} else {
-			if (alt_data[1].mask == 0 || depth == 1)
-				break;
-
-			ad->mask = 0b11111111;
-			ad = &(alt_data[depth - 1]);
-			pow8 = ad->pow8;
-			layerindex = ad->layerindex;
-			globalid = ad->globalid;
-			csize = ad->csize;
-			xo = ad->xo;
-			yo = ad->yo;
-			zo = ad->zo;
-			depth -= 2;
-		}
-	}
-
-	if( dist < *max_dist ) {
-		*max_dist = dist;
-
-		const int index = ((1 - pow8) / -7 + globalid) * 4;
-		if (depth >= octree_depth + 1 && octree[index + 3] > 0) {
-			output->x = octree[index];
-			output->y = octree[index + 1];
-			output->z = octree[index + 2];
-		}
-	}
 }
 
 global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int size, float* dist, float len ) {
@@ -280,8 +68,8 @@ global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int 
 
 			if( intersect(ray, bounds, &tmp_dist) ) {
 
-				// >= ?
-				if( *dist > tmp_dist ) {
+				// TODO: why >=?
+				if( *dist >= tmp_dist ) {
 					*dist = tmp_dist;
 					branch = octree;
 					moved = pos;
@@ -290,6 +78,7 @@ global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int 
 			}
 		}
 
+		// move to the next child
 		octree += size;
 
 	}
@@ -310,7 +99,7 @@ global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int 
 
 }
 
-void render_xam_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* dist, vec3* output, int octree_depth, int __csize ) {
+void render_xam_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* dist, vec3* output ) {
 	
 	// the octree is empty
 	if( octree[0] == 0 ) {
@@ -324,7 +113,7 @@ void render_xam_chunk( float cx, float cy, float cz, Ray* ray, global byte* octr
 	int size = (octree_length - 1) >> 3;
 	vec3 chunk_pos = { cx, cy, cz };
 
-	global byte* voxel = render_xam_branch( chunk_pos, ray, octree + 1, size, &dist, 0.5f );
+	global byte* voxel = render_xam_branch( chunk_pos, ray, octree + 1, size, &dist, 128 );
 
 	if( voxel != 0 ) {
 		output->x = voxel[0];
@@ -357,6 +146,7 @@ void kernel render( const int spp, const int width, const int height, const int 
 	const float scale = 0.8f;
 	const float aspect_ratio = (float) width / (float) height;
 
+	// this isn't realy applicable anymore, remove in the future
 	// size of the currently tested octant
 	// chunk size, cannot be smaller than 2^octree_depth
 	// TODO: do something smart with this
@@ -389,6 +179,7 @@ void kernel render( const int spp, const int width, const int height, const int 
 	ray.sign[2] = (ray.invdir.z < 0);
 
 	float dist = 0xffffff;
+	float dummy = 0;
 
 	// iterate all chunks
 	for( int chunk = 0; chunk < chunk_count; chunk ++ ) {
@@ -399,17 +190,16 @@ void kernel render( const int spp, const int width, const int height, const int 
 		float cz = chunks[chunk * 3 + 2] * 2;
 
 		vec3 bounds[2] = { { cx, cy, cz }, { cx + csize, cy + csize, cz + csize } };
-		float useless_distance = 0;
 
-		if ( intersect(&ray, bounds, &useless_distance )) {
+		if( intersect(&ray, bounds, &dummy) ) {
 
 			// get pointer to octree of given chunk
 			// the 299593 is derived from: `((1 - pow(8, octree_depth + 1)) / -7)`
 			global byte* octree = octrees + (chunk * 299593 * 4);
 
 			// render the chunk
-			// internally updates `max_dist`
-			render_xam_chunk( cx, cy, cz, &ray, octree, &dist, &color, octree_depth, csize );
+			// internally updates `dist`
+			render_xam_chunk( cx, cy, cz, &ray, octree, &dist, &color );
 		}
 	}
 
