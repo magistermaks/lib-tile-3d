@@ -1,4 +1,5 @@
 
+#include "world/octree.hpp"
 #include "config.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -6,8 +7,8 @@
 
 void gen_chunk(Region& region, int x, int y, int z) {
 	
-	region.put( nullptr, x, y, z );
-	VoxelTree& tree = *region.chunk(x, y, z)->tree;
+	region.put( x, y, z );
+	auto& tree = *region.chunk(x, y, z)->tree;
 
 	for( int x = 0; x < 64; x ++ ) {
 		for( int y = 0; y < 50; y ++ ) {
@@ -49,9 +50,9 @@ int main() {
 	ChunkManager manager( tracer );
 
 	Region region( manager );
-	region.put( nullptr, 0, 0, 0 );
+	region.put( 0, 0, 0 );
 
-	VoxelTree& tree = *region.chunk(0, 0, 0)->tree;
+	auto& tree = *region.chunk(0, 0, 0)->tree;
 
 	tree.set(0,0,0,{255, 0, 0, 255});
 	tree.set(1,1,0,{0, 255, 0, 255});

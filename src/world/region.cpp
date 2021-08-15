@@ -29,7 +29,7 @@ Region::Region( ChunkManager& manager ) : manager(manager) {
 
 }
 
-void Region::put( Voxel* __unused__, int x, int y, int z ) {
+void Region::put( int x, int y, int z ) {
 	Chunk* chunk = new Chunk(this, x, y, z);
 	this->map[ ChunkPos(x, y, z) ] = chunk;
 	this->manager.add( chunk );

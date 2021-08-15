@@ -2,15 +2,15 @@
 #include "chunk.hpp"
 
 Chunk::Chunk( Region* region, int x, int y, int z ) : cx(x), cy(y), cz(z) {
-	this->tree = new VoxelTree(6);
+	this->tree = new Octree<OctreeVoxel>(6);
 	this->region = region;
 }
 
 Chunk::~Chunk() {
-	delete[] this->tree;
+	delete this->tree;
 }
 
-ChunkManager::ChunkManager( PathTracer& tracer ) : tracer(tracer), chunk_size( ((1 - pow(8, (6 + 1))) / -7) * sizeof(VoxelTreeNode) ) {
+ChunkManager::ChunkManager( PathTracer& tracer ) : tracer(tracer), chunk_size( Octree<OctreeVoxel>::sizeOf(6) ) {
 	this->length = 0;
 }
 

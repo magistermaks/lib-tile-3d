@@ -62,7 +62,6 @@ add_executable(main
 
 	src/world/chunk.cpp
 	src/world/region.cpp
-	src/world/octree.cpp
 
 	src/renderer/renderer.cpp
 	src/renderer/pathtracer.cpp

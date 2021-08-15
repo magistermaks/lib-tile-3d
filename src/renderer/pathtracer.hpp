@@ -1,11 +1,11 @@
 #pragma once
 
+//#include "../world/octree.hpp"
 #include "../config.hpp"
 
 class Canvas;
 class Camera;
 class Scene;
-class VoxelTree;
 
 class PathTracer {
 
