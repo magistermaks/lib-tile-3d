@@ -8,10 +8,8 @@ typedef struct {
 } Ray;
 
 typedef struct {
-	int xo;
-	int yo;
-	int zo;
-	int csize;
+	vec3 xyzo;
+	float csize;
 	int globalid;
 	int layerindex;
 	int pow8;
@@ -42,59 +40,61 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 }
 
-byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist, byte* mask) {
+byte test_octree(const float csize, global byte* octree, int layerid, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
+	if (id > 0)	xyz.y += csize;
+
 	byte vid = 255;
 	float tmpdist;
-	layerid += globalid + id;
+	layerid += id;
 
-	bounds[0].x = x;
-	bounds[0].y = y;
-	bounds[0].z = z;
-	bounds[1].x = csize + x;
-	bounds[1].y = csize + y;
-	bounds[1].z = csize + z;
+	vec3 bounds[2] = { xyz, { csize + xyz.x, csize + xyz.y, csize + xyz.z } };
 
-	if ((octree[(layerid) * 4 + 3]) > 0 && ((*mask >> id) & 1) == 1)
+	//layerid * 4 + 3
+	if ((octree[layerid * 4 + 3]) > 0 && ((mask >> id) & 1) == 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
 				*dist = tmpdist;
 			}
 		}
+	}
 
-	bounds[0].x = csize + x;
-	bounds[1].x = csize * 2 + x;
+	bounds[0].x = csize + xyz.x;
+	bounds[1].x = csize * 2 + xyz.x;
 
-	if ((octree[(layerid + 1) * 4 + 3]) > 0 && ((*mask >> (id + 1)) & 1) == 1)
+	//(layerid + 1) * 4 + 3
+	if ((octree[layerid * 4 + 7]) > 0 && ((mask >> (id + 1)) & 1) == 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
 				*dist = tmpdist;
 			}
 		}
+	}
 
-	bounds[0].x = csize + x;
-	bounds[0].z = csize + z;
-	bounds[1].z = csize * 2 + z;
+	bounds[0].z = csize + xyz.z;
+	bounds[1].z = csize * 2 + xyz.z;
 
-	if ((octree[(layerid + 2) * 4 + 3]) > 0 && ((*mask >> (id + 2)) & 1) == 1)
+	//(layerid + 2) * 4 + 3
+	if ((octree[layerid * 4 + 11]) > 0 && ((mask >> (id + 2)) & 1) == 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 2;
 				*dist = tmpdist;
 			}
 		}
-
-	bounds[0].x = x;
-	bounds[1].x = csize + x;
-
-	if ((octree[(layerid + 3) * 4 + 3]) > 0 && ((*mask >> (id + 3)) & 1) == 1)
+	}
+	//octree[(layerid + 3) * 4 + 3
+	if ((octree[layerid * 4 + 15]) > 0 && ((mask >> (id + 3)) & 1) == 1) {
+		bounds[0].x = xyz.x;
+		bounds[1].x = csize + xyz.x;
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 3;
 				*dist = tmpdist;
 			}
 		}
+	}
 
 	return vid;
 }
@@ -117,10 +117,7 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, int csize ) {
-
-	// some variables used later
-	vec3 bounds[2] = { { 0, 0, 0 }, { 1, 1, 1 } };
+void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, float csize) {
 
 	float dist = 0xffffff;
 
@@ -128,7 +125,7 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 	byte oc = 255;
 
 	// coordinates of the currently tested octant
-	int xo = 0, yo = 0, zo = 0;
+	vec3 xyzo = { 0, 0, 0 };
 
 	// id of tested voxel relative to the start of the currently tested level
 	int globalid = 0;
@@ -140,7 +137,7 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 	int pow8 = 1;
 
 	// store alternate nodes in case of ray miss
-	Data alt_data[10];
+	Data alt_data[7];
 	for (int d = 0; d <= octree_depth; d++) {
 		alt_data[d].mask = 0b11111111;
 	}
@@ -156,30 +153,29 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 		ad->globalid = globalid;
 		ad->csize = csize;
 		ad->layerindex = layerindex;
+		ad->pow8 = pow8;
+		ad->xyzo = xyzo;
 
 		// clearing the closest distance to the voxel
 		dist = 0xffffff;
 
 		// decreasing octant size
-		csize /= 2;
+		csize /= 2.0f;
 
 		// entry to the area where children will be tested
-		globalid = globalid * 8;
+		globalid *= 8;
 
 		// test first 4 octants
-		oc = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + cy, zo + cz, 0, globalid, &dist, &(ad->mask));
+		if ((ad->mask & 0b00001111) != 0)
+			oc = test_octree(csize, octree, layerindex + globalid, ray, add(&xyzo, &xyzc), 0, &dist, ad->mask);
 
 		// test next 4 octants
-		byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + csize + cy, zo + cz, 4, globalid, &dist, &(ad->mask));
+		if ((ad->mask & 0b11110000) != 0) {
+			byte oc1 = test_octree(csize, octree, layerindex + globalid, ray, add(&xyzo, &xyzc), 4, &dist, ad->mask);
 
-		// store variables in case of having to choose a different path 
-		ad->pow8 = pow8;
-		ad->xo = xo;
-		ad->yo = yo;
-		ad->zo = zo;
-
-		// checking if ray from the second test hit anything
-		if (oc1 != 255) oc = oc1;
+			// checking if ray from the second test hit anything
+			if (oc1 != 255) oc = oc1;
+		}
 
 		// move to the next child (by the id of the one that got intersected)
 		globalid += oc;
@@ -189,41 +185,38 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 
 			// move coordinates of the currently tested octant
 			switch (oc) {
-				case 1:
-					xo += csize;
-					break;
+			case 1:
+				xyzo.x += csize;
+				break;
 
-				case 2:
-					xo += csize;
-					zo += csize;
-					break;
+			case 2:
+				xyzo.x += csize;
+				xyzo.z += csize;
+				break;
 
-				case 3:
-					zo += csize;
-					break;
+			case 3:
+				xyzo.z += csize;
+				break;
 
-				case 4:
-					yo += csize;
-					break;
+			case 4:
+				xyzo.y += csize;
+				break;
 
-				case 5:
-					xo += csize;
-					yo += csize;
-					break;
+			case 5:
+				xyzo.x += csize;
+				xyzo.y += csize;
+				break;
 
-				case 6:
-					xo += csize;
-					yo += csize;
-					zo += csize;
-					break;
+			case 6:
+				xyzo.x += csize;
+				xyzo.y += csize;
+				xyzo.z += csize;
+				break;
 
-				case 7:
-					yo += csize;
-					zo += csize;
-						break;
-
-				default:
-					break;
+			case 7:
+				xyzo.y += csize;
+				xyzo.z += csize;
+				break;
 			}
 
 			ad->mask &= ~(1 << oc);
@@ -231,7 +224,8 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 			pow8 *= 8;
 			layerindex += pow8;
 
-		} else {
+		}
+		else {
 			if (alt_data[1].mask == 0 || depth == 1)
 				break;
 
@@ -241,14 +235,12 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 			layerindex = ad->layerindex;
 			globalid = ad->globalid;
 			csize = ad->csize;
-			xo = ad->xo;
-			yo = ad->yo;
-			zo = ad->zo;
+			xyzo = ad->xyzo;
 			depth -= 2;
 		}
 	}
 
-	if( dist < *max_dist ) {
+	if (dist < *max_dist) {
 		*max_dist = dist;
 
 		const int index = ((1 - pow8) / -7 + globalid) * 4;
@@ -260,7 +252,7 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 	}
 }
 
-void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
+void kernel render(const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks, const byte render_mode) {
 
 	// Epic ChadRayFrameworkX
 	//   pixel x       : get_global_id(0)
@@ -275,23 +267,46 @@ void kernel render( const int spp, const int width, const int height, const int 
 	//   chunk count   : chunk_count
 	//   chunk offsets : chunks 
 
-	int2 pos = { 
-		get_global_id(0),
-		get_global_id(1) 
+	int2 pos = {
+		get_global_id(0) * ((render_mode >= 16) ? 2 : 1),
+		get_global_id(1) * ((render_mode >= 8) ? 2 : 1)
 	};
+
+	switch (render_mode) {
+	case (8 + 1):
+		pos.y += 1;
+		break;
+
+	case (16 + 1):
+		pos.x += 1;
+		break;
+
+	case (16 + 2):
+		pos.y += 1;
+		break;
+
+	case (16 + 3):
+		pos.x += 1;
+		pos.y += 1;
+		break;
+
+	default:
+		break;
+	}
+
 
 	// calculating ray direction based on pixel coordinates
 	const float scale = 0.8f;
-	const float aspect_ratio = (float) width / (float) height;
+	const float aspect_ratio = (float)width / (float)height;
 
 	// size of the currently tested octant
 	// chunk size, cannot be smaller than 2^octree_depth
 	// TODO: do something smart with this
-	const int csize = 128;
+	const float csize = 128;
 
 	vec3 dir;
-	dir.x = (2.0f * pos.x / (float) width - 1.0f) * aspect_ratio * scale;
-	dir.y = (2.0f * pos.y / (float) height - 1.0f) * scale;
+	dir.x = (2.0f * pos.x / (float)width - 1.0f) * aspect_ratio * scale;
+	dir.y = (2.0f * pos.y / (float)height - 1.0f) * scale;
 	dir.z = 1;
 
 	// load scene data
@@ -318,35 +333,35 @@ void kernel render( const int spp, const int width, const int height, const int 
 	float max_dist = 0xffffff;
 
 	// iterate all chunks
-	for( int chunk = 0; chunk < chunk_count; chunk ++ ) {
-		
+	for (int chunk = 0; chunk < chunk_count; chunk++) {
+
 		// read chunk offset from chunks array
-		float cx = chunks[chunk * 3 + 0] * 2;
-		float cy = chunks[chunk * 3 + 1] * 2;
-		float cz = chunks[chunk * 3 + 2] * 2;
+		vec3 xyzc = { chunks[chunk * 3 + 0] * 2, chunks[chunk * 3 + 1] * 2, chunks[chunk * 3 + 2] * 2 };
 
-		vec3 bounds[2] = { { cx, cy, cz }, { cx + csize, cy + csize, cz + csize } };
-		float useless_distance = 0;
+		vec3 bounds[2] = { xyzc, { xyzc.x + csize, xyzc.y + csize, xyzc.z + csize } };
+		float distance = 0;
 
-		if ( intersect(&ray, bounds, &useless_distance )) {
+		if (intersect(&ray, bounds, &distance)) {
+			// 222 = csize * sqrt(3)
+			if (distance > -222.0f) {
+				// get pointer to octree of given chunk
+				// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
+				global byte* octree = octrees + (chunk * 299593 * 4);
 
-			// get pointer to octree of given chunk
-			// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
-			global byte* octree = octrees + (chunk * 299593 * 4);
-
-			// render the chunk
-			// internally updates `max_dist`
-			render_chunk( cx, cy, cz, &ray, octree, &max_dist, &color, octree_depth, csize );
+				// render the chunk
+				// internally updates `max_dist`
+				render_chunk(xyzc, &ray, octree, &max_dist, &color, octree_depth, csize);
+			}
 		}
 	}
 
-	float4 colr = { 
-		color.x * (1.0f / 255.0f), 
-		color.y * (1.0f / 255.0f), 
-		color.z * (1.0f / 255.0f), 
-		0 
+	float4 colr = {
+		color.x * (1.0f / 255.0f),
+		color.y * (1.0f / 255.0f),
+		color.z * (1.0f / 255.0f),
+		0
 	};
 
-	write_imagef( image, pos, colr );
+	write_imagef(image, pos, colr);
 
 }
