@@ -260,6 +260,79 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 	}
 }
 
+global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int size, float* dist, float len ) {
+	
+	global byte* branch = 0;
+	float tmp_dist;
+	vec3 moved;
+
+	for( int i = 0; i < 8; i ++ ) {
+
+		if( octree[0] != 0 ) {
+
+			vec3 pos = {
+				origin.x + !!(i & 1) * len, 
+				origin.y + !!(i & 2) * len, 
+				origin.z + !!(i & 4) * len
+			};
+
+			vec3 bounds[2] = {origin, pos};
+
+			if( intersect(ray, bounds, &tmp_dist) ) {
+
+				// >= ?
+				if( *dist > tmp_dist ) {
+					*dist = tmp_dist;
+					branch = octree;
+					moved = pos;
+				}
+
+			}
+		}
+
+		octree += size;
+
+	}
+
+	// we go a hit with the tree
+	if( branch != 0 ) {
+		
+		// return voxel pointer
+		if( size == 1 ) return branch;
+
+		// go to the lower layer
+		return render_xam_branch( moved, ray, branch + 1, (size - 1) >> 3, dist, len * 0.5f );
+
+	}
+
+	// return nullptr
+	return 0;
+
+}
+
+void render_xam_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* dist, vec3* output, int octree_depth, int __csize ) {
+	
+	// the octree is empty
+	if( octree[0] == 0 ) {
+		return;
+	}
+
+	// just for now
+	*dist = 0xffffff;
+
+	int octree_length = 299593;
+	int size = (octree_length - 1) >> 3;
+	vec3 chunk_pos = { cx, cy, cz };
+
+	global byte* voxel = render_xam_branch( chunk_pos, ray, octree + 1, size, &dist, 0.5f );
+
+	if( voxel != 0 ) {
+		output->x = voxel[0];
+		output->y = voxel[1];
+		output->z = voxel[2];
+	}
+}
+
 void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
 
 	// Epic ChadRayFrameworkX
@@ -315,7 +388,7 @@ void kernel render( const int spp, const int width, const int height, const int 
 	ray.sign[1] = (ray.invdir.y < 0);
 	ray.sign[2] = (ray.invdir.z < 0);
 
-	float max_dist = 0xffffff;
+	float dist = 0xffffff;
 
 	// iterate all chunks
 	for( int chunk = 0; chunk < chunk_count; chunk ++ ) {
@@ -331,12 +404,12 @@ void kernel render( const int spp, const int width, const int height, const int 
 		if ( intersect(&ray, bounds, &useless_distance )) {
 
 			// get pointer to octree of given chunk
-			// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
+			// the 299593 is derived from: `((1 - pow(8, octree_depth + 1)) / -7)`
 			global byte* octree = octrees + (chunk * 299593 * 4);
 
 			// render the chunk
 			// internally updates `max_dist`
-			render_chunk( cx, cy, cz, &ray, octree, &max_dist, &color, octree_depth, csize );
+			render_xam_chunk( cx, cy, cz, &ray, octree, &dist, &color, octree_depth, csize );
 		}
 	}
 
