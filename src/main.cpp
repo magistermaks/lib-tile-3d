@@ -46,7 +46,7 @@ inline float vdist(glm::vec3& origin, glm::vec3 bounds[2], int csize) {
 	return d;
 }
 
-inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layerid, Ray& ray, int x, int y, int z, int id, int globalid, float* dist, glm::vec3* origin, byte* mask) {
+inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layerid, Ray& ray, int x, int y, int z, int id, int globalid, float* dist, glm::vec3* origin, byte mask) {
 	byte vid = 255;
 	float tmpdist;
 	layerid += globalid + id;
@@ -57,7 +57,8 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	bounds[1].x = csize + x;
 	bounds[1].y = csize + y;
 	bounds[1].z = csize + z;
-	if ((octree[(layerid) * 4 + 3]) > 128 && ((*mask >> id) & 1) == 1)
+
+	if (((mask >> id) & 1) == 1)
 		if (intersect(&ray, bounds, &tmpdist)) {
 			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
@@ -73,7 +74,7 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	bounds[1].x = csize * 2 + x;
 	//bounds[1].y = csize * 0.5f + y;
 	//bounds[1].z = csize * 0.5f + z;
-	if ((octree[(layerid + 1) * 4 + 3]) > 128 && ((*mask >> (id + 1)) & 1) == 1)
+	if (((mask >> (id + 1)) & 1) == 1)
 		if (intersect(&ray, bounds, &tmpdist)) {
 			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
@@ -89,7 +90,7 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	//bounds[1].x = csize + x;
 	//bounds[1].y = csize * 0.5f + y;
 	bounds[1].z = csize * 2 + z;
-	if ((octree[(layerid + 2) * 4 + 3]) > 128 && ((*mask >> (id + 2)) & 1) == 1)
+	if (((mask >> (id + 2)) & 1) == 1)
 		if (intersect(&ray, bounds, &tmpdist)) {
 			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
@@ -105,7 +106,7 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 	bounds[1].x = csize + x;
 	//bounds[1].y = csize * 0.5f + y;
 	//bounds[1].z = csize + z;
-	if ((octree[(layerid + 3) * 4 + 3]) > 128 && ((*mask >> (id + 3)) & 1) == 1)
+	if (((mask >> (id + 3)) & 1) == 1)
 		if (intersect(&ray, bounds, &tmpdist)) {
 			//tmpdist = vdist(*origin, bounds, csize);
 			if (*dist >= tmpdist) {
@@ -114,7 +115,7 @@ inline byte test_octree(glm::vec3 bounds[2], int csize, byte* octree, int layeri
 			}
 			//(*mask) |= 1 << (id + 3);
 		}
-
+		
 	return vid;
 }
 
@@ -198,7 +199,7 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 			int depth = 1;
 			int pow8 = 1;
 			float dist = 0xffffff;
-			
+
 			for (int chunkx = 0; chunkx < chunk_count; chunkx++) {
 				for (int chunky = 0; chunky < chunk_count; chunky++) {
 					for (int chunkz = 0; chunkz < chunk_count; chunkz++) {
@@ -223,17 +224,22 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 							ad->globalid = globalid;
 							ad->csize = csize;
 							ad->layerindex = layerindex;
-
-							csize /= 2;
-							globalid = globalid * 8;
-
-							oc = test_octree(bounds, csize, octree, layerindex, ray, xo + chunkoff.x, yo + chunkoff.y, zo + chunkoff.z, 0, globalid, &dist, origin, &(ad->mask));
-							byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo + chunkoff.x, yo + csize + chunkoff.y, zo + chunkoff.z, 4, globalid, &dist, origin, &(ad->mask));
-
 							ad->pow8 = pow8;
 							ad->xo = xo;
 							ad->yo = yo;
 							ad->zo = zo;
+
+							ad->mask &= octree[(layerindex - pow8 + globalid) * 4 + 3];
+							//ad->mask = octree[(layerindex - pow8 + globalid) * 4 + 3];
+							//byte ocmask = (octree[(layerindex - pow8 + globalid) * 4 + 3]);
+							//if (ocmask != 255)
+								//int a = 0;
+							//byte maskk = (ad->mask);// &ocmask;
+							csize /= 2;
+							globalid = globalid * 8;
+
+							oc = test_octree(bounds, csize, octree, layerindex, ray, xo + chunkoff.x, yo + chunkoff.y, zo + chunkoff.z, 0, globalid, &dist, origin, ad->mask);
+							byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo + chunkoff.x, yo + csize + chunkoff.y, zo + chunkoff.z, 4, globalid, &dist, origin, ad->mask);
 
 							if (oc1 != 255) oc = oc1;
 							globalid += oc;
@@ -304,7 +310,9 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 							}
 						}
 						const int index = ((1 - pow8) / -7 + globalid) * 4;
-						if (depth >= octree_depth + 1 && octree[index + 3] > 128) {
+						//if (octree[index + 3] == 0)
+							//int b = 0;
+						if (depth >= octree_depth + 1 && octree[index + 3] > 0) {
 							color.r = octree[index];
 							color.g = octree[index + 1];
 							color.b = octree[index + 2];
@@ -326,14 +334,14 @@ void draw(int width, int height, byte* img, Region* region, glm::vec3* origin, g
 	delete[] alt_data;
 }
 
-	//      7-------6   
-	//y    /|      /|   
-	//^   / |     / |     
-	//|  4--|----5  |  
-	//|  |  3----|--2    
-	//|  | /     | /       
-	//|	 0-------1 
-	//=====>x
+//      7-------6   
+//y    /|      /|   
+//^   / |     / |     
+//|  4--|----5  |  
+//|  |  3----|--2    
+//|  | /     | /       
+//|	 0-------1 
+//=====>x
 
 void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte g, byte b, int csize) {
 	int globalid = 0;
@@ -342,26 +350,26 @@ void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte
 	int pow8 = 1;
 	for (int depth = 1; depth <= octree_depth; depth++) {
 		csize /= 2;
-		
-		globalid *= 8;
+
+		int oc = 0;
 
 		if (x < xo + csize) {
 			if (y < yo + csize) {
 				if (z < zo + csize) {
-					globalid += 0;
+					oc = 0;
 				}
 				else {
-					globalid += 3;
+					oc = 3;
 					zo += csize;
 				}
 			}
 			else {
 				yo += csize;
 				if(z < zo + csize) {
-					globalid += 4;
+					oc = 4;
 				}
 				else {
-					globalid += 7;
+					oc = 7;
 					zo += csize;
 				}
 			}
@@ -370,27 +378,33 @@ void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte
 			xo += csize;
 			if (y < yo + csize) {
 				if (z < zo + csize) {
-					globalid += 1;					
+					oc += 1;
 				}
 				else {
-					globalid += 2;
+					oc += 2;
 					zo += csize;
 				}
 			}
 			else {
 				yo += csize;
 				if (z < zo + csize) {
-					globalid += 5;
+					oc = 5;
 				}
 				else {
-					globalid += 6;
+					oc = 6;
 					zo += csize;
 				}
 			}
 		}
 
-		int a = (layerindex + globalid) * 4;
-		octree[a + 3] = 255;
+		int a = (layerindex - pow8 + globalid) * 4;
+		octree[a + 3] |= 1UL << oc;
+
+		globalid *= 8;
+		globalid += oc;
+
+		//int a = (layerindex + globalid) * 4;
+		//octree[a + 3] = 255;
 		pow8 *= 8;
 		layerindex += pow8;
 
@@ -403,56 +417,58 @@ void set_voxel(int x, int y, int z, byte* octree, int octree_depth, byte r, byte
 }
 
 void fill_chunk(int csize, byte* octree, int chunk_size, int octree_depth, int chid) {
-	const int cm = 256 / csize;
-	//const int c = csize / 2;
+	const int cm = 200 / csize;
+	const int c = csize / 2;
 
 	for (int x = 0; x < csize; x++) {
 		for (int y = 0; y < csize; y++) {
 			for (int z = 0; z < csize; z++) {
 
 				//float A = c - x, B = c - y, C = c - z;
-				//if((x > c + 1 || x < c - 1) && (y > c + 1 || y < c - 1) && sqrt(A * A + B * B + C * C) < 14) {
-				set_voxel(x, y, z, octree + chunk_size * chid, octree_depth, x * cm, y * cm, z * cm, csize);
-				//}
+				if (x != 0 || y != 0 || z != 0) {//if(sqrt(A * A + B * B + C * C) < 26) {//(x > c + 1 || x < c - 1) && (y > c + 1 || y < c - 1) && 
+					set_voxel(x, y, z, octree + chunk_size * chid, octree_depth, x * cm + 55, y * cm + 55, z * cm + 55, csize);
+				}
 			}
 		}
 	}
 }
-
+//5-4 fps
 int main(void) {
 
 	bool building = false;
 
-	const int chunk_count = 2;
+	const int chunk_count = 1;
 	const int octree_depth = 5;
 	const int chunk_size = ((1 - pow(8, (octree_depth + 1))) / -7) * 4;
 	const int len = chunk_size * chunk_count * chunk_count * chunk_count;
-	byte* octree = new byte[ len ]; //Sn = 1 * (1 - q^n) / (1 - q)
+	byte* octree = new byte[len]; //Sn = 1 * (1 - q^n) / (1 - q)
 
-	int index = 0;
-	for (int i = 0; i <= octree_depth; i++) {
-		int size = std::pow(8, i);
-		byte* node = octree + index; //r g b a
-		index += size * 4;
-		for (int n = 0; n < size * 4; n += 4) {
-			node[n] = 255;
-			node[n + 1] = 255;
-			node[n + 2] = 255;
-			node[n + 3] = 255;
-			/*if (i < octree_depth - 2)
-				node[n + 3] = 255;// randomByte();
-			else
-				node[n + 3] = 0;*/
+	for (int cu = 0; cu < chunk_count * chunk_count * chunk_count; cu++) {
+		int index = 0;
+		for (int i = 0; i <= octree_depth; i++) {
+			int size = std::pow(8, i);
+			byte* node = octree + index + cu * chunk_size; //r g b a
+			index += size * 4;
+			for (int n = 0; n < size * 4; n += 4) {
+				node[n] = 255;
+				node[n + 1] = 255;
+				node[n + 2] = 255;
+				node[n + 3] = 0;
+				/*if (i < octree_depth - 2)
+					node[n + 3] = 255;// randomByte();
+				else
+					node[n + 3] = 0;*/
+			}
 		}
 	}
 	//std::fill_n(octree, len * 4, 0xff);
 
 	const int csize = std::pow(2, octree_depth);
-	
-	for (int i = 0; i < 8; i++) {
+
+	for (int i = 0; i < chunk_count * chunk_count * chunk_count; i++) {
 		fill_chunk(csize, octree, chunk_size, octree_depth, i);
 	}
-	
+
 
 	// print cwd, nice for debugging
 	{
