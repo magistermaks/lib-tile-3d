@@ -90,19 +90,14 @@ int main() {
 
 	// move the camera so that we don't start inside a black cube
 	camera.move( glm::vec3(1, 150, 1) );
- 
-	//size_t c = 0;
 
 	do {
 
 		auto start = Clock::now();
 
-		//if( c < 100 * 10 ) {
 		tree.set( rand() % 65, rand() % 65, rand() % 65, {
 			((byte) rand()), ((byte) rand()), ((byte) rand()), 255
 		} ); 
-
-		//c ++; }
 
 		// update the fps count
 		if( last != time(0) ) {

@@ -13,7 +13,7 @@ struct OctreeVoxel {
 
 template< typename T >
 void octree_callback_set(byte mask, T* ptr) {
-	if( mask != 1 ) *ptr = { 255, 255, 255, 255 };
+	if( mask != 1 ) *ptr = { 255, 255, 255, 255 }; // FIXME: generify this ugly trash
 }
 
 template< typename T >
@@ -50,6 +50,10 @@ class Octree {
 
 			// pointer to the tree data buffer
 			T* offset = this->buffer;
+
+			// FIXME fix it in some better, less hacky, way
+			Func(0, offset);
+			offset ++;
 
 			// iterate until the mask is shifted to target (leaf) layer
 			while( mask ) {
@@ -123,12 +127,7 @@ class Octree {
 			return (byte*) this->buffer;
 		}
 
-		/// get size (in bytes) of the buffer 
-		int length() {
-			return ((length << 3) + 1) * sizeof(T);
-		}
-
-		/// TODO
+		/// TODO make it less ugly
 		bool dirty() {
 			bool flag = this->modified;
 			this->modified = false;
@@ -138,7 +137,7 @@ class Octree {
 		// length of the buffer used to store the tree of a given depth
 		static int sizeOf( int depth ) {
 			// derived from: `Sn = (1 - q^n) / (1 - q)`
-			return ((1 - pow(8, depth + 1)) / -7) * sizeof(T);
+			return ((1 - pow(8, depth + 1)) / -7);
 		}
 
 };

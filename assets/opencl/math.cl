@@ -5,6 +5,9 @@
 // select floating point value to use, float or double
 #define real float
 
+// old habits die hard
+#define nullptr 0
+
 // define byte type for convenience
 typedef unsigned char byte;
 

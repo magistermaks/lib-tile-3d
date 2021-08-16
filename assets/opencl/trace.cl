@@ -1,5 +1,6 @@
 
 #require assets/opencl/math.cl
+#define VOXEL_SIZE 4
 
 typedef struct {
 	vec3 orig;
@@ -50,76 +51,92 @@ void setRotation(vec3* vec, vec3* rotation) {
 
 global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int size, float* dist, float len ) {
 	
-	global byte* branch = 0;
 	float tmp_dist;
-	vec3 moved;
+	float branch_dist = *dist;
+	global byte* branch = nullptr;
 
 	for( int i = 0; i < 8; i ++ ) {
 
-		if( octree[0] != 0 ) {
+		if( octree[3] != 0 ) {
 
-			vec3 pos = {
-				origin.x + !!(i & 1) * len, 
-				origin.y + !!(i & 2) * len, 
-				origin.z + !!(i & 4) * len
+			bool x = !!(i & 1);
+			bool y = !!(i & 2);
+			bool z = !!(i & 4);
+
+			vec3 bounds[2] = {
+				{
+					origin.x + x * len,
+					origin.y + y * len,
+					origin.z + z * len
+				}, 
+				{
+					origin.x + (1 + x) * len,
+					origin.y + (1 + y) * len,
+					origin.z + (1 + z) * len
+				}
 			};
-
-			vec3 bounds[2] = {origin, pos};
 
 			if( intersect(ray, bounds, &tmp_dist) ) {
 
 				// TODO: why >=?
-				if( *dist >= tmp_dist ) {
-					*dist = tmp_dist;
-					branch = octree;
-					moved = pos;
+				if( branch_dist >= tmp_dist ) {
+
+					if( size == 1 ) {
+
+						branch = octree;
+						branch_dist = tmp_dist;
+
+					}else{
+
+						float vdist = *dist;
+						global byte* ptr = render_xam_branch( bounds[0], ray, octree + VOXEL_SIZE, (size - 1) >> 3, &vdist, len * 0.5f );
+
+						if( ptr != 0 && branch_dist > vdist ) {
+							branch_dist = vdist;
+							branch = ptr;
+						}
+
+					}
+
 				}
 
 			}
+
 		}
 
 		// move to the next child
-		octree += size;
+		octree += size * VOXEL_SIZE;
 
 	}
 
-	// we go a hit with the tree
-	if( branch != 0 ) {
-		
-		// return voxel pointer
-		if( size == 1 ) return branch;
-
-		// go to the lower layer
-		return render_xam_branch( moved, ray, branch + 1, (size - 1) >> 3, dist, len * 0.5f );
-
-	}
-
-	// return nullptr
-	return 0;
+	*dist = branch_dist;
+	return branch;
 
 }
 
 void render_xam_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, float* dist, vec3* output ) {
 	
 	// the octree is empty
-	if( octree[0] == 0 ) {
+	if( octree[3] == 0 ) {
 		return;
 	}
-
-	// just for now
-	*dist = 0xffffff;
 
 	int octree_length = 299593;
 	int size = (octree_length - 1) >> 3;
 	vec3 chunk_pos = { cx, cy, cz };
 
-	global byte* voxel = render_xam_branch( chunk_pos, ray, octree + 1, size, &dist, 128 );
+	//float cdist = *dist;
+
+	global byte* voxel = render_xam_branch( chunk_pos, ray, octree + VOXEL_SIZE, size, dist, 64 );
 
 	if( voxel != 0 ) {
+		//*dist = cdist;
+
 		output->x = voxel[0];
 		output->y = voxel[1];
 		output->z = voxel[2];
 	}
+
 }
 
 void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
@@ -195,7 +212,7 @@ void kernel render( const int spp, const int width, const int height, const int 
 
 			// get pointer to octree of given chunk
 			// the 299593 is derived from: `((1 - pow(8, octree_depth + 1)) / -7)`
-			global byte* octree = octrees + (chunk * 299593 * 4);
+			global byte* octree = octrees + (chunk * 299593 * VOXEL_SIZE);
 
 			// render the chunk
 			// internally updates `dist`

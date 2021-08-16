@@ -10,7 +10,7 @@ Chunk::~Chunk() {
 	delete this->tree;
 }
 
-ChunkManager::ChunkManager( PathTracer& tracer ) : tracer(tracer), chunk_size( Octree<OctreeVoxel>::sizeOf(6) ) {
+ChunkManager::ChunkManager( PathTracer& tracer ) : tracer(tracer), chunk_size( Octree<OctreeVoxel>::sizeOf(6) * sizeof(OctreeVoxel) ) {
 	this->length = 0;
 }
 
