@@ -30,29 +30,27 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 	int pow8 = 1;
 	int csize = size;
 
-	VoxelTreeNode** nodes = new VoxelTreeNode*[this->depth];
-
 	// TODO: use some magic here
 	for( int i = 1; i <= this->depth; i ++ ) {
 
 		csize /= 2;
-		globalid *= 8;
+		int oc = 0;
 
 		if (x < xo + csize) {
 			if (y < yo + csize) {
 				if (z < zo + csize) {
-					globalid += 0;
+					oc = 0;
 				} else {
-					globalid += 3;
+					oc = 3;
 					zo += csize;
 				}
 			} else {
 
 				yo += csize;
 				if (z < zo + csize) {
-					globalid += 4;
+					oc = 4;
 				} else {
-					globalid += 7;
+					oc = 7;
 					zo += csize;
 				}
 			}
@@ -61,24 +59,30 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 
 			if (y < yo + csize) {
 				if (z < zo + csize) {
-					globalid += 1;
+					oc = 1;
 				} else {
-					globalid += 2;
+					oc = 2;
 					zo += csize;
 				}
 			} else {
 				yo += csize;
 
 				if (z < zo + csize) {
-					globalid += 5;
+					oc = 5;
 				} else {
-					globalid += 6;
+					oc = 6;
 					zo += csize;
 				}
 			}
 		}
 
-		nodes[i - 1] = buffer + layerindex + globalid;
+		// indicate child presence
+		if (sign >= 1)
+			this->buffer[(layerindex - pow8 + globalid)].a |= 1 << oc;
+		else if (sign <= -1)
+			this->buffer[(layerindex - pow8 + globalid)].a &= ~(1 << oc);
+
+		globalid = globalid * 8 + oc;
 		pow8 *= 8;
 		layerindex += pow8;
 
@@ -90,24 +94,6 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 
 	// return node pointer
 	VoxelTreeNode* node = buffer + index;
-
-	// apply sign changes to affected branches
-	if( sign != 0 && (node->empty() ? -1 : +1) != sign ) {
-		const int v = sign == -1 ? 1 : 0;
-
-		for( int i = this->depth - 2; i >= 0; i -- ) {
-			auto* node = nodes[i];
-		
-			if( node->a == v ) {
-				node->a += sign;
-			}else{
-				node->a += sign;
-				break;
-			} 
-		}
-	}
-
-	delete[] nodes;
 
 	// return node pointer
 	return node;

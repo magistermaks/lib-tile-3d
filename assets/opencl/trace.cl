@@ -40,17 +40,15 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 }
 
-byte test_octree(const float csize, global byte* octree, int layerid, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
+byte test_octree(const float csize, global byte* octree, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
 	if (id > 0)	xyz.y += csize;
 
 	byte vid = 255;
 	float tmpdist;
-	layerid += id;
 
 	vec3 bounds[2] = { xyz, { csize + xyz.x, csize + xyz.y, csize + xyz.z } };
 
-	//layerid * 4 + 3
-	if ((octree[layerid * 4 + 3]) > 0 && ((mask >> id) & 1) == 1) {
+	if ((mask >> id) & 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
@@ -62,8 +60,7 @@ byte test_octree(const float csize, global byte* octree, int layerid, const Ray*
 	bounds[0].x = csize + xyz.x;
 	bounds[1].x = csize * 2 + xyz.x;
 
-	//(layerid + 1) * 4 + 3
-	if ((octree[layerid * 4 + 7]) > 0 && ((mask >> (id + 1)) & 1) == 1) {
+	if ((mask >> (id + 1)) & 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
@@ -75,8 +72,7 @@ byte test_octree(const float csize, global byte* octree, int layerid, const Ray*
 	bounds[0].z = csize + xyz.z;
 	bounds[1].z = csize * 2 + xyz.z;
 
-	//(layerid + 2) * 4 + 3
-	if ((octree[layerid * 4 + 11]) > 0 && ((mask >> (id + 2)) & 1) == 1) {
+	if ((mask >> (id + 2)) & 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 2;
@@ -84,8 +80,8 @@ byte test_octree(const float csize, global byte* octree, int layerid, const Ray*
 			}
 		}
 	}
-	//octree[(layerid + 3) * 4 + 3
-	if ((octree[layerid * 4 + 15]) > 0 && ((mask >> (id + 3)) & 1) == 1) {
+
+	if ((mask >> (id + 3)) & 1) {
 		bounds[0].x = xyz.x;
 		bounds[1].x = csize + xyz.x;
 		if (intersect(ray, bounds, &tmpdist)) {
@@ -156,6 +152,9 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		ad->pow8 = pow8;
 		ad->xyzo = xyzo;
 
+		// mask representing transparency of children
+		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * 4 + 3];
+
 		// clearing the closest distance to the voxel
 		dist = 0xffffff;
 
@@ -167,11 +166,11 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 
 		// test first 4 octants
 		if ((ad->mask & 0b00001111) != 0)
-			oc = test_octree(csize, octree, layerindex + globalid, ray, add(&xyzo, &xyzc), 0, &dist, ad->mask);
+			oc = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 0, &dist, alpha_mask);
 
 		// test next 4 octants
 		if ((ad->mask & 0b11110000) != 0) {
-			byte oc1 = test_octree(csize, octree, layerindex + globalid, ray, add(&xyzo, &xyzc), 4, &dist, ad->mask);
+			byte oc1 = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 4, &dist, alpha_mask);
 
 			// checking if ray from the second test hit anything
 			if (oc1 != 255) oc = oc1;
@@ -272,6 +271,7 @@ void kernel render(const int spp, const int width, const int height, const int o
 		get_global_id(1) * ((render_mode >= 8) ? 2 : 1)
 	};
 
+	// selects pixels which are rendered (if "blur" enabled)
 	switch (render_mode) {
 	case (8 + 1):
 		pos.y += 1;

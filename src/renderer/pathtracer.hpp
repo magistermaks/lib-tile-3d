@@ -13,6 +13,7 @@ class PathTracer {
 		
 		unsigned int spp, width, height;
 		byte render_mode = 0;
+		byte pixel = 0;
 		
 		cl::Kernel kernel;
 

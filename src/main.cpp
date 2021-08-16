@@ -10,13 +10,11 @@ void gen_chunk(Region& region, int x, int y, int z) {
 	VoxelTree& tree = *region.chunk(x, y, z)->tree;
 
 	for( int x = 0; x < 64; x ++ ) {
-		for( int y = 0; y < 64; y ++ ) {
-			for( int z = 0; z < 64; z ++ ) {
-				if (x * x + y * y + z * z < 4096) {
-					tree.set(x, y, z, {
-						((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-						});
-				}
+		for( int y = 0; y < 50; y ++ ) {
+			for( int z = 0; z < 64; z++ ) {
+				tree.set(x, y, z, {
+					((byte)rand()), ((byte)rand()), ((byte)rand()), 255
+					});
 			}
 		}
 	}
