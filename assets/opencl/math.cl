@@ -60,6 +60,13 @@ inline vec3 add( vec3* a, vec3* b ) {
 	return c;
 }
 
+// add vector and scalar, and returns the resulting vector
+inline vec3 adds( vec3* a, real b ) {
+	vec3 c;
+	vsopt( a, b, &c, + );
+	return c;
+}
+
 // substracts vector b from vector a, and returns the resulting vector
 inline vec3 sub( vec3* a, vec3* b ) {
 	vec3 c;

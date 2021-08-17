@@ -49,51 +49,66 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int size, float* dist, float len ) {
+global byte* xam_get_voxel( vec3 origin, Ray* ray, global byte* octree, int size, float* dist, float len ) {
 	
-	float tmp_dist;
-	float branch_dist = *dist;
-	global byte* branch = nullptr;
+	global byte* voxel = nullptr;
 
+	// precalculated values
+	const int next_size = (size - 1) >> 3; // the size (memory, counted in voxels) of next (sub) level
+	const int next_len = len * 0.5f; // the size (3D length) of next (sub) level
+	const int next_step = size * VOXEL_SIZE; // the size (memory, counted in BYTES) of THIS level
+
+	float tmp_dist;
+	float voxel_dist = *dist;
+
+	vec3 bounds[2];
+
+	// iterate sub-branches
 	for( int i = 0; i < 8; i ++ ) {
 
+		// check if the branch exists
 		if( octree[3] != 0 ) {
 
-			bool x = !!(i & 1);
-			bool y = !!(i & 2);
-			bool z = !!(i & 4);
-
-			vec3 bounds[2] = {
-				{
-					origin.x + x * len,
-					origin.y + y * len,
-					origin.z + z * len
-				}, 
-				{
-					origin.x + (1 + x) * len,
-					origin.y + (1 + y) * len,
-					origin.z + (1 + z) * len
-				}
+			// get octant position form the binary pattern of `i`
+			vec3 pos = {
+				origin.x + !!(i & 1) * len,
+				origin.y + !!(i & 2) * len,
+				origin.z + !!(i & 4) * len
 			};
 
+			// create the bounds array
+			vec3 bounds[2] = {
+				pos,
+				adds(&pos, len)
+			};
+
+			// check ray intersection
 			if( intersect(ray, bounds, &tmp_dist) ) {
 
-				// TODO: why >=?
-				if( branch_dist >= tmp_dist ) {
+				// if the intersection occured closed to the camera
+				// than the last VOXEL-ray intersection continue
+				if( voxel_dist > tmp_dist ) {
 
+					// if we are at the last level of the tree
+					// that was voxel intersection, update voxel_dist and voxel pointer
 					if( size == 1 ) {
 
-						branch = octree;
-						branch_dist = tmp_dist;
+						voxel = octree;
+						voxel_dist = tmp_dist;
 
+					// otherwise recursivly resolve lower branches
 					}else{
 
-						float vdist = *dist;
-						global byte* ptr = render_xam_branch( bounds[0], ray, octree + VOXEL_SIZE, (size - 1) >> 3, &vdist, len * 0.5f );
+						float tmp_dist = voxel_dist;
+						global byte* ptr = xam_get_voxel( pos, ray, octree + VOXEL_SIZE, next_size, &tmp_dist, next_len );
 
-						if( ptr != 0 && branch_dist > vdist ) {
-							branch_dist = vdist;
-							branch = ptr;
+						// if there was a hit with a voxel and the distans is closer to the camera
+						// than the current voxel distanse update voxel_dist and voxel pointer 
+						if( ptr != 0 && voxel_dist > tmp_dist ) {
+
+							voxel = ptr;
+							voxel_dist = tmp_dist;
+
 						}
 
 					}
@@ -104,13 +119,15 @@ global byte* render_xam_branch( vec3 origin, Ray* ray, global byte* octree, int 
 
 		}
 
-		// move to the next child
-		octree += size * VOXEL_SIZE;
+		// move to the next octant
+		octree += next_step;
 
 	}
 
-	*dist = branch_dist;
-	return branch;
+	// 'return' voxel distanse
+	*dist = voxel_dist;
+
+	return voxel;
 
 }
 
@@ -121,17 +138,15 @@ void render_xam_chunk( float cx, float cy, float cz, Ray* ray, global byte* octr
 		return;
 	}
 
-	int octree_length = 299593;
-	int size = (octree_length - 1) >> 3;
-	vec3 chunk_pos = { cx, cy, cz };
+	// chunk position
+	vec3 origin = { cx, cy, cz };
 
-	//float cdist = *dist;
+	// query voxel from tree
+	// we skip first element (octree + VOXEL_SIZE) as it's the header of level 0
+	global byte* voxel = xam_get_voxel( origin, ray, octree + VOXEL_SIZE, 37449, dist, 64 );
 
-	global byte* voxel = render_xam_branch( chunk_pos, ray, octree + VOXEL_SIZE, size, dist, 64 );
-
-	if( voxel != 0 ) {
-		//*dist = cdist;
-
+	// draw voxel to screen (if voxel != nullptr)
+	if( voxel ) {
 		output->x = voxel[0];
 		output->y = voxel[1];
 		output->z = voxel[2];
