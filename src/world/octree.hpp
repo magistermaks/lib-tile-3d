@@ -12,12 +12,12 @@ struct OctreeVoxel {
 };
 
 template< typename T >
-void octree_callback_set(byte mask, T* ptr) {
-	if( mask != 1 ) *ptr = { 255, 255, 255, 255 }; // FIXME: generify this ugly trash
+void octree_callback_set(const byte mask, const int offset, T* ptr) {
+	if( mask != 1 ) ptr[offset] = { 255, 255, 255, 255 }; // FIXME: generify this ugly trash
 }
 
 template< typename T >
-void octree_callback_get(byte mask, T* ptr) {
+void octree_callback_get(const byte mask, const int offset, T* ptr) {
 
 }
 
@@ -29,58 +29,55 @@ class Octree {
 		bool modified = false;
 
 		int mask; // iterator mask, based on tree depth
-		int size; // size of the second branch
 
 		T* buffer;
 
 	protected:
 
 		/// branch iterator callback
-		using Iterator = void (*) (byte, T*);
+		using Iterator = void (*) (const byte, const int, T*);
 		
 		/// get a leaf pointer
 		template<Iterator Func>
 		T* accessor( const int x, const int y, const int z ) {
 
+			// the offset into the tree
+			int offset = 0;
+
 			// copy iterator mask
-			byte mask = this->mask;
-
-			// copy branch size
-			int size = this->size;
-
-			// pointer to the tree data buffer
-			T* offset = this->buffer;
+			byte mask = this->mask;	
 
 			// FIXME fix it in some better, less hacky, way
-			Func(0, offset);
-			offset ++;
+			Func(0, 0, this->buffer);
+
+			// pointer to the tree data buffer
+			T* pointer = this->buffer + 1;
 
 			// iterate until the mask is shifted to target (leaf) layer
 			while( mask ) {
 
-				// calculate the offset by decomposing xyz to its binary form
+				// shift the offset so that it aligns to the next layer
+				offset <<= 3;
+
+				// calculate the offset by decomposing the xyz to its binary form
 				offset += (
 					!!(x & mask) * 1 + 
 					!!(y & mask) * 2 +
 					!!(z & mask) * 4
-				) * size;
+				);
 
 				// call iterator handle (this is inlined by the compiler)
-				Func(mask, offset);
+				Func(mask, offset, pointer);
 
-				// skip branch header
 				offset ++;
-
-				// get size of the lower level
-				size = (size - 1) >> 3;
 
 				// shift the mask
 				mask >>= 1;
 
 			}
 
-			// the last level doesn't have headers, we need to un-skip it
-			return offset - 1; 
+			// the last level don't have headers, we need to un-skip it
+			return pointer + offset; 
 
 		}
 	
@@ -93,9 +90,6 @@ class Octree {
 
 			// iterator mask, based on tree depth (skips tree root)
 			this->mask = 1 << (depth - 1);
-
-			// the value we use in set and get, the size of the second branch
-			this->size = (length - 1) >> 3;
 	
 			// allocate the tree buffer
 			this->buffer = new T[length];

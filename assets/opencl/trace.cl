@@ -49,55 +49,54 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->x = rotated;
 }
 
-// god forgive me
-// expects: `tmp_dist`, `voxel_dist`, `origin`, `octree`, `ray`
-#define OCTREE_LAYER( size, len, ... ) { \
-	global byte* ptr##size = octree; \
-	octree += VOXEL_SIZE; \
-	for( int i##size = 0; i##size < 8; i##size ++ ) { \
-		if( octree[3] ) { \
-			vec3 pos##size = { \
-				origin.x + !!(i##size & 1) * len, \
-				origin.y + !!(i##size & 2) * len, \
-				origin.z + !!(i##size & 4) * len \
+// expects: `tmp_dist`, `voxel_dist`, `origin0`, `offset0`, `octree`, `ray`
+#define OCTREE_LAYER( id, prev, len, ... ) { \
+	int offset##id = offset##prev; \
+	offset##id = (offset##id + 1) << 3; \
+	for( int i##id = 0; i##id < 8; i##id ++ ) { \
+		if( octree[3 + offset##id * VOXEL_SIZE] ) { \
+			vec3 origin##id = { \
+				origin##prev.x + !!(i##id & 1) * len, \
+				origin##prev.y + !!(i##id & 2) * len, \
+				origin##prev.z + !!(i##id & 4) * len \
 			}; \
-			vec3 bounds##size[2] = { \
-				pos##size, \
-				adds(&pos##size, len) \
+			vec3 bounds##id[2] = { \
+				origin##id, \
+				adds(&origin##id, len) \
 			}; \
-			vec3 origin##size = origin; \
-			origin = pos##size; \
-			if( intersect(ray, bounds##size, &tmp_dist) ) { \
+			if( intersect(ray, bounds##id, &tmp_dist) ) { \
 				if( *voxel_dist > tmp_dist ) { \
 					{ __VA_ARGS__ } \
 				} \
 			} \
-			origin = origin##size; \
 		} \
-		octree += size * VOXEL_SIZE; \
+		offset##id ++; \
 	} \
-	octree = ptr##size; \
 }
 
-global byte* octree_get_voxel( vec3 origin, Ray* ray, global byte* octree, float* voxel_dist ) {
+global byte* octree_get_voxel( vec3 origin0, Ray* ray, global byte* octree, float* voxel_dist ) {
 
 	// the octree is empty
 	if( octree[3] == 0 ) {
 		return nullptr;
 	}
 
+	// skip the first voxel
+	octree += VOXEL_SIZE;
+
 	global byte* voxel = nullptr;
 	float tmp_dist;
+	int offset0 = -1;
 
-	OCTREE_LAYER( 37449, 64, {
-		OCTREE_LAYER( 4681, 32, {
-			OCTREE_LAYER( 585, 16, {
-				OCTREE_LAYER( 73, 8, {
-					OCTREE_LAYER( 9, 4, {
-						OCTREE_LAYER( 1, 2, {
+	OCTREE_LAYER( 1, 0, 64, {
+		OCTREE_LAYER( 2, 1, 32, {
+			OCTREE_LAYER( 3, 2, 16, {
+				OCTREE_LAYER( 4, 3, 8, {
+					OCTREE_LAYER( 5, 4, 4, {
+						OCTREE_LAYER( 6, 5, 2, {
 
 							*voxel_dist = tmp_dist;
-							voxel = octree;
+							voxel = octree + offset6 * VOXEL_SIZE;
 
 						} );
 					} );
