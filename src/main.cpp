@@ -4,23 +4,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/image.h>
 
-void gen_chunk(Region& region, int x, int y, int z) {
-	
-	region.put( nullptr, x, y, z );
-	VoxelTree& tree = *region.chunk(x, y, z)->tree;
-
-	for( int x = 0; x < 64; x ++ ) {
-		for( int y = 0; y < 50; y ++ ) {
-			for( int z = 0; z < 64; z++ ) {
-				tree.set(x, y, z, {
-					((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-					});
-			}
-		}
-	}
-
-
-}
+#define WORLD
 
 int main() {
 
@@ -49,32 +33,14 @@ int main() {
 	ChunkManager manager( tracer );
 
 	Region region( manager );
-	region.put( nullptr, 0, 0, 0 );
 
+#ifdef WORLD
+	Worldgen::gen_chunk_world(region);
+#else
+	// floating voixels surrounded with cubes
+	Worldgen::gen_chunk_scene1(region);
 	VoxelTree& tree = *region.chunk(0, 0, 0)->tree;
-
-	tree.set(0,0,0,{255, 0, 0, 255});
-	tree.set(1,1,0,{0, 255, 0, 255});
-	tree.set(2,2,0,{0, 0, 255, 255});
-	tree.set(3,3,0,{255, 255, 0, 255});
-	tree.set(4,4,0,{0, 255, 255, 255});
-	tree.set(5,5,0,{255, 0, 255, 255});
-
-	for( int x = -2; x <= 2; x ++ ) {
-		for( int z = -2; z <= 2; z ++ ) {
-			if( z ==  1 && x ==  0 ) continue;
-			if( x ==  0 && z ==  0 ) continue;
-			if( z == -1 && x ==  0 ) continue;
-			if( z ==  1 && x ==  1 ) continue;
-			if( z == -1 && x ==  1 ) continue;
-			if( z ==  1 && x == -1 ) continue;
-			if( z == -1 && x == -1 ) continue;
-			if( z ==  0 && x == -1 ) continue;
-			if( z ==  0 && x ==  1 ) continue;
-			
-			gen_chunk(region, x, 0, z);
-		}
-	}
+#endif
 
 	Charset charset( "assets/8x8font.png" );
 
@@ -96,12 +62,11 @@ int main() {
 
 		auto start = Clock::now();
 
-		//if( c < 100 * 10 ) {
+#ifndef WORLD
 		tree.set(rand() % 65, rand() % 65, rand() % 65, {
-			((byte) rand()), ((byte) rand()), ((byte) rand()), 255
-		} );
-
-		//c ++; }
+			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
+	} );
+#endif // !WORLD
 
 		// update the fps count
 		if( last != time(0) ) {

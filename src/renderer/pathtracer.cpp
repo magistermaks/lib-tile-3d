@@ -19,7 +19,7 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 	this->canvas = nullptr;
 
 	// init scene
-	scene->setBackground( 0, 0, 102 );
+	scene->setBackground(3, 169, 252);
 
 	// initialize all size dependent components
 	resize( w, h );

@@ -77,15 +77,16 @@ VoxelTreeNode* VoxelTree::get( const int x, const int y, const int z, const int 
 		}
 
 		// indicate child presence
+		byte* node_a = &this->buffer[(layerindex - pow8 + globalid)].a;
 		if (sign >= 1)
-			this->buffer[(layerindex - pow8 + globalid)].a |= 1 << oc;
-		else if (sign <= -1)
-			this->buffer[(layerindex - pow8 + globalid)].a &= ~(1 << oc);
+			*node_a |= 1UL << oc;
 
 		globalid = globalid * 8 + oc;
 		pow8 *= 8;
 		layerindex += pow8;
 
+		if (sign <= -1 && this->buffer[(layerindex - pow8 + globalid)].a == ~(1UL << oc))
+			*node_a &= ~(1UL << oc);
 	}
 
 	// tree buffer node offset index

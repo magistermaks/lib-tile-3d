@@ -343,7 +343,7 @@ void kernel render(const int spp, const int width, const int height, const int o
 
 		if (intersect(&ray, bounds, &distance)) {
 			// 222 = csize * sqrt(3)
-			if (distance > -222.0f) {
+			if (distance > -222.0f && distance < max_dist) {
 				// get pointer to octree of given chunk
 				// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
 				global byte* octree = octrees + (chunk * 299593 * 4);

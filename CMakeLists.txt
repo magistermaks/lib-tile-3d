@@ -6,10 +6,7 @@ project(LibTile3D)
 find_package(OpenGL REQUIRED)
 find_package(OpenCL REQUIRED)
 
-if (NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	set(CMAKE_CXX_STANDARD 17)
-endif()
-
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
@@ -66,6 +63,7 @@ add_executable(main
 	src/world/chunk.cpp
 	src/world/region.cpp
 	src/world/octree.cpp
+	src/world/worldgen.cpp
 
 	src/renderer/renderer.cpp
 	src/renderer/pathtracer.cpp
@@ -78,7 +76,7 @@ add_executable(main
 	src/clhelper.cpp
 	src/camera.cpp
 	src/voxel.cpp
-)
+ )
 
 target_link_libraries(main
 	${ALL_LIBS}
