@@ -45,8 +45,10 @@ namespace GLHelper {
 
 	bool init(int, int, const char*);
 	void frame();
+
+	// screenshot utilities
 	byte* capture( int*, int* );
-	void screenshot( const char* path );
+	void screenshot( const std::string& path );
 
 	// platform specific
 	cl_context_properties getContext();

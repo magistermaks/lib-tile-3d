@@ -60,16 +60,17 @@ bool GLHelper::init(int width, int height, const char* name) {
 	// specify window size to OpenGL
 	glViewport(0, 0, width, height);
 
-	// Time to enter the third dimension! 
-	// FIXME: this is broken for some reason
-//	glEnable(GL_DEPTH_TEST);
+	// Time to enter the third dimension!
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+
+	// allow to override color if the depth is equal
+	glDepthFunc(GL_LEQUAL);
 
 	// enable alpha blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 	srand(time(0));
 	rng.seed(time(0) - rand());
 
@@ -81,7 +82,7 @@ bool GLHelper::init(int width, int height, const char* name) {
 	stbi_set_flip_vertically_on_load(true);  
 	stbi_flip_vertically_on_write(true);
 
-	// initialize OpenCL 2.X
+	// initialize OpenCL
 	return CLHelper::init();
 
 }
@@ -119,13 +120,13 @@ byte* GLHelper::capture( int* width, int* height ) {
 	return pixels;
 }
 
-void GLHelper::screenshot( const char* path ) {
+void GLHelper::screenshot( const std::string& path ) {
 	
 	int width, height;
 	byte* pixels = GLHelper::capture( &width, &height );
 
 	// write buffer to file
-	if( stbi_write_png( path, width, height, 3 /*RGB*/, pixels, 0 ) == 0 ) {
+	if( stbi_write_png( path.c_str(), width, height, 3 /*RGB*/, pixels, 0 ) == 0 ) {
 		logger::error("Failed to write screenshot to: '" + std::string(path) + "'!");
 	}else{
 		logger::info("Written screenshot to: '" + std::string(path) + "'");
