@@ -39,7 +39,8 @@
 #include <opencl/opencl.hpp>
 
 // external
-#include <stb/image.h>
+#include <stb/image/read.h>
+#include <stb/image/write.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>

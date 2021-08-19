@@ -2,7 +2,10 @@
 #include "config.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb/image.h>
+#include <stb/image/read.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb/image/write.h>
 
 void gen_chunk(Region& region, int x, int y, int z) {
 	

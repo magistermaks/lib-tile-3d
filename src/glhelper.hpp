@@ -45,6 +45,8 @@ namespace GLHelper {
 
 	bool init(int, int, const char*);
 	void frame();
+	byte* capture( int*, int* );
+	void screenshot( const char* path );
 
 	// platform specific
 	cl_context_properties getContext();

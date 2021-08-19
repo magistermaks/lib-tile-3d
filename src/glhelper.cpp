@@ -40,6 +40,11 @@ bool GLHelper::init(int width, int height, const char* name) {
 		return false;
 	}
 
+	// TODO move somewhere else
+	glfwSetKeyCallback( windowHandle, [] (GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
+		if( key == GLFW_KEY_SPACE && action == GLFW_PRESS ) GLHelper::screenshot("screenshot.png");
+	} );
+
 	glfwMakeContextCurrent(windowHandle);
 	glewExperimental = true;
 
@@ -74,6 +79,7 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 	// stb image config
 	stbi_set_flip_vertically_on_load(true);  
+	stbi_flip_vertically_on_write(true);
 
 	// initialize OpenCL 2.X
 	return CLHelper::init();
@@ -92,7 +98,41 @@ void GLHelper::frame() {
 	getError();
 	
 	// clear the screen and depth buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+}
+
+byte* GLHelper::capture( int* width, int* height ) {
+
+	// get window size
+	int viewport[4];
+	glGetIntegerv( GL_VIEWPORT, viewport );
+
+	*width = viewport[2], *height = viewport[3];
+
+	// create RGB image buffer
+	byte* pixels = new byte[3 * *width * *height];
+
+	// read from framebuffer
+	glReadPixels(0, 0, *width, *height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	return pixels;
+}
+
+void GLHelper::screenshot( const char* path ) {
+	
+	int width, height;
+	byte* pixels = GLHelper::capture( &width, &height );
+
+	// write buffer to file
+	if( stbi_write_png( path, width, height, 3 /*RGB*/, pixels, 0 ) == 0 ) {
+		logger::error("Failed to write screenshot to: '" + std::string(path) + "'!");
+	}else{
+		logger::info("Written screenshot to: '" + std::string(path) + "'");
+	}
+
+	// free buffer
+	delete[] pixels;
 
 }
 
