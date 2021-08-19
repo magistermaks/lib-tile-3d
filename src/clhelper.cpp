@@ -1,16 +1,15 @@
 
 #include "clhelper.hpp"
 
-void CLHelper::KernelProgramBuilder::addSource( std::string source ) {
-	this->sources.push_back( {source.c_str(), source.length()} );
-}
-
-void CLHelper::KernelProgramBuilder::addFile( std::string path ) {
-
+// helper function used by CLHelper::loadKernel
+bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, const std::string& filename ) {
+	
 	std::string source;
-	std::ifstream ifile(path, std::ios::in);
+	std::string fullpath = path + filename;
+	std::ifstream ifile(fullpath, std::ios::in);
 	const std::string command = "#require ";
 
+	// open specified file
 	if( ifile.is_open() ) {
 		std::stringstream sstr;
 		sstr << ifile.rdbuf();
@@ -20,38 +19,24 @@ void CLHelper::KernelProgramBuilder::addFile( std::string path ) {
 
 		while( std::getline(sstr, line) ) {
 			if( !line.compare(0, command.size(), command) ) {
-				addFile( line.substr( command.size() ) );
+				if( !parseKernelFile( sources, path, line.substr( command.size() ) ) ) {
+					logger::info( "Required from: '" + fullpath + "'" );
+					return false;
+				}
 			} else {
 				source += line + "\n";
 			}
 		}
 
-		// compile shader source
-		this->addSource( source );
+		// add parsed source
+		sources.push_back( {source.c_str(), source.length()} );
 	}else{
-		logger::error( "Failed to read kernel file: '" + path + "'!" );
-		failed = true;
+		logger::error( "Failed to read kernel file: '" + fullpath + "'!" );
+		return false;
 	}
 
-}
+	return true;
 
-std::string CLHelper::KernelProgramBuilder::build() {
-
-	if( failed ) {
-		return "Resource loading failed!";
-	}
-
-	this->program = cl::Program(sources);
-	if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS) {
-		return program.getBuildInfo<CL_PROGRAM_BUILD_LOG>( cl::Device::getDefault() );
-	}
-
-	return "";
-
-}
-
-cl::Kernel CLHelper::KernelProgramBuilder::get( const char* name ) {
-	return cl::Kernel( program, name );
 }
 
 bool CLHelper::init() {
@@ -96,7 +81,7 @@ bool CLHelper::init() {
 
 	// check device count
 	if( count == 0 ) {
-		logger::fatal("No GPU device found!");
+		logger::fatal("No OpenCL GPU device found!");
 		return false;
 	}else{
 		logger::info("Found " + std::to_string(count) + " OpenCL GPU device(s)");
@@ -136,19 +121,26 @@ bool CLHelper::init() {
 
 }
 
-cl::Kernel CLHelper::loadKernel( std::string path, std::string kernel ) {
+cl::Kernel CLHelper::loadKernel( const std::string& name ) {
 
-	KernelProgramBuilder builder;
-	builder.addFile( "assets/opencl/" + path );
-	std::string log = builder.build();
+	cl::Program::Sources sources;
+	cl::Program program;
 
-	if( !log.empty() ) {
-		logger::fatal( "Failed to load kernel: " + log );
-	}else{
-		logger::info( "Loaded OpenCL kernel: '" + kernel + "' from: 'assets/opencl/" + path + "'" );
+	if( parseKernelFile( sources, "assets/opencl/", name ) ) {
+		
+		cl::Program program = cl::Program(sources);
+		if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS ) {
+			std::string log = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>( cl::Device::getDefault() );
+
+			logger::fatal( "Failed to compile OpenCL kernel: '" + name + "'\n" + log );
+		}else{
+			logger::info( "Loaded OpenCL kernel: '" + name + "'" );
+			return cl::Kernel( program, "main" );
+		}
+
 	}
 
-	return builder.get( kernel.c_str() );
+	throw std::runtime_error("OpenCL kernel failed to load!");
 
 }
 

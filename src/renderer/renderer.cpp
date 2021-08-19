@@ -65,7 +65,7 @@ void RenderSystem::setTexture( GLuint tex ) {
 	this->tex = tex;
 }
 
-void RenderSystem::setShader( GLHelper::ShaderProgram& shader ) {
+void RenderSystem::setShader( ShaderProgram& shader ) {
 	this->shader = &shader;
 }
 
@@ -74,6 +74,7 @@ void RenderSystem::vertex( float x, float y, float u, float v ) {
 }
 
 void RenderSystem::drawText( const std::string& text, float x, float y, float size, Charset& charset ) {
+
 	this->setTexture( charset.texture() );
 
 	for( char letter : text ) {

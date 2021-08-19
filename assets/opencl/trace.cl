@@ -1,5 +1,5 @@
 
-#require assets/opencl/math.cl
+#require math.cl
 
 typedef struct {
 	vec3 orig;
@@ -260,7 +260,7 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 	}
 }
 
-void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
+void kernel main( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
 
 	// Epic ChadRayFrameworkX
 	//   pixel x       : get_global_id(0)

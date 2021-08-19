@@ -41,8 +41,8 @@ int main() {
 	
 	GLFWwindow* window = GLHelper::window();
 
-	// compile GLSL program from the shaders
-	GLHelper::ShaderProgram program = GLHelper::loadShaders( "layer" );
+	// compile shader program
+	ShaderProgram* program = GLHelper::loadShaderProgram("layer");
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
@@ -86,7 +86,7 @@ int main() {
 
 	// enable shader program
 	auto& renderer = RenderSystem::instance();
-	renderer.setShader(program);
+	renderer.setShader(*program);
 
 	Camera camera;
 
@@ -125,6 +125,8 @@ int main() {
 		ms = (ms + std::chrono::duration_cast<milliseconds>( Clock::now() - start ).count())/2;
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
+
+	delete program;
 
 	// close window
 	glfwTerminate();
