@@ -32,7 +32,7 @@ int main() {
 	 
 	logger::info("Generating voxel data...");
 
-	PathTracer tracer( 8, width, height, 6, 0 );
+	PathTracer tracer( 8, width, height, 6 );
 	ChunkManager manager( tracer );
 
 	Region region( manager );

@@ -5,7 +5,7 @@
 #include <string>
 #include "pathtracer.hpp"
 
-PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mode ) {
+PathTracer::PathTracer( int spp, int w, int h, int octree_depth ) {
 	this->spp = spp;
 	this->octree_depth = octree_depth;
 
@@ -36,7 +36,6 @@ void PathTracer::resize( int w, int h ) {
 		delete this->canvas;
 	}
 
-
 	this->width = w;
 	this->height = h;
 
@@ -61,8 +60,6 @@ void PathTracer::resize( int w, int h ) {
 	// those ones need to be send every time they change
 	this->kernel.setArg(5, this->image_buffer);
 	this->kernel.setArg(6, this->scene_buffer);
-
-	this->kernel.setArg(9, (byte)(this->render_mode * 8));
 	
 	// send data to buffers in the GPU, do this every time the data changes
 	this->queue.enqueueWriteBuffer(scene_buffer, OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());

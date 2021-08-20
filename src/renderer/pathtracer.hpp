@@ -33,7 +33,7 @@ class PathTracer {
 
 	public:
 
-		PathTracer( int spp, int w, int h, int octree_depth, byte render_mode );
+		PathTracer( int spp, int w, int h, int octree_depth );
 		~PathTracer();
 
 		void resizeVoxels( size_t size );
