@@ -2,12 +2,15 @@
 #include "clhelper.hpp"
 
 // helper function used by CLHelper::loadKernel
-bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, const std::string& filename ) {
-	
+bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, const std::string& filename, std::vector<std::string>& includes ) {
+
 	std::string source;
 	std::string fullpath = path + filename;
 	std::ifstream ifile(fullpath, std::ios::in);
 	const std::string command = "#require ";
+
+	// add yourself to included files
+	includes.push_back(fullpath);
 
 	// open specified file
 	if( ifile.is_open() ) {
@@ -19,9 +22,13 @@ bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, co
 
 		while( std::getline(sstr, line) ) {
 			if( !line.compare(0, command.size(), command) ) {
-				if( !parseKernelFile( sources, path, line.substr( command.size() ) ) ) {
-					logger::info( "Required from: '" + fullpath + "'" );
-					return false;
+				std::string include = line.substr( command.size() );
+
+				if( std::find(includes.begin(), includes.end(), path + include) == includes.end() ) {
+					if( !parseKernelFile(sources, path, include, includes) ) {
+						logger::info( "Required from: '" + fullpath + "'" );
+						return false;
+					}
 				}
 			} else {
 				source += line + "\n";
@@ -126,7 +133,9 @@ cl::Kernel CLHelper::loadKernel( const std::string& name ) {
 	cl::Program::Sources sources;
 	cl::Program program;
 
-	if( parseKernelFile( sources, "assets/opencl/", name ) ) {
+	std::vector<std::string> includes = {};
+
+	if( parseKernelFile( sources, "assets/opencl/", name, includes ) ) {
 		
 		cl::Program program = cl::Program(sources);
 		if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS ) {

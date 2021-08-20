@@ -1,29 +1,14 @@
 
-// require doubles
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-
-// select floating point value to use, float or double
-#define real float
-
 // old habits die hard
 #define nullptr 0
 
 // define byte type for convenience
 typedef unsigned char byte;
 
-// define 3D (xyz) vector
+// define 3D vector
 typedef struct {
-	real x, y, z;
-} vec3;
-
-// define scene object
-typedef struct {
-	vec3 camera_origin;
-	vec3 camera_direction;
-	vec3 ambient_light;
-	vec3 sky_light;
-	vec3 background;
-} Scene;
+	float x, y, z;
+} Vec3;
 
 // macro used for generic vector-vector math
 #define vvopt( ap, bp, out, opt ) \
@@ -38,59 +23,50 @@ typedef struct {
 	(out)->z = (ap)->z opt b; \
 
 // load vector from float array
-void load_vec3( vec3* v, global float* arr ) {
-	v->x = (real) arr[0];
-	v->y = (real) arr[1];
-	v->z = (real) arr[2];
-}
-
-// load scene from float array
-void load_scene( Scene* s, global float* arr ) {
-	load_vec3( &(s->camera_origin),    arr + 0 * 3 );
-	load_vec3( &(s->camera_direction), arr + 1 * 3 );
-	load_vec3( &(s->ambient_light),    arr + 2 * 3 );
-	load_vec3( &(s->sky_light),        arr + 3 * 3 );
-	load_vec3( &(s->background),       arr + 4 * 3 );
+void load_vec3( Vec3* v, global float* arr ) {
+	v->x = (float) arr[0];
+	v->y = (float) arr[1];
+	v->z = (float) arr[2];
 }
 
 // add two vectors, and returns the resulting vector
-inline vec3 add( vec3* a, vec3* b ) {
-	vec3 c;
+inline Vec3 add( Vec3* a, Vec3* b ) {
+	Vec3 c;
 	vvopt( a, b, &c, + );
 	return c;
 }
 
 // add vector and scalar, and returns the resulting vector
-inline vec3 adds( vec3* a, real b ) {
-	vec3 c;
+inline Vec3 adds( Vec3* a, float b ) {
+	Vec3 c;
 	vsopt( a, b, &c, + );
 	return c;
 }
 
 // substracts vector b from vector a, and returns the resulting vector
-inline vec3 sub( vec3* a, vec3* b ) {
-	vec3 c;
+inline Vec3 sub( Vec3* a, Vec3* b ) {
+	Vec3 c;
 	vvopt( a, b, &c, - );
 	return c;
 }
 
 // mutliplies two vectors, and returns the resulting vector
-inline vec3 mul( vec3* a, vec3* b ) {
-	vec3 c;
+inline Vec3 mul( Vec3* a, Vec3* b ) {
+	Vec3 c;
 	vvopt( a, b, &c, * );
 	return c;
 }
 
 // mutliplies vector and scalar, and returns the resulting vector
-inline vec3 muls( vec3* a, real b ) {
-	vec3 c;
+inline Vec3 muls( Vec3* a, float b ) {
+	Vec3 c;
 	vsopt( a, b, &c, * );
 	return c;
 }
 
 // normalize given vector, returns given pointer
-inline vec3* norm( vec3* a ) {
-	const real b = ( 
+inline Vec3* norm( Vec3* a ) {
+	const float b = ( 
 		1.0 / sqrt( a->x * a->x + a->y * a->y + a->z * a->z )
 	);
 
@@ -99,12 +75,12 @@ inline vec3* norm( vec3* a ) {
 }
 
 // get the dot product of two given vectors
-inline real vdot( vec3* a, vec3* b ) {
+inline float vdot( Vec3* a, Vec3* b ) {
 	return a->x * b->x + a->y * b->y + a->z * b->z; 
 }
 
-// clamps given real to range [0-1]
-inline real sclamp( real x ){ 
+// clamps given float to range [0-1]
+inline float sclamp( float x ){ 
 	return x < 0 ? 0 : x > 1 ? 1 : x; 
 }
 
