@@ -5,9 +5,12 @@
 #include <string>
 #include "pathtracer.hpp"
 
-PathTracer::PathTracer( int spp, int w, int h, int octree_depth ) {
+PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mode ) {
 	this->spp = spp;
 	this->octree_depth = octree_depth;
+
+	//render_mode 0 - full resolution, 1 - half of pixels, 2 - quarter of pixels
+	this->render_mode = render_mode;
 
 	// load the path-tracing kernel, and create OpenCl task queue
 	this->kernel = CLHelper::loadKernel( "trace.cl" );
@@ -16,7 +19,7 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth ) {
 	this->canvas = nullptr;
 
 	// init scene
-	scene->setBackground( 0, 0, 102 );
+	scene->setBackground(3, 169, 252);
 
 	// initialize all size dependent components
 	resize( w, h );
@@ -33,9 +36,13 @@ void PathTracer::resize( int w, int h ) {
 		delete this->canvas;
 	}
 
+
 	this->width = w;
 	this->height = h;
-	this->range = cl::NDRange(w, h);
+
+	// scale of rendering resolution
+	glm::vec2 scale[3] = { {1,1}, {1,2}, {2,2} };
+	this->range = cl::NDRange(w / scale[this->render_mode].x, h / scale[this->render_mode].y);
 
 	// texture to draw on
 	this->canvas = new Canvas(w, h);
@@ -54,6 +61,8 @@ void PathTracer::resize( int w, int h ) {
 	// those ones need to be send every time they change
 	this->kernel.setArg(5, this->image_buffer);
 	this->kernel.setArg(6, this->scene_buffer);
+
+	this->kernel.setArg(9, (byte)(this->render_mode * 8));
 	
 	// send data to buffers in the GPU, do this every time the data changes
 	this->queue.enqueueWriteBuffer(scene_buffer, OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
@@ -112,6 +121,11 @@ void PathTracer::render( Camera& camera ) {
 	}else{
 		pressed = false;
 	}
+
+	// selects pixels which are rendered (if "blur" enabled)
+	int top[3] = {0, 1, 3};
+	this->kernel.setArg(9, (byte)(pixel + this->render_mode * 8));
+	pixel = (pixel >= top[this->render_mode]) ? 0 : pixel + 1;
 
 	auto& renderer = RenderSystem::instance();
 

@@ -50,6 +50,7 @@
 #include <murmur-3/murmur.hpp>
 #include <thread_pool/thread_pool.hpp>
 #include <stx/string.hpp>
+#include <perlin_noise/PerlinNoise.hpp>
 
 #ifdef __linux__
 #	undef Region
@@ -97,6 +98,7 @@ typedef std::mt19937 rng_type;
 #include "world/chunk.hpp"
 #include "world/region.hpp"
 #include "world/octree.hpp"
+#include "world/worldgen.hpp"
 #include "renderer/shader.hpp"
 #include "renderer/scene.hpp"
 #include "renderer/renderer.hpp"

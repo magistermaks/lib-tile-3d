@@ -12,6 +12,8 @@ class PathTracer {
 	private:
 		
 		unsigned int spp, width, height;
+		byte render_mode = 0;
+		byte pixel = 0;
 		
 		cl::Kernel kernel;
 
@@ -31,7 +33,7 @@ class PathTracer {
 
 	public:
 
-		PathTracer( int spp, int w, int h, int octree_depth );
+		PathTracer( int spp, int w, int h, int octree_depth, byte render_mode );
 		~PathTracer();
 
 		void resizeVoxels( size_t size );
