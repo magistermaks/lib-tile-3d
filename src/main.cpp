@@ -7,7 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/image/write.h>
 
-#define WORLD
+//#define WORLD
 
 int main() {
 
@@ -26,7 +26,8 @@ int main() {
 	GLFWwindow* window = GLHelper::window();
 
 	// compile shader program
-	ShaderProgram* program = GLHelper::loadShaderProgram("layer");
+	ShaderProgram* depth = GLHelper::loadShaderProgram("depth");
+	ShaderProgram* layer = GLHelper::loadShaderProgram("layer");
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
@@ -52,7 +53,6 @@ int main() {
 
 	// enable shader program
 	auto& renderer = RenderSystem::instance();
-	renderer.setShader(*program);
 
 	Camera camera;
 
@@ -78,10 +78,12 @@ int main() {
 			count = 0;
 		}
 
+		renderer.setShader(*depth);
 		manager.update();
 		camera.update();
 		tracer.render( camera );
 
+		renderer.setShader(*layer);
 		renderer.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
 
 		GLHelper::frame();
@@ -91,7 +93,8 @@ int main() {
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 
-	delete program;
+	delete depth;
+	delete layer;
 
 	// close window
 	glfwTerminate();

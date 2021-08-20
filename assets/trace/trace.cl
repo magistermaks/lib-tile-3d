@@ -57,9 +57,9 @@ void kernel main( const int spp, const int width, const int height, const int oc
 	// preparing ray
 	Ray ray;
 	load_ray(&ray, &scene, &pos, width, height, 0.8f);
-
-	// background color
-	Vec3 color = scene.background;
+ 
+	// set background color
+	float4 color = { scene.background.x, scene.background.y, scene.background.z, 1.0f };
 
 	float max_dist = 0xffffff;
 	float size = 64 * scale;
@@ -85,11 +85,11 @@ void kernel main( const int spp, const int width, const int height, const int oc
 
 				// get pointer to octree of given chunk
 				// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
-				global byte* octree = octrees + (chunk * 299593 * 4);
+				global byte* octree = octrees + (chunk * 299593 * VOXEL_SIZE);
 
 				// render the chunk
 				// internally updates `max_dist`
-				octree_draw_pixel(chunk_pos, &ray, octree, &max_dist, &color, octree_depth, size);
+				octree_get_pixel(chunk_pos, &ray, octree, &max_dist, &color, octree_depth, size);
 			}
 		}
 	}
@@ -98,7 +98,7 @@ void kernel main( const int spp, const int width, const int height, const int oc
 		color.x * (1.0f / 255.0f),
 		color.y * (1.0f / 255.0f),
 		color.z * (1.0f / 255.0f),
-		0
+		color.w
 	};
 
 	write_imagef(image, pos, colr);

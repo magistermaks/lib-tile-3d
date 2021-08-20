@@ -15,16 +15,16 @@ Canvas::Canvas( int width, int height ) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// initialize an empty texture
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr );
 }
 
 Canvas::~Canvas() {
 	glDeleteTextures(1, &tex);
 }
 
-void Canvas::update( byte* buffer ) {
+void Canvas::update( float* buffer ) {
 	this->bind();
-	glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+	glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, buffer );
 }
 
 GLuint Canvas::id() {
@@ -36,8 +36,8 @@ void Canvas::bind() {
 	glBindTexture( GL_TEXTURE_2D, this->tex );
 }
 
-byte* Canvas::allocate( int width, int height ) {
-	return new byte[3 * width * height];
+float* Canvas::allocate( int width, int height ) {
+	return new float[4 * width * height];
 }
 
 RenderSystem::RenderSystem() : vertices(16) {

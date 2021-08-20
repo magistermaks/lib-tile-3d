@@ -19,11 +19,11 @@ class Canvas {
 		Canvas( int, int );
 		~Canvas();
 
-		void update( byte* data );
+		void update( float* data );
 		void bind();
 		GLuint id();
 
-		static byte* allocate( int, int );
+		static float* allocate( int, int );
 
 };
 
