@@ -5,7 +5,7 @@
 #include <string>
 #include "pathtracer.hpp"
 
-PathTracer::PathTracer( int spp, int w, int h, int octree_depth ) {
+PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mode ) {
 	this->spp = spp;
 	this->octree_depth = octree_depth;
 
