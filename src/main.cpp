@@ -42,7 +42,7 @@ int main() {
 #else
 	// floating voixels surrounded with cubes
 	Worldgen::gen_chunk_scene1(region);
-	VoxelTree& tree = *region.chunk(0, 0, 0)->tree;
+	auto& tree = *region.chunk(0, 0, 0)->tree;
 #endif
 
 	Charset charset( "assets/8x8font.png" );

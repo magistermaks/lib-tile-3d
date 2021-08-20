@@ -1,6 +1,12 @@
 
 #require math.cl
 
+#define VOXEL_SIZE 4
+#define RED 0
+#define GREEN 1
+#define BLUE 2
+#define ALPHA 3
+
 typedef struct {
 	vec3 orig;
 	vec3 invdir;
@@ -41,14 +47,15 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 }
 
 byte test_octree(const float csize, global byte* octree, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
-	if (id > 0)	xyz.y += csize;
+
+	if( id > 0 ) xyz.z += csize;
 
 	byte vid = 255;
 	float tmpdist;
 
 	vec3 bounds[2] = { xyz, { csize + xyz.x, csize + xyz.y, csize + xyz.z } };
 
-	if ((mask >> id) & 1) {
+	if( (mask >> id) & 1 ) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
@@ -60,7 +67,7 @@ byte test_octree(const float csize, global byte* octree, const Ray* ray, vec3 xy
 	bounds[0].x = csize + xyz.x;
 	bounds[1].x = csize * 2 + xyz.x;
 
-	if ((mask >> (id + 1)) & 1) {
+	if( (mask >> (id + 1)) & 1 ) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
@@ -69,24 +76,24 @@ byte test_octree(const float csize, global byte* octree, const Ray* ray, vec3 xy
 		}
 	}
 
-	bounds[0].z = csize + xyz.z;
-	bounds[1].z = csize * 2 + xyz.z;
+	bounds[0].y = csize + xyz.y;
+	bounds[1].y = csize * 2 + xyz.y;
 
-	if ((mask >> (id + 2)) & 1) {
+	if( (mask >> (id + 3)) & 1 ) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
-				vid = id + 2;
+				vid = id + 3;
 				*dist = tmpdist;
 			}
 		}
 	}
 
-	if ((mask >> (id + 3)) & 1) {
+	if( (mask >> (id + 2)) & 1 ) {
 		bounds[0].x = xyz.x;
 		bounds[1].x = csize + xyz.x;
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
-				vid = id + 3;
+				vid = id + 2;
 				*dist = tmpdist;
 			}
 		}
@@ -115,7 +122,7 @@ void setRotation(vec3* vec, vec3* rotation) {
 
 void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, float csize) {
 
-	float dist = 0xffffff;
+	float dist;
 
 	// id of hit voxel (from 0 to 7, 255 = miss)
 	byte oc = 255;
@@ -138,12 +145,12 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		alt_data[d].mask = 0b11111111;
 	}
 
-	// currently tested level
+	// currently tested level 
 	int depth = 1;
-	for (; depth <= octree_depth; depth++) {
+	for(; depth <= octree_depth; depth ++ ) {
 
 		// get a data container that corresponds to the level of tested node 
-		Data* ad = &(alt_data[depth]);
+		Data* ad = &alt_data[depth];
 
 		// store variables in case of having to choose a different path 
 		ad->globalid = globalid;
@@ -153,10 +160,10 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		ad->xyzo = xyzo;
 
 		// mask representing transparency of children
-		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * 4 + 3];
+		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * VOXEL_SIZE + ALPHA];
 
 		// clearing the closest distance to the voxel
-		dist = 0xffffff;
+		dist = *max_dist;
 
 		// decreasing octant size
 		csize /= 2.0f;
@@ -165,71 +172,39 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		globalid *= 8;
 
 		// test first 4 octants
-		if ((ad->mask & 0b00001111) != 0)
+		if( ad->mask & 0b00001111 )
 			oc = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 0, &dist, alpha_mask);
 
 		// test next 4 octants
-		if ((ad->mask & 0b11110000) != 0) {
+		if( ad->mask & 0b11110000 ) {
 			byte oc1 = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 4, &dist, alpha_mask);
 
 			// checking if ray from the second test hit anything
-			if (oc1 != 255) oc = oc1;
+			if( oc1 != 255 ) oc = oc1;
 		}
 
 		// move to the next child (by the id of the one that got intersected)
 		globalid += oc;
 
 		// if intersected anything
-		if (oc != 255) {
+		if( oc != 255 ) {
 
 			// move coordinates of the currently tested octant
-			switch (oc) {
-			case 1:
-				xyzo.x += csize;
-				break;
-
-			case 2:
-				xyzo.x += csize;
-				xyzo.z += csize;
-				break;
-
-			case 3:
-				xyzo.z += csize;
-				break;
-
-			case 4:
-				xyzo.y += csize;
-				break;
-
-			case 5:
-				xyzo.x += csize;
-				xyzo.y += csize;
-				break;
-
-			case 6:
-				xyzo.x += csize;
-				xyzo.y += csize;
-				xyzo.z += csize;
-				break;
-
-			case 7:
-				xyzo.y += csize;
-				xyzo.z += csize;
-				break;
-			}
+			xyzo.x += !!(oc & 1) * csize;
+			xyzo.y += !!(oc & 2) * csize;
+			xyzo.z += !!(oc & 4) * csize;
 
 			ad->mask &= ~(1 << oc);
 			ad->oc = oc;
 			pow8 *= 8;
 			layerindex += pow8;
 
-		}
-		else {
-			if (alt_data[1].mask == 0 || depth == 1)
+		}else{
+			if( alt_data[1].mask == 0 || depth == 1 )
 				break;
 
 			ad->mask = 0b11111111;
-			ad = &(alt_data[depth - 1]);
+			ad = &alt_data[depth - 1];
 			pow8 = ad->pow8;
 			layerindex = ad->layerindex;
 			globalid = ad->globalid;
@@ -239,14 +214,14 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		}
 	}
 
-	if (dist < *max_dist) {
+	if( dist < *max_dist ) {
 		*max_dist = dist;
 
-		const int index = ((1 - pow8) / -7 + globalid) * 4;
-		if (depth >= octree_depth + 1 && octree[index + 3] > 0) {
-			output->x = octree[index];
-			output->y = octree[index + 1];
-			output->z = octree[index + 2];
+		const int index = ((1 - pow8) / -7 + globalid) * VOXEL_SIZE;
+		if( depth >= octree_depth + 1 ) {
+			output->x = octree[index + RED];
+			output->y = octree[index + GREEN];
+			output->z = octree[index + BLUE];
 		}
 	}
 }
