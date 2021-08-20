@@ -135,7 +135,7 @@ cl::Kernel CLHelper::loadKernel( const std::string& name ) {
 
 	std::vector<std::string> includes = {};
 
-	if( parseKernelFile( sources, "assets/opencl/", name, includes ) ) {
+	if( parseKernelFile( sources, "assets/" + name + "/", name + ".cl", includes ) ) {
 		
 		cl::Program program = cl::Program(sources);
 		if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS ) {

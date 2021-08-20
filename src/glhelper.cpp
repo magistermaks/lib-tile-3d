@@ -34,6 +34,11 @@ bool GLHelper::init(int width, int height, const char* name) {
 		return false;
 	}
 
+	glfwSetWindowSizeCallback( windowHandle, [](GLFWwindow* window, int width, int height) -> void {
+		glViewport(0, 0, width, height);
+		PathTracer::instance()->resize(width, height);
+	} );
+
 	// TODO move somewhere else
 	glfwSetKeyCallback( windowHandle, [] (GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
 		if( key == GLFW_KEY_SPACE && action == GLFW_PRESS ) GLHelper::screenshot("screenshot.png");

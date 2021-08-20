@@ -10,6 +10,7 @@ class VoxelTree;
 class PathTracer {
 
 	private:
+		static PathTracer* self;
 		
 		unsigned int spp, width, height;
 		byte render_mode = 0;
@@ -35,6 +36,8 @@ class PathTracer {
 
 		PathTracer( int spp, int w, int h, int octree_depth, byte render_mode );
 		~PathTracer();
+
+		static PathTracer* instance();
 
 		void resizeVoxels( size_t size );
 		void updateVoxels( size_t offset, size_t count, byte* ptr );

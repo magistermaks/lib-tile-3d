@@ -5,6 +5,8 @@
 #include <string>
 #include "pathtracer.hpp"
 
+PathTracer* PathTracer::self = nullptr;
+
 PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mode ) {
 	this->spp = spp;
 	this->octree_depth = octree_depth;
@@ -13,7 +15,7 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 	this->render_mode = render_mode;
 
 	// load the path-tracing kernel, and create OpenCl task queue
-	this->kernel = CLHelper::loadKernel( "trace.cl" );
+	this->kernel = CLHelper::loadKernel("trace");
 	this->queue = cl::CommandQueue( cl::Context::getDefault(), cl::Device::getDefault() );	
 	this->scene = new Scene();
 	this->canvas = nullptr;
@@ -23,11 +25,19 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 
 	// initialize all size dependent components
 	resize( w, h );
+
+	PathTracer::self = this;
 }
 
 PathTracer::~PathTracer() {
 	delete this->scene;
 	delete this->canvas;
+
+	PathTracer::self = nullptr;
+}
+
+PathTracer* PathTracer::instance() {
+	return PathTracer::self;
 }
 
 void PathTracer::resize( int w, int h ) {
