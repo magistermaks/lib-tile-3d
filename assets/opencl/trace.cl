@@ -41,17 +41,16 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 }
 
-byte test_octree(const float csize, global byte* octree, int layerid, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
+byte test_octree(const float csize, global byte* octree, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
 
 	if( id > 0 ) xyz.z += csize;
 
 	byte vid = 255;
 	float tmpdist;
-	layerid += id;
 
 	vec3 bounds[2] = { xyz, { csize + xyz.x, csize + xyz.y, csize + xyz.z } };
 
-	if( octree[layerid * 4 + 3] && ((mask >> id) & 1) ) {
+	if( (mask >> id) & 1 ) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
@@ -63,7 +62,7 @@ byte test_octree(const float csize, global byte* octree, int layerid, const Ray*
 	bounds[0].x = csize + xyz.x;
 	bounds[1].x = csize * 2 + xyz.x;
 
-	if( octree[layerid * 4 + 7] && ((mask >> (id + 1)) & 1) ) {
+	if( (mask >> (id + 1)) & 1 ) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
@@ -75,7 +74,7 @@ byte test_octree(const float csize, global byte* octree, int layerid, const Ray*
 	bounds[0].y = csize + xyz.y;
 	bounds[1].y = csize * 2 + xyz.y;
 
-	if( octree[layerid * 4 + 15] && ((mask >> (id + 3)) & 1) ) {
+	if( (mask >> (id + 3)) & 1 ) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 3;
@@ -84,7 +83,7 @@ byte test_octree(const float csize, global byte* octree, int layerid, const Ray*
 		}
 	}
 
-	if( octree[layerid * 4 + 11] && ((mask >> (id + 2)) & 1) ) {
+	if( (mask >> (id + 2)) & 1 ) {
 		bounds[0].x = xyz.x;
 		bounds[1].x = csize + xyz.x;
 		if (intersect(ray, bounds, &tmpdist)) {
@@ -141,9 +140,9 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		alt_data[d].mask = 0b11111111;
 	}
 
-	// currently tested level
+	// currently tested level 
 	int depth = 1;
-	for (; depth <= octree_depth; depth++) {
+	for(; depth <= octree_depth; depth ++ ) {
 
 		// get a data container that corresponds to the level of tested node 
 		Data* ad = &(alt_data[depth]);
@@ -156,7 +155,7 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		ad->xyzo = xyzo;
 
 		// mask representing transparency of children
-		// byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * 4 + 3];
+		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * 4 + 3];
 
 		// clearing the closest distance to the voxel
 		dist = 0xffffff;
@@ -169,11 +168,11 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 
 		// test first 4 octants
 		if( ad->mask & 0b00001111 )
-			oc = test_octree(csize, octree, layerindex + globalid, ray, add(&xyzo, &xyzc), 0, &dist, ad->mask);
+			oc = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 0, &dist, alpha_mask);
 
 		// test next 4 octants
 		if( ad->mask & 0b11110000 ) {
-			byte oc1 = test_octree(csize, octree, layerindex + globalid, ray, add(&xyzo, &xyzc), 4, &dist, ad->mask);
+			byte oc1 = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 4, &dist, alpha_mask);
 
 			// checking if ray from the second test hit anything
 			if( oc1 != 255 ) oc = oc1;
@@ -214,7 +213,7 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		*max_dist = dist;
 
 		const int index = ((1 - pow8) / -7 + globalid) * 4;
-		if (depth >= octree_depth + 1 && octree[index + 3] > 0) {
+		if( depth >= octree_depth + 1 ) {
 			output->x = octree[index];
 			output->y = octree[index + 1];
 			output->z = octree[index + 2];

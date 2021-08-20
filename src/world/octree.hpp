@@ -9,17 +9,24 @@ struct OctreeVoxel {
 	byte b; // blue color
 	byte a; // translucency 
 //	byte i; // light intensity
+
+	bool empty() {
+		return this->a == 0;
+	}
+
+	static void set( const int octant, const int offset, OctreeVoxel* ptr ) {
+		ptr[offset].a |= 1 << octant;
+	}
+
+	static void get( const int octant, const int offset, OctreeVoxel* ptr ) {
+		// noop
+	}
+
+	static void erase( const int octant, const int offset, OctreeVoxel* ptr ) {
+		// noop
+	}
+
 };
-
-template< typename T >
-void octree_callback_set(const byte mask, const int offset, T* ptr) {
-	if( mask != 1 ) ptr[offset] = { 255, 255, 255, 255 }; // FIXME: generify this ugly trash
-}
-
-template< typename T >
-void octree_callback_get(const byte mask, const int offset, T* ptr) {
-	// let's hope that the compiler will be smart enough to optimize this out
-}
 
 template< typename T >
 class Octree {
@@ -35,7 +42,7 @@ class Octree {
 	protected:
 
 		/// branch iterator callback
-		using Iterator = void (*) (const byte, const int, T*);
+		using Iterator = void (*) (const int, const int, T*);
 		
 		/// get a leaf pointer
 		template<Iterator Func>
@@ -45,40 +52,43 @@ class Octree {
 			int offset = 0;
 
 			// copy iterator mask
-			byte mask = this->mask;	
-
-			// FIXME fix it in some better, less hacky, way
-			Func(0, 0, this->buffer);
-
-			// pointer to the tree data buffer
-			T* pointer = this->buffer + 1;
+			byte mask = this->mask;
 
 			// iterate until the mask is shifted to target (leaf) layer
 			while( mask ) {
 
-				// shift the offset so that it aligns to the next layer
-				offset <<= 3;
-
-				// calculate the offset by decomposing the xyz to its binary form
-				offset += (
+				// calculate the octant by decomposing the xyz to its binary form
+				const int octant = (
 					!!(x & mask) * 1 + 
 					!!(y & mask) * 2 +
 					!!(z & mask) * 4
 				);
 
-				// call iterator handle (this is inlined by the compiler)
-				Func(mask, offset, pointer);
+				// call iterator handle (this SHOULD be inlined by the compiler)
+				Func(octant, offset, this->buffer);
 
-				// the value added to `offset` must be kept in range 1-8, not 0-7
-				offset ++; 
+				// shift the offset so that it aligns to the next layer
+				offset <<= 3;
+
+				// calculate the offset by decomposing the xyz to its binary form
+				offset += octant;
 
 				// shift the mask
 				mask >>= 1;
 
+				// the value added to `offset` must be kept in range 1-8, not 0-7
+				offset ++;
+
 			}
 
-			// the value added to `offset` must be kept in range 0-7 (on the leaf layer), not 1-8
-			return pointer + offset - 1;
+			// return pointer to leaf
+			return this->buffer + offset;
+
+		}
+
+		void optimize( const int offset, byte depth ) {
+
+			// TODO: fix alpha masks for removed leafs
 
 		}
 	
@@ -101,18 +111,22 @@ class Octree {
 		}
 	
 		~Octree() {
-			delete[] buffer;
+			delete[] this->buffer;
 		}
 
 		/// get raw entry from the tree
 		T get( const int x, const int y, const int z ) {
-			return *accessor<octree_callback_get<T>>(x, y, z);
+			return *accessor<T::get>(x, y, z);
 		}
 
 		/// set raw entry in a tree
 		void set( const int x, const int y, const int z, T leaf ) {
 			this->modified = true;
-			*accessor<octree_callback_set<T>>(x, y, z) = leaf;
+			if( leaf.empty() ) {
+				*accessor<T::erase>(x, y, z) = leaf;
+			} else {
+				*accessor<T::set>(x, y, z) = leaf;
+			}
 		}
 
 	public:
@@ -126,6 +140,8 @@ class Octree {
 		bool dirty() {
 			bool flag = this->modified;
 			this->modified = false;
+			if( flag ) this->optimize(0, this->mask);
+
 			return flag;
 		}
 
