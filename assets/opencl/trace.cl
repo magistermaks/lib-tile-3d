@@ -1,6 +1,11 @@
 
 #require math.cl
+
 #define VOXEL_SIZE 4
+#define RED 0
+#define GREEN 1
+#define BLUE 2
+#define ALPHA 3
 
 typedef struct {
 	vec3 orig;
@@ -117,7 +122,7 @@ void setRotation(vec3* vec, vec3* rotation) {
 
 void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, float csize) {
 
-	float dist = 0xffffff;
+	float dist;
 
 	// id of hit voxel (from 0 to 7, 255 = miss)
 	byte oc = 255;
@@ -145,7 +150,7 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 	for(; depth <= octree_depth; depth ++ ) {
 
 		// get a data container that corresponds to the level of tested node 
-		Data* ad = &(alt_data[depth]);
+		Data* ad = &alt_data[depth];
 
 		// store variables in case of having to choose a different path 
 		ad->globalid = globalid;
@@ -155,10 +160,10 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 		ad->xyzo = xyzo;
 
 		// mask representing transparency of children
-		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * 4 + 3];
+		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * VOXEL_SIZE + ALPHA];
 
 		// clearing the closest distance to the voxel
-		dist = 0xffffff;
+		dist = *max_dist;
 
 		// decreasing octant size
 		csize /= 2.0f;
@@ -199,7 +204,7 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 				break;
 
 			ad->mask = 0b11111111;
-			ad = &(alt_data[depth - 1]);
+			ad = &alt_data[depth - 1];
 			pow8 = ad->pow8;
 			layerindex = ad->layerindex;
 			globalid = ad->globalid;
@@ -212,11 +217,11 @@ void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec
 	if( dist < *max_dist ) {
 		*max_dist = dist;
 
-		const int index = ((1 - pow8) / -7 + globalid) * 4;
+		const int index = ((1 - pow8) / -7 + globalid) * VOXEL_SIZE;
 		if( depth >= octree_depth + 1 ) {
-			output->x = octree[index];
-			output->y = octree[index + 1];
-			output->z = octree[index + 2];
+			output->x = octree[index + RED];
+			output->y = octree[index + GREEN];
+			output->z = octree[index + BLUE];
 		}
 	}
 }
