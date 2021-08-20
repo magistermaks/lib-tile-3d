@@ -65,7 +65,7 @@ void RenderSystem::setTexture( GLuint tex ) {
 	this->tex = tex;
 }
 
-void RenderSystem::setShader( GLHelper::ShaderProgram& shader ) {
+void RenderSystem::setShader( ShaderProgram& shader ) {
 	this->shader = &shader;
 }
 
@@ -85,6 +85,9 @@ void RenderSystem::drawText( const std::string& text, float x, float y, float si
 
 		this->vertex( x, y, glyph.uv.x, glyph.uv.y );
 		this->vertex( x + w, y, glyph.uv.x + glyph.size.x, glyph.uv.y );
+		this->vertex( x, y + h, glyph.uv.x, glyph.uv.y + glyph.size.y );
+
+		this->vertex( x + w, y, glyph.uv.x + glyph.size.x, glyph.uv.y );
 		this->vertex( x + w, y + h, glyph.uv.x + glyph.size.x, glyph.uv.y + glyph.size.y );
 		this->vertex( x, y + h, glyph.uv.x, glyph.uv.y + glyph.size.y );
 
@@ -96,10 +99,15 @@ void RenderSystem::drawText( const std::string& text, float x, float y, float si
 
 void RenderSystem::drawScreen( Canvas& canvas ) {
 	this->setTexture( canvas.id() );
+
 	this->vertex( -1, -1,  0,  0 );
 	this->vertex(  1, -1,  1,  0 );
+	this->vertex( -1,  1,  0,  1 );
+
 	this->vertex(  1,  1,  1,  1 );
 	this->vertex( -1,  1,  0,  1 );
+	this->vertex(  1, -1,  1,  0 );
+
 	this->draw();
 }
 
@@ -122,7 +130,7 @@ void RenderSystem::draw() {
 		this->shader->bind();
 
 		// call OpenGL
-		glDrawArrays(GL_QUADS, 0, vertices.size() / 4 );
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3 );
 		vertices.clear();
 
 	}

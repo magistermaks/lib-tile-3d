@@ -13,7 +13,7 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 	this->render_mode = render_mode;
 
 	// load the path-tracing kernel, and create OpenCl task queue
-	this->kernel = CLHelper::loadKernel( "trace.cl", "render" );
+	this->kernel = CLHelper::loadKernel( "trace.cl" );
 	this->queue = cl::CommandQueue( cl::Context::getDefault(), cl::Device::getDefault() );	
 	this->scene = new Scene();
 	this->canvas = nullptr;

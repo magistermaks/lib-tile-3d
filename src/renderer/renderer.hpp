@@ -1,9 +1,10 @@
 #pragma once
 
+#include "shader.hpp"
 #include "../config.hpp"
 
 // :angry_bread:
-namespace GLHelper { class ShaderProgram; }
+class ShaderProgram;
 class Charset;
 
 class Canvas {
@@ -32,7 +33,7 @@ class RenderSystem {
 		
 		ReusableBuffer<float> vertices;
 		GLuint vbo, vao, tex;
-		GLHelper::ShaderProgram* shader;
+		ShaderProgram* shader;
 
 		RenderSystem();
 
@@ -46,7 +47,7 @@ class RenderSystem {
 
 		// modify renderer state
 		void setTexture( GLuint );
-		void setShader( GLHelper::ShaderProgram& );
+		void setShader( ShaderProgram& );
 		void vertex( float, float, float, float );
 
 		// render specific elements

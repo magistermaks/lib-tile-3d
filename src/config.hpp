@@ -39,7 +39,8 @@
 #include <opencl/opencl.hpp>
 
 // external
-#include <stb/image.h>
+#include <stb/image/read.h>
+#include <stb/image/write.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -98,6 +99,7 @@ typedef std::mt19937 rng_type;
 #include "world/region.hpp"
 #include "world/octree.hpp"
 #include "world/worldgen.hpp"
+#include "renderer/shader.hpp"
 #include "renderer/scene.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/material.hpp"
