@@ -8,8 +8,8 @@ void Worldgen::gen_chunk_world(Region& region) {
 			for (int zc = -2; zc <= 2; zc++) {
 				int x = xc, z = zc, y = i;
 
-				region.put(nullptr, x, y, z);
-				VoxelTree& tree = *region.chunk(x, y, z)->tree;
+				region.put(x, y, z);
+				auto& tree = *region.chunk(x, y, z)->tree;
 
 				x *= 64;
 				y *= 64;
@@ -77,9 +77,9 @@ void Worldgen::gen_chunk_world(Region& region) {
 
 void Worldgen::gen_chunk_scene1(Region& region) {
 
-	region.put(nullptr, 0, 0, 0);
+	region.put(0, 0, 0);
 
-	VoxelTree& tree = *region.chunk(0, 0, 0)->tree;
+	auto& tree = *region.chunk(0, 0, 0)->tree;
 
 	tree.set(0, 0, 0, { 255, 0, 0, 255 });
 	tree.set(1, 1, 0, { 0, 255, 0, 255 });
@@ -87,7 +87,6 @@ void Worldgen::gen_chunk_scene1(Region& region) {
 	tree.set(3, 3, 0, { 255, 255, 0, 255 });
 	tree.set(4, 4, 0, { 0, 255, 255, 255 });
 	tree.set(5, 5, 0, { 255, 0, 255, 255 });
-
 
 	for (int xc = -2; xc <= 2; xc++) {
 		for (int zc = -2; zc <= 2; zc++) {
@@ -101,8 +100,8 @@ void Worldgen::gen_chunk_scene1(Region& region) {
 			if (zc == 0 && xc == -1) continue;
 			if (zc == 0 && xc == 1) continue;
 
-			region.put(nullptr, xc, 0, zc);
-			VoxelTree& tree = *region.chunk(xc, 0, zc)->tree;
+			region.put(xc, 0, zc);
+			auto& tree = *region.chunk(xc, 0, zc)->tree;
 
 			for (int x = 0; x < 64; x++) {
 				for (int y = 0; y < 50; y++) {

@@ -1,15 +1,14 @@
 #pragma once
 
+#include "octree.hpp"
 #include "../config.hpp"
 
-typedef byte chunk_t[64][64][64][4];
-
 class Region;
-class Voxel;
-class VoxelTree;
 class PathTracer;
+class OctreeVoxel;
 
-Voxel& get(Voxel* arr, byte x, byte y, byte z);
+template< typename T >
+class Octree;
 
 class Chunk {
 
@@ -20,7 +19,7 @@ class Chunk {
 	public:
 
 		// TODO: make this private
-		VoxelTree* tree;
+		Octree<OctreeVoxel>* tree;
 		const int cx, cy, cz;
 
 		Chunk( Region*, int, int, int );

@@ -97,7 +97,6 @@ typedef std::mt19937 rng_type;
 #include "util/charset.hpp"
 #include "world/chunk.hpp"
 #include "world/region.hpp"
-#include "world/octree.hpp"
 #include "world/worldgen.hpp"
 #include "renderer/shader.hpp"
 #include "renderer/scene.hpp"

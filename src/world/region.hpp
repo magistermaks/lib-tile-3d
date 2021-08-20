@@ -37,7 +37,7 @@ class Region {
 		Region( ChunkManager& );
 
 		/// add chunk to region, expects chunk to be on the heap
-		void put( Voxel* chunk, int x, int y, int z );
+		void put( int x, int y, int z );
 
 		/// remove (and free) chunk from region
 		void remove( int x, int y, int z );

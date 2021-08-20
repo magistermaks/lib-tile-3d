@@ -5,6 +5,9 @@
 // select floating point value to use, float or double
 #define real float
 
+// old habits die hard
+#define nullptr 0
+
 // define byte type for convenience
 typedef unsigned char byte;
 
@@ -54,6 +57,13 @@ void load_scene( Scene* s, global float* arr ) {
 inline vec3 add( vec3* a, vec3* b ) {
 	vec3 c;
 	vvopt( a, b, &c, + );
+	return c;
+}
+
+// add vector and scalar, and returns the resulting vector
+inline vec3 adds( vec3* a, real b ) {
+	vec3 c;
+	vsopt( a, b, &c, + );
 	return c;
 }
 
