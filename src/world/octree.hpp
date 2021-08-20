@@ -77,7 +77,7 @@ class Octree {
 			}
 
 			// the last level don't have headers, we need to un-skip it
-			return pointer + offset; 
+			return pointer + offset - 1;
 
 		}
 	

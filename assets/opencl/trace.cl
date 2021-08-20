@@ -8,7 +8,15 @@ typedef struct {
 	int sign[3];
 } Ray;
 
-
+typedef struct {
+	vec3 xyzo;
+	float csize;
+	int globalid;
+	int layerindex;
+	int pow8;
+	byte oc;
+	byte mask;
+} Data;
 
 bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
@@ -106,16 +114,6 @@ void setRotation(vec3* vec, vec3* rotation) {
 	vec->z = vec->z * cosCamY + vec->x * sinCamY;
 	vec->x = rotated;
 }
-
-typedef struct {
-	vec3 xyzo;
-	float csize;
-	int globalid;
-	int layerindex;
-	int pow8;
-	byte oc;
-	byte mask;
-} Data;
 
 void render_chunk(vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, vec3* output, int octree_depth, float csize) {
 
