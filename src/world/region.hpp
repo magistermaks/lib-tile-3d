@@ -18,7 +18,7 @@ struct ChunkPos {
 namespace std {
 
 	template <>
-	struct hash<ChunkPos> : public std::unary_function<const ChunkPos&, std::size_t> {
+	struct hash<ChunkPos> : public std::function<std::size_t(const ChunkPos&)> {
 		inline std::size_t operator()( const ChunkPos& pos ) const;
 	};
 

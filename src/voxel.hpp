@@ -17,6 +17,4 @@ class Voxel {
 
 		Voxel& operator=( Voxel&& );
 
-		static Voxel random();
-
 };

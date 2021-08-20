@@ -1,5 +1,5 @@
 
-#require assets/opencl/math.cl
+#require math.cl
 
 typedef struct {
 	vec3 orig;
@@ -42,10 +42,11 @@ bool intersect(const Ray* r, const vec3 bounds[2], float* dist) {
 
 }
 
-byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ray* ray, int x, int y, int z, int id, int globalid, float* dist, byte* mask) {
+byte test_octree(const float csize, global byte* octree, const Ray* ray, vec3 xyz, const int id, float* dist, byte mask) {
+	if (id > 0)	xyz.y += csize;
+
 	byte vid = 255;
 	float tmpdist;
-	layerid += globalid + id;
 
 	bounds[0].x = x;
 	bounds[0].y = y;
@@ -54,7 +55,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[1].y = csize + y;
 	bounds[1].z = csize + z;
 
-	if ((octree[(layerid) * 4 + 3]) > 0 && ((*mask >> id) & 1) == 1)
+	if ((mask >> id) & 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id;
@@ -65,7 +66,7 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].x = csize + x;
 	bounds[1].x = csize * 2 + x;
 
-	if ((octree[(layerid + 1) * 4 + 3]) > 0 && ((*mask >> (id + 1)) & 1) == 1)
+	if ((mask >> (id + 1)) & 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 1;
@@ -77,18 +78,19 @@ byte test_octree(vec3 bounds[2], int csize, global byte* octree, int layerid, Ra
 	bounds[0].z = csize + z;
 	bounds[1].z = csize * 2 + z;
 
-	if ((octree[(layerid + 2) * 4 + 3]) > 0 && ((*mask >> (id + 2)) & 1) == 1)
+	if ((mask >> (id + 2)) & 1) {
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 2;
 				*dist = tmpdist;
 			}
 		}
+	}
 
-	bounds[0].x = x;
-	bounds[1].x = csize + x;
+	if ((mask >> (id + 3)) & 1) {
+		bounds[0].x = xyz.x;
+		bounds[1].x = csize + xyz.x;
 
-	if ((octree[(layerid + 3) * 4 + 3]) > 0 && ((*mask >> (id + 3)) & 1) == 1)
 		if (intersect(ray, bounds, &tmpdist)) {
 			if (*dist >= tmpdist) {
 				vid = id + 3;
@@ -157,6 +159,9 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 		ad->csize = csize;
 		ad->layerindex = layerindex;
 
+		// mask representing transparency of children
+		byte alpha_mask = ad->mask & octree[(layerindex - pow8 + globalid) * 4 + 3];
+
 		// clearing the closest distance to the voxel
 		dist = 0xffffff;
 
@@ -167,10 +172,13 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 		globalid = globalid * 8;
 
 		// test first 4 octants
-		oc = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + cy, zo + cz, 0, globalid, &dist, &(ad->mask));
+		if ((ad->mask & 0b00001111) != 0)
+			oc = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 0, &dist, alpha_mask);
 
 		// test next 4 octants
-		byte oc1 = test_octree(bounds, csize, octree, layerindex, ray, xo + cx, yo + csize + cy, zo + cz, 4, globalid, &dist, &(ad->mask));
+		if ((ad->mask & 0b11110000) != 0) {
+			byte oc1 = test_octree(csize, octree, ray, add(&xyzo, &xyzc), 4, &dist, alpha_mask);
+
 
 		// store variables in case of having to choose a different path 
 		ad->pow8 = pow8;
@@ -260,7 +268,7 @@ void render_chunk( float cx, float cy, float cz, Ray* ray, global byte* octree, 
 	}
 }
 
-void kernel render( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks ) {
+void kernel main( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks, const byte render_mode ) {
 
 	// Epic ChadRayFrameworkX
 	//   pixel x       : get_global_id(0)
@@ -279,6 +287,29 @@ void kernel render( const int spp, const int width, const int height, const int 
 		get_global_id(0),
 		get_global_id(1) 
 	};
+
+	// selects pixels which are rendered (if "blur" enabled)
+	switch (render_mode) {
+	case (8 + 1):
+		pos.y += 1;
+		break;
+
+	case (16 + 1):
+		pos.x += 1;
+		break;
+
+	case (16 + 2):
+		pos.y += 1;
+		break;
+
+	case (16 + 3):
+		pos.x += 1;
+		pos.y += 1;
+		break;
+
+	default:
+		break;
+	}
 
 	// calculating ray direction based on pixel coordinates
 	const float scale = 0.8f;
@@ -327,8 +358,13 @@ void kernel render( const int spp, const int width, const int height, const int 
 
 		vec3 bounds[2] = { { cx, cy, cz }, { cx + csize, cy + csize, cz + csize } };
 		float useless_distance = 0;
-
-		if ( intersect(&ray, bounds, &useless_distance )) {
+    
+		if (intersect(&ray, bounds, &distance)) {
+			// 222 = csize * sqrt(3)
+			if (distance > -222.0f && distance < max_dist) {
+				// get pointer to octree of given chunk
+				// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
+				global byte* octree = octrees + (chunk * 299593 * 4);
 
 			// get pointer to octree of given chunk
 			// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`

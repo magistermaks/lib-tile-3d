@@ -5,8 +5,9 @@ out vec4 color;
   
 in vec2 uv;
 
-uniform sampler2D canvas;
+uniform sampler2D sampler;
 
 void main() {
-    color = texture(canvas, uv);
+
+	color = texture(sampler, uv);
 }

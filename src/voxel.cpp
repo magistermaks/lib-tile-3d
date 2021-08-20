@@ -20,7 +20,3 @@ Voxel& Voxel::operator=( Voxel&& vox ) {
 	a = vox.a;
 	return *this;
 }
-
-Voxel Voxel::random() {
-	return Voxel( randomByte(), randomByte(), randomByte(), 255 );
-}
