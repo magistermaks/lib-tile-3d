@@ -4,28 +4,11 @@
 #include "../config.hpp"
 
 // :angry_bread:
+class Texture;
 class ShaderProgram;
 class Charset;
-
-class Canvas {
-
-	private:
-
-		int width, height;
-		GLuint tex;
-
-	public:
-
-		Canvas( int, int );
-		~Canvas();
-
-		void update( float* data );
-		void bind();
-		GLuint id();
-
-		static float* allocate( int, int );
-
-};
+class Screen;
+class VertexConsumer;
 
 class RenderSystem {
 
@@ -33,6 +16,8 @@ class RenderSystem {
 		
 		ReusableBuffer<float> vertices;
 		GLuint vbo, vao, tex;
+
+		VertexConsumer* consumer;
 		ShaderProgram* shader;
 
 		RenderSystem();
@@ -46,13 +31,16 @@ class RenderSystem {
 		void operator=( const RenderSystem& ) = delete;
 
 		// modify renderer state
+		void setTexture( Texture& );
 		void setTexture( GLuint );
 		void setShader( ShaderProgram& );
-		void vertex( float, float, float, float );
+		void setConsumer( VertexConsumer& );
+		void vertex2f( float, float, float, float );
+		void vertex3f( float, float, float, float, float );
 
 		// render specific elements
 		void drawText( const std::string&, float, float, float, Charset& );
-		void drawScreen( Canvas& );
+		void drawScreen( Screen& );
 
 		// draw queued quads
 		void draw();

@@ -51,15 +51,19 @@ int main() {
 	time_t last = 0;
 	long count = 0, fps = 0, ms = 0;
 
-	// enable shader program
 	auto& renderer = RenderSystem::instance();
+
+	VertexConsumerProvider provider;
+	provider.attribute(2); // 0 -> [x, y]
+	provider.attribute(2); // 1 -> [u, v]
+
+	VertexConsumer consumer = provider.get();
+	renderer.setConsumer(consumer);
 
 	Camera camera;
 
 	// move the camera so that we don't start inside a black cube
 	camera.move( glm::vec3(1, 150, 1) );
- 
-	//size_t c = 0;
 
 	do {
 

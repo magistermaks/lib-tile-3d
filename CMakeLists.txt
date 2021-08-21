@@ -68,6 +68,8 @@ add_executable(main
 	src/renderer/pathtracer.cpp
 	src/renderer/scene.cpp
 	src/renderer/shader.cpp
+	src/renderer/texture.cpp
+	src/renderer/vertex.cpp
 
 	src/math.cpp
 	src/main.cpp

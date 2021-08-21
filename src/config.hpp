@@ -38,6 +38,8 @@
 
 #include <opencl/opencl.hpp>
 
+#define Screen ScreenX11
+
 // external
 #include <stb/image/read.h>
 #include <stb/image/write.h>
@@ -53,6 +55,7 @@
 #include <perlin_noise/PerlinNoise.hpp>
 
 #ifdef __linux__
+#	undef Screen
 #	undef Region
 #	undef Glyph
 #endif
@@ -102,6 +105,8 @@ typedef std::mt19937 rng_type;
 #include "renderer/scene.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/material.hpp"
+#include "renderer/texture.hpp"
+#include "renderer/vertex.hpp"
 #include "renderer/pathtracer.hpp"
 
 #ifdef WIN32 

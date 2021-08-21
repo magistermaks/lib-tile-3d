@@ -18,7 +18,7 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 	this->kernel = CLHelper::loadKernel("trace");
 	this->queue = cl::CommandQueue( cl::Context::getDefault(), cl::Device::getDefault() );	
 	this->scene = new Scene();
-	this->canvas = nullptr;
+	this->screen = nullptr;
 
 	// init scene
 	scene->setBackground(3, 169, 252);
@@ -26,12 +26,16 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 	// initialize all size dependent components
 	resize( w, h );
 
+	if( PathTracer::self != nullptr ) {
+		throw std::runtime_error("PathTracer already in use!");
+	}
+
 	PathTracer::self = this;
 }
 
 PathTracer::~PathTracer() {
 	delete this->scene;
-	delete this->canvas;
+	delete this->screen;
 
 	PathTracer::self = nullptr;
 }
@@ -42,8 +46,8 @@ PathTracer* PathTracer::instance() {
 
 void PathTracer::resize( int w, int h ) {
 
-	if( this->canvas != nullptr ) {
-		delete this->canvas;
+	if( this->screen != nullptr ) {
+		delete this->screen;
 	}
 
 	this->width = w;
@@ -54,10 +58,10 @@ void PathTracer::resize( int w, int h ) {
 	this->range = cl::NDRange(w / scale[this->render_mode].x, h / scale[this->render_mode].y);
 
 	// texture to draw on
-	this->canvas = new Canvas(w, h);
+	this->screen = new Screen(w, h);
 
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, scene->size());
-	this->image_buffer = cl::Image2DGL( cl::Context::getDefault(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, this->canvas->id() );
+	this->image_buffer = cl::Image2DGL( cl::Context::getDefault(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, this->screen->id() );
 	this->object_array = { this->image_buffer };
 
 	// static args
@@ -151,8 +155,8 @@ void PathTracer::render( Camera& camera ) {
     // release texture handle
 	this->queue.enqueueReleaseGLObjects(&object_array);
 
-	// draw to screen
-	renderer.drawScreen(*canvas);
+	// draw the screen
+	renderer.drawScreen(*screen);
 
 }
 
