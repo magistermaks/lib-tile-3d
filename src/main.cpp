@@ -28,6 +28,9 @@ int main() {
 	// compile shader program
 	ShaderProgram* depth = GLHelper::loadShaderProgram("depth");
 	ShaderProgram* layer = GLHelper::loadShaderProgram("layer");
+	ShaderProgram* lines = GLHelper::loadShaderProgram("lines");
+
+	GLint loc = lines->location("mvp");
 
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
 	 
@@ -60,6 +63,12 @@ int main() {
 	VertexConsumer consumer = provider.get();
 	renderer.setConsumer(consumer);
 
+	VertexConsumerProvider linesProvider;
+	linesProvider.attribute(3); // 0 -> [x, y, z]
+	linesProvider.setPrimitive(GL_LINES);
+
+	VertexConsumer linesConsumer = linesProvider.get();
+
 	Camera camera;
 
 	// move the camera so that we don't start inside a black cube
@@ -82,6 +91,7 @@ int main() {
 			count = 0;
 		}
 
+		renderer.setConsumer(consumer);
 		renderer.setShader(*depth);
 		manager.update();
 		camera.update();
@@ -89,6 +99,18 @@ int main() {
 
 		renderer.setShader(*layer);
 		renderer.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
+
+		lines->bind();
+		renderer.setShader(*lines);
+		renderer.setConsumer(linesConsumer);
+		glm::mat4 model = MatrixStack::getModelIdentity();
+		glm::mat4 mvp = proj * camera.getView() * model;
+
+		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));
+
+		renderer.vertex3f(0, -10, 0);
+		renderer.vertex3f(0, 10, 0);
+		renderer.draw();
 
 		GLHelper::frame();
 		count ++;

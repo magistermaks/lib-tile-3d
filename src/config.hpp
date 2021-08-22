@@ -107,6 +107,7 @@ typedef std::mt19937 rng_type;
 #include "renderer/material.hpp"
 #include "renderer/texture.hpp"
 #include "renderer/vertex.hpp"
+#include "renderer/matrix.hpp"
 #include "renderer/pathtracer.hpp"
 
 #ifdef WIN32 

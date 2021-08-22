@@ -29,13 +29,13 @@ void Camera::update() {
 	this->rotation.y = y;
 
 	// vector representing where the camera is currently pointing
-	glm::vec3 direction = {
+	this->direction = {
 		 cos(x) * cos(y),
 		-sin(y),
 		 sin(x) * cos(y)
 	};
 
-	direction = glm::normalize(direction);
+	this->direction = glm::normalize(direction);
 
 	const float speed = this->speed * this->delta_time;
 	GLFWwindow* window = GLHelper::window();
@@ -101,5 +101,9 @@ glm::vec3& Camera::getPosition() {
 
 glm::vec3& Camera::getRotation() {
 	return this->rotation;
+}
+
+glm::mat4 Camera::getView() {
+	return glm::lookAt(this->pos, this->direction, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

@@ -2,7 +2,7 @@
 
 namespace trait {
 	
-	/// internal utility, check if are givent types are equal
+	/// internal utility, check if the given types are equal
 	template<class Type, class... Args>
 	using are_of_type = std::conjunction<std::is_same<Type, Args>...>;
 

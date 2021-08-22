@@ -12,6 +12,8 @@ namespace GLHelper {
 	void vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size, GLboolean normalize = GL_FALSE );
 	void getError( const char* name = nullptr );
 
+	int getSizeOf( GLenum thing );
+
 	bool init(int, int, const char*);
 	void frame();
 

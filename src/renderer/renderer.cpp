@@ -36,6 +36,10 @@ void RenderSystem::vertex3f( float x, float y, float z, float u, float v ) {
 	vertices.push(x, y, z, u, v);
 }
 
+void RenderSystem::vertex3f( float x, float y, float z ) {
+	vertices.push(x, y, z);
+}
+
 void RenderSystem::drawText( const std::string& text, float x, float y, float size, Charset& charset ) {
 
 	this->setTexture( charset.texture() );
@@ -78,13 +82,15 @@ void RenderSystem::draw() {
 	if( !vertices.empty() ) {
 
 		assert( this->shader != nullptr );
+		assert( this->consumer != nullptr );
 
 		// bind given texture
+		// TODO switch to Texture class
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, this->tex);
 
 		// bind vertex buffer
-		this->consumer->bind();		
+		this->consumer->bind();	
 
 		// update buffer
 		glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(float), this->vertices.data(), GL_DYNAMIC_DRAW);
@@ -93,7 +99,7 @@ void RenderSystem::draw() {
 		this->shader->bind();
 
 		// call OpenGL
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3 );
+		glDrawArrays(this->consumer->primitive, 0, vertices.size() / this->consumer->length);
 		vertices.clear();
 
 	}

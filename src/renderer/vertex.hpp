@@ -21,7 +21,11 @@ class VertexConsumer {
 
 	public:
 
-		VertexConsumer();
+		// primitive info
+		const GLenum primitive;
+		const int length;
+
+		VertexConsumer( GLenum primitive, int length );
 		~VertexConsumer();
 
 		void bind();
@@ -32,6 +36,7 @@ class VertexConsumerProvider {
 
 	private:
 
+		GLenum primitive = GL_TRIANGLES;
 		int length = 0;
 		std::vector<VertexAttribute> attributes;
 
@@ -39,6 +44,7 @@ class VertexConsumerProvider {
 
 	public:
 
+		void setPrimitive( GLenum primitive );
 		void attribute( int size );
 		void attribute( VertexAttribute attr );
 

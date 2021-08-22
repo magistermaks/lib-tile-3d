@@ -16,7 +16,7 @@ Texture::Texture( int width, int height, GLenum format, GLenum type, GLint inter
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolation);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolation);
 
-	// initialize an empty texture
+	// initialize empty texture
 	this->resize( width, height );
 }
 

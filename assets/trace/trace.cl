@@ -3,6 +3,8 @@
 #require scene.cl
 #require ray.cl
 
+#define MAX_DEPTH 200
+
 void kernel main( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks, const byte render_mode ) {
 
 	// Epic ChadRayFrameworkX
@@ -59,7 +61,7 @@ void kernel main( const int spp, const int width, const int height, const int oc
 	load_ray(&ray, &scene, &pos, width, height, 0.8f);
  
 	// set background color
-	float4 color = { scene.background.x, scene.background.y, scene.background.z, 1.0f };
+	float4 color = { scene.background.x, scene.background.y, scene.background.z, MAX_DEPTH };
 
 	float max_dist = 0xffffff;
 	float size = 64 * scale;
@@ -98,7 +100,7 @@ void kernel main( const int spp, const int width, const int height, const int oc
 		color.x * (1.0f / 255.0f),
 		color.y * (1.0f / 255.0f),
 		color.z * (1.0f / 255.0f),
-		color.w
+		color.w / MAX_DEPTH
 	};
 
 	write_imagef(image, pos, colr);

@@ -5,7 +5,7 @@ VertexAttribute::VertexAttribute( int length, GLenum type, GLsizei size, GLboole
 	// noop
 }
 
-VertexConsumer::VertexConsumer() {
+VertexConsumer::VertexConsumer(GLenum primitive, int length) : primitive(primitive), length(length) {
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 
@@ -21,6 +21,7 @@ VertexConsumer::~VertexConsumer() {
 
 void VertexConsumer::bind() {
 	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 }
 
 void VertexConsumerProvider::apply() {
@@ -28,7 +29,7 @@ void VertexConsumerProvider::apply() {
 
 	for( VertexAttribute attribute : this->attributes ) {
 
-		GLHelper::vertexAttribute( 
+		GLHelper::vertexAttribute(
 			index, 
 			attribute.length,
 			attribute.type,
@@ -45,6 +46,10 @@ void VertexConsumerProvider::apply() {
 
 }
 
+void VertexConsumerProvider::setPrimitive( GLenum primitive ) {
+	this->primitive = primitive;
+}
+
 void VertexConsumerProvider::attribute( int size ) {
 	this->attribute( VertexAttribute( size, GL_FLOAT, sizeof(float) ) );
 }
@@ -55,7 +60,7 @@ void VertexConsumerProvider::attribute( VertexAttribute attr ) {
 }
 
 VertexConsumer VertexConsumerProvider::get() {
-	VertexConsumer consumer;
+	VertexConsumer consumer(this->primitive, this->length);
 
 	// add attributes to the consumer
 	this->apply();

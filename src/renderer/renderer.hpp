@@ -35,6 +35,7 @@ class RenderSystem {
 		void setTexture( GLuint );
 		void setShader( ShaderProgram& );
 		void setConsumer( VertexConsumer& );
+		void vertex3f( float, float, float );
 		void vertex2f( float, float, float, float );
 		void vertex3f( float, float, float, float, float );
 
