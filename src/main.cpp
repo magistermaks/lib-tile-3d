@@ -32,7 +32,7 @@ int main() {
 
 	GLint loc = lines->location("mvp");
 
-	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
+	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 100.0f);
 	 
 	logger::info("Generating voxel data...");
 
@@ -110,6 +110,10 @@ int main() {
 
 		renderer.vertex3f(0, -10, 0);
 		renderer.vertex3f(0, 10, 0);
+		renderer.vertex3f(10, 0, 0);
+		renderer.vertex3f(-10, 0, 0);
+		renderer.vertex3f(0, 0, 10);
+		renderer.vertex3f(0, 0, -10);
 		renderer.draw();
 
 		GLHelper::frame();

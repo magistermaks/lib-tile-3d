@@ -3,17 +3,19 @@
 void Camera::update() {
 	
 	this->updateTime();
-	float x = 0, y = 0;
+	float x = 0, y = 0, xi;
 
 	// get cursors position
 	getCursorPos(&x, &y);
 	double delta_x = +1.0f * (cursor.x - x) * this->sensivity;
+	double delta_xi = -1.0f * (cursor.x - x) * this->sensivity;
 	double delta_y = -1.0f * (cursor.y - y) * this->sensivity;
 	cursor.x = x;
 	cursor.y = y;
 
 	x = angle.x + delta_x;
 	y = angle.y + delta_y;
+	xi = anglei.x + delta_xi;
 
 	// limit viewing angles
 	if( y > +89.0 ) y = +89.0;
@@ -21,6 +23,7 @@ void Camera::update() {
 
 	this->angle.x = x;
 	this->angle.y = y;
+	this->anglei.x = xi;
 
 	// calculate rotation
 	x = glm::radians(x);
@@ -36,6 +39,17 @@ void Camera::update() {
 	};
 
 	this->direction = glm::normalize(direction);
+
+	xi = glm::radians(xi);
+
+	// vector representing where the camera is currently pointing
+	this->idirection = {
+		 cos(xi) * cos(y),
+		-sin(y),
+		 sin(xi) * cos(y)
+	};
+
+	this->idirection = glm::normalize(idirection);
 
 	const float speed = this->speed * this->delta_time;
 	GLFWwindow* window = GLHelper::window();
@@ -104,6 +118,8 @@ glm::vec3& Camera::getRotation() {
 }
 
 glm::mat4 Camera::getView() {
-	return glm::lookAt(this->pos, this->direction, glm::vec3(0.0f, 1.0f, 0.0f));
+	auto ipos = this->pos;
+	ipos.z = -ipos.z;
+	return glm::lookAt(ipos, ipos + this->idirection, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
