@@ -10,8 +10,6 @@ class Camera {
 		glm::vec3 pos;
 		glm::vec3 rotation;
 		glm::vec3 direction;
-		glm::vec3 idirection;
-		glm::vec3 anglei;
 
 		float sensivity;
 		float speed;

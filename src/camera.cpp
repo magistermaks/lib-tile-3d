@@ -3,19 +3,17 @@
 void Camera::update() {
 	
 	this->updateTime();
-	float x = 0, y = 0, xi;
+	float x = 0, y = 0;
 
 	// get cursors position
 	getCursorPos(&x, &y);
 	double delta_x = +1.0f * (cursor.x - x) * this->sensivity;
-	double delta_xi = -1.0f * (cursor.x - x) * this->sensivity;
 	double delta_y = -1.0f * (cursor.y - y) * this->sensivity;
 	cursor.x = x;
 	cursor.y = y;
 
 	x = angle.x + delta_x;
 	y = angle.y + delta_y;
-	xi = anglei.x + delta_xi;
 
 	// limit viewing angles
 	if( y > +89.0 ) y = +89.0;
@@ -23,7 +21,6 @@ void Camera::update() {
 
 	this->angle.x = x;
 	this->angle.y = y;
-	this->anglei.x = xi;
 
 	// calculate rotation
 	x = glm::radians(x);
@@ -38,38 +35,27 @@ void Camera::update() {
 		 sin(x) * cos(y)
 	};
 
-	this->direction = glm::normalize(direction);
-
-	xi = glm::radians(xi);
-
-	// vector representing where the camera is currently pointing
-	this->idirection = {
-		 cos(xi) * cos(y),
-		-sin(y),
-		 sin(xi) * cos(y)
-	};
-
-	this->idirection = glm::normalize(idirection);
+	this->direction = glm::normalize(this->direction);
 
 	const float speed = this->speed * this->delta_time;
 	GLFWwindow* window = GLHelper::window();
 
 	//keyboard input
 	if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) {
-		this->pos += direction * speed;
+		this->pos += this->direction * speed;
 	}
 
 	if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) {
-		this->pos -= direction * speed;
+		this->pos -= this->direction * speed;
 	}
 
 	if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ) {
-		glm::vec3 vec = glm::cross( direction, glm::vec3(0, 1, 0) );
+		glm::vec3 vec = glm::cross( this->direction, glm::vec3(0, 1, 0) );
 		this->pos -= glm::normalize(vec) * speed;
 	}
 
 	if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) {
-		glm::vec3 vec = glm::cross( direction, glm::vec3(0, 1, 0) );
+		glm::vec3 vec = glm::cross( this->direction, glm::vec3(0, 1, 0) );
 		this->pos += glm::normalize(vec) * speed;
 	}
 
@@ -118,8 +104,11 @@ glm::vec3& Camera::getRotation() {
 }
 
 glm::mat4 Camera::getView() {
-	auto ipos = this->pos;
-	ipos.z = -ipos.z;
-	return glm::lookAt(ipos, ipos + this->idirection, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::vec3 sign = {1, 1, -1};
+
+	glm::vec3 pos = this->pos * sign;
+	glm::vec3 dir = this->direction * sign;
+
+	return glm::lookAt(pos, pos + dir, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
