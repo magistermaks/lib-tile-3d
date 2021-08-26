@@ -3,7 +3,14 @@
 #require scene.cl
 #require ray.cl
 
-#define MAX_DEPTH 200
+#define MAX_DEPTH 100
+
+float get_depth( float dist ) {
+	const double far = MAX_DEPTH;
+	const double near = 0.1f;
+
+	return (1.0f/dist - 1.0f/near) / (1.0f/far - 1.0f/near);
+}
 
 void kernel main( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks, const byte render_mode ) {
 
@@ -96,11 +103,18 @@ void kernel main( const int spp, const int width, const int height, const int oc
 		}
 	}
 
+//	if( color.w > MAX_DEPTH ) {
+//		color.x = scene.background.x;
+//		color.y = scene.background.y;
+//		color.z = scene.background.z;
+//		color.w = MAX_DEPTH;
+//	}
+
 	float4 colr = {
 		color.x * (1.0f / 255.0f),
 		color.y * (1.0f / 255.0f),
 		color.z * (1.0f / 255.0f),
-		color.w / MAX_DEPTH
+		get_depth(color.w * 1.2f)
 	};
 
 	write_imagef(image, pos, colr);

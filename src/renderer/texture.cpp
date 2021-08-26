@@ -25,7 +25,7 @@ Texture::~Texture() {
 }
 
 void Texture::resize( int width, int height ) {
-	glTexImage2D( GL_TEXTURE_2D, 0, this->format, width, height, 0, this->format, this->type, nullptr );
+	glTexImage2D( GL_TEXTURE_2D, 0, this->format == GL_RGBA ? GL_RGBA32F : this->format, width, height, 0, this->format, this->type, nullptr );
 }
 
 void Texture::bind() {

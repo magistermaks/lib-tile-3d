@@ -65,7 +65,7 @@ int main() {
 
 	VertexConsumerProvider linesProvider;
 	linesProvider.attribute(3); // 0 -> [x, y, z]
-	linesProvider.setPrimitive(GL_LINES);
+//	linesProvider.setPrimitive(GL_LINES);
 
 	VertexConsumer linesConsumer = linesProvider.get();
 
