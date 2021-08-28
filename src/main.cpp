@@ -32,14 +32,13 @@ int main() {
 
 	GLint loc = lines->location("mvp");
 
-	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 100.0f);
-	 
-	logger::info("Generating voxel data...");
+	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 1000.0f);
 
 	PathTracer tracer( 8, width, height, 6, 0 );
 	ChunkManager manager( tracer );
-
 	Region region( manager );
+
+	logger::info("Generating voxel data...");
 
 #ifdef WORLD
 	Worldgen::gen_chunk_world(region);
@@ -81,7 +80,7 @@ int main() {
 #ifndef WORLD
 		tree.set(rand() % 65, rand() % 65, rand() % 65, {
 			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-	} );
+		} );
 #endif // !WORLD
 
 		// update the fps count
@@ -108,12 +107,12 @@ int main() {
 
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));
 
-		renderer.vertex3f(0, -10, 0);
-		renderer.vertex3f(0, 10, 0);
-		renderer.vertex3f(10, 0, 0);
-		renderer.vertex3f(-10, 0, 0);
-		renderer.vertex3f(0, 0, 10);
-		renderer.vertex3f(0, 0, -10);
+		renderer.vertex3f(  0+10, -10+10,   0-10);
+		renderer.vertex3f(  0+10,  10+10,   0-10);
+		renderer.vertex3f( 10+10,   0+10,   0-10);
+		renderer.vertex3f(-10+10,   0+10,   0-10);
+		renderer.vertex3f(  0+10,   0+10,  10-10);
+		renderer.vertex3f(  0+10,   0+10, -10-10);
 		renderer.draw();
 
 		GLHelper::frame();

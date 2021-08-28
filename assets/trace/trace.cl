@@ -3,11 +3,11 @@
 #require scene.cl
 #require ray.cl
 
-#define MAX_DEPTH 100
+#define MAX_DEPTH 1000
 
 float get_depth( float dist ) {
-	const double far = MAX_DEPTH;
-	const double near = 0.1f;
+	const float far = MAX_DEPTH;
+	const float near = 0.1f;
 
 	return (1.0f/dist - 1.0f/near) / (1.0f/far - 1.0f/near);
 }
@@ -65,7 +65,7 @@ void kernel main( const int spp, const int width, const int height, const int oc
 
 	// preparing ray
 	Ray ray;
-	load_ray(&ray, &scene, &pos, width, height, 0.8f);
+	load_ray(&ray, &scene, &pos, width, height, tan(77.5f * 0.01745329 / 2));
  
 	// set background color
 	float4 color = { scene.background.x, scene.background.y, scene.background.z, MAX_DEPTH };
@@ -103,18 +103,11 @@ void kernel main( const int spp, const int width, const int height, const int oc
 		}
 	}
 
-//	if( color.w > MAX_DEPTH ) {
-//		color.x = scene.background.x;
-//		color.y = scene.background.y;
-//		color.z = scene.background.z;
-//		color.w = MAX_DEPTH;
-//	}
-
 	float4 colr = {
 		color.x * (1.0f / 255.0f),
 		color.y * (1.0f / 255.0f),
 		color.z * (1.0f / 255.0f),
-		get_depth(color.w * 1.2f)
+		get_depth(color.w)
 	};
 
 	write_imagef(image, pos, colr);
