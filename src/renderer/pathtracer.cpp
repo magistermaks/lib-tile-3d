@@ -61,7 +61,7 @@ void PathTracer::resize( int w, int h ) {
 	this->screen = new Screen(w, h);
 
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, scene->size());
-	this->image_buffer = cl::Image2DGL( cl::Context::getDefault(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, this->screen->id() );
+	this->image_buffer = this->screen->getHandle(CL_MEM_WRITE_ONLY);
 	this->object_array = { this->image_buffer };
 
 	// static args
@@ -76,7 +76,7 @@ void PathTracer::resize( int w, int h ) {
 	this->kernel.setArg(6, this->scene_buffer);
 	
 	// send data to buffers in the GPU, do this every time the data changes
-	this->queue.enqueueWriteBuffer(scene_buffer, OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
+	this->queue.enqueueWriteBuffer(scene_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
 }
 
 void PathTracer::updateCamera( Camera& camera ) {
@@ -88,7 +88,7 @@ void PathTracer::updateCamera( Camera& camera ) {
 	scene->setCameraDirection( rot.x, rot.y, rot.z );
 
 	// send to kernel
-	this->queue.enqueueWriteBuffer(scene_buffer, OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
+	this->queue.enqueueWriteBuffer(scene_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
 }
 
 void PathTracer::resizeVoxels( size_t size ) {
@@ -99,14 +99,14 @@ void PathTracer::resizeVoxels( size_t size ) {
 }
 
 void PathTracer::updateVoxels( size_t offset, size_t count, byte* ptr ) {
-	this->queue.enqueueWriteBuffer(voxel_buffer, OPENCL_COPY_ON_WRITE, offset, count, ptr);
+	this->queue.enqueueWriteBuffer(voxel_buffer, LT3D_OPENCL_COPY_ON_WRITE, offset, count, ptr);
 	this->kernel.setArg(7, voxel_buffer);
 }
 
 void PathTracer::updateChunks( size_t count, float* ptr ) {
 	this->chunk_count = count;
 	this->chunk_buffer = cl::Buffer(CL_MEM_READ_ONLY, count * 3 * sizeof(float));
-	this->queue.enqueueWriteBuffer(chunk_buffer, OPENCL_COPY_ON_WRITE, 0, count * 3 * sizeof(float), (byte*) ptr);
+	this->queue.enqueueWriteBuffer(chunk_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, count * 3 * sizeof(float), (byte*) ptr);
 
 	this->kernel.setArg(4, chunk_count);
 	this->kernel.setArg(8, chunk_buffer);

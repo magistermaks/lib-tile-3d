@@ -16,16 +16,16 @@ void RenderSystem::setTexture( Texture& texture ) {
 	this->tex = texture.id();
 }
 
-void RenderSystem::setTexture( GLuint texture ) {
-	this->tex = texture;
-}
-
 void RenderSystem::setShader( ShaderProgram& shader ) {
 	this->shader = &shader;
 }
 
 void RenderSystem::setConsumer( VertexConsumer& consumer ) {
 	this->consumer = &consumer;
+}
+
+void RenderSystem::setDepthFunc( GLenum depth ) {
+	this->depth = depth;
 }
 
 void RenderSystem::vertex2f( float x, float y, float u, float v ) {
@@ -38,6 +38,14 @@ void RenderSystem::vertex3f( float x, float y, float z, float u, float v ) {
 
 void RenderSystem::vertex3f( float x, float y, float z ) {
 	vertices.push(x, y, z);
+}
+
+void RenderSystem::depthTest( bool flag ) {
+	if( flag ) glDepthFunc(this->depth); else glDepthFunc(GL_ALWAYS);
+}
+
+void RenderSystem::depthMask( bool flag ) {
+	glDepthMask(flag);
 }
 
 void RenderSystem::drawText( const std::string& text, float x, float y, float size, Charset& charset ) {

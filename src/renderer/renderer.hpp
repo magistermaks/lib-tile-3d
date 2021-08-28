@@ -19,6 +19,7 @@ class RenderSystem {
 
 		VertexConsumer* consumer;
 		ShaderProgram* shader;
+		GLenum depth;
 
 		RenderSystem();
 
@@ -32,12 +33,16 @@ class RenderSystem {
 
 		// modify renderer state
 		void setTexture( Texture& );
-		void setTexture( GLuint );
 		void setShader( ShaderProgram& );
 		void setConsumer( VertexConsumer& );
+		void setDepthFunc( GLenum depth );
+
 		void vertex3f( float, float, float );
 		void vertex2f( float, float, float, float );
 		void vertex3f( float, float, float, float, float );
+
+		void depthTest( bool flag );
+		void depthMask( bool flag );
 
 		// render specific elements
 		void drawText( const std::string&, float, float, float, Charset& );

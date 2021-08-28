@@ -92,12 +92,17 @@ int main() {
 
 		renderer.setConsumer(consumer);
 		renderer.setShader(*depth);
+		renderer.depthTest(false);
 		manager.update();
 		camera.update();
 		tracer.render( camera );
 
+		renderer.depthMask(false);
 		renderer.setShader(*layer);
 		renderer.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
+
+		renderer.depthMask(true);
+		renderer.depthTest(true);
 
 		lines->bind();
 		renderer.setShader(*lines);
@@ -122,8 +127,7 @@ int main() {
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 
-	delete depth;
-	delete layer;
+	delete depth, layer, lines;
 
 	// close window
 	glfwTerminate();

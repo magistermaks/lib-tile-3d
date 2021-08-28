@@ -1,10 +1,11 @@
 
 #include "texture.hpp"
 
-Texture::Texture( int width, int height, GLenum format, GLenum type, GLint interpolation ) {
+Texture::Texture( int width, int height, GLenum format, GLenum internal, GLenum type, GLint interpolation ) {
 	this->width = width;
 	this->height = height;
 	this->format = format;
+	this->internal = internal;
 	this->type = type;
 
 	glGenTextures(1, &tex);  
@@ -25,7 +26,7 @@ Texture::~Texture() {
 }
 
 void Texture::resize( int width, int height ) {
-	glTexImage2D( GL_TEXTURE_2D, 0, this->format == GL_RGBA ? GL_RGBA32F : this->format, width, height, 0, this->format, this->type, nullptr );
+	glTexImage2D( GL_TEXTURE_2D, 0, this->internal, width, height, 0, this->format, this->type, nullptr );
 }
 
 void Texture::bind() {
@@ -37,7 +38,11 @@ GLuint Texture::id() {
 	return this->tex;
 }
 
-Screen::Screen( int width, int height ) : Texture( width, height, GL_RGBA, GL_FLOAT ) {
+cl::Image2DGL Texture::getHandle( cl_mem_flags flags ) {
+	return cl::Image2DGL( cl::Context::getDefault(), flags, GL_TEXTURE_2D, 0, this->tex );
+}
+
+Screen::Screen( int width, int height ) : Texture( width, height, GL_RGBA, GL_RGBA32F, GL_FLOAT ) {
 	// noop
 }
 

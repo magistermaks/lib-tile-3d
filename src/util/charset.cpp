@@ -16,16 +16,8 @@ Charset::Charset( const char* path, int size ) {
 		throw std::runtime_error("Font error");
 	} 
 
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-	// set texture options
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	this->tex = new Texture(w, h, GL_RGBA, GL_RGBA);
+	this->tex->update(data);
   
 	glm::fvec2 siz( size / float(w), size / float(h) );
 
@@ -47,14 +39,14 @@ Charset::Charset( const char* path, int size ) {
 }
 
 Charset::~Charset() {
-	glDeleteTextures(1, &tex);
+	delete this->tex;
 }
 
 Glyph& Charset::get( char index ) {
 	return characters.at((int) index);
 }
 
-GLuint Charset::texture() {
-	return this->tex;
+Texture& Charset::texture() {
+	return *this->tex;
 }
 
