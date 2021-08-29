@@ -68,6 +68,13 @@ int main() {
 
 	VertexConsumer linesConsumer = linesProvider.get();
 
+	linesConsumer.vertex(  0+10.0f, -10+10.0f,   0-10.0f);
+	linesConsumer.vertex(  0+10.0f,  10+10.0f,   0-10.0f);
+	linesConsumer.vertex( 10+10.0f,   0+10.0f,   0-10.0f);
+	linesConsumer.vertex(-10+10.0f,   0+10.0f,   0-10.0f);
+	linesConsumer.vertex(  0+10.0f,   0+10.0f,  10-10.0f);
+	linesConsumer.vertex(  0+10.0f,   0+10.0f, -10-10.0f);
+
 	Camera camera;
 
 	// move the camera so that we don't start inside a black cube
@@ -109,15 +116,7 @@ int main() {
 		renderer.setConsumer(linesConsumer);
 		glm::mat4 model = MatrixStack::getModelIdentity();
 		glm::mat4 mvp = proj * camera.getView() * model;
-
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));
-
-		renderer.vertex3f(  0+10, -10+10,   0-10);
-		renderer.vertex3f(  0+10,  10+10,   0-10);
-		renderer.vertex3f( 10+10,   0+10,   0-10);
-		renderer.vertex3f(-10+10,   0+10,   0-10);
-		renderer.vertex3f(  0+10,   0+10,  10-10);
-		renderer.vertex3f(  0+10,   0+10, -10-10);
 		renderer.draw();
 
 		GLHelper::frame();

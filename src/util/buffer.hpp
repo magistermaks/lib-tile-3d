@@ -86,6 +86,9 @@ void ReusableBuffer<T>::assert_size( int count ) {
 		//	throw std::runtime_error( "Maximum buffer size excedded!" );
 		//}
 
+		// logger is not avaible here, ehhh
+		std::cout << "(ReusableBuffer) Buffer '" << this << "' resized to " << new_size << " (" << new_size * sizeof(T) << " bytes)\n";
+
 		this->buffer = (T*) realloc(this->buffer, new_size * sizeof(T));
 		this->length = new_size;
 	}

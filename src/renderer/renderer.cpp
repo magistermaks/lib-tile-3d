@@ -1,19 +1,14 @@
 
 #include "renderer.hpp"
 
-RenderSystem::RenderSystem() : vertices(16) {
-	this->tex = 0;
+RenderSystem::RenderSystem() {
 	this->shader = nullptr;
 	this->consumer = nullptr;
-}
-
-RenderSystem::~RenderSystem() {
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+	this->texture = nullptr;
 }
 
 void RenderSystem::setTexture( Texture& texture ) {
-	this->tex = texture.id();
+	this->texture = &texture;
 }
 
 void RenderSystem::setShader( ShaderProgram& shader ) {
@@ -28,16 +23,24 @@ void RenderSystem::setDepthFunc( GLenum depth ) {
 	this->depth = depth;
 }
 
-void RenderSystem::vertex2f( float x, float y, float u, float v ) {
-	vertices.push(x, y, u, v);
+void RenderSystem::vertex( float x, float y ) {
+	this->consumer->vertex(x, y);
 }
 
-void RenderSystem::vertex3f( float x, float y, float z, float u, float v ) {
-	vertices.push(x, y, z, u, v);
+void RenderSystem::vertex( float x, float y, float z ) {
+	this->consumer->vertex(x, y, z);
 }
 
-void RenderSystem::vertex3f( float x, float y, float z ) {
-	vertices.push(x, y, z);
+void RenderSystem::vertex( float x, float y, float u, float v ) {
+	this->consumer->vertex(x, y, u, v);
+}
+
+void RenderSystem::vertex( float x, float y, float z, float u, float v ) {
+	this->consumer->vertex(x, y, z, u, v);
+}
+
+void RenderSystem::clear() {
+	this->consumer->clear();
 }
 
 void RenderSystem::depthTest( bool flag ) {
@@ -58,59 +61,52 @@ void RenderSystem::drawText( const std::string& text, float x, float y, float si
 		const float w = size;
 		const float h = size;
 
-		this->vertex2f( x, y, glyph.uv.x, glyph.uv.y );
-		this->vertex2f( x + w, y, glyph.uv.x + glyph.size.x, glyph.uv.y );
-		this->vertex2f( x, y + h, glyph.uv.x, glyph.uv.y + glyph.size.y );
+		this->vertex( x, y, glyph.uv.x, glyph.uv.y );
+		this->vertex( x + w, y, glyph.uv.x + glyph.size.x, glyph.uv.y );
+		this->vertex( x, y + h, glyph.uv.x, glyph.uv.y + glyph.size.y );
 
-		this->vertex2f( x + w, y, glyph.uv.x + glyph.size.x, glyph.uv.y );
-		this->vertex2f( x + w, y + h, glyph.uv.x + glyph.size.x, glyph.uv.y + glyph.size.y );
-		this->vertex2f( x, y + h, glyph.uv.x, glyph.uv.y + glyph.size.y );
+		this->vertex( x + w, y, glyph.uv.x + glyph.size.x, glyph.uv.y );
+		this->vertex( x + w, y + h, glyph.uv.x + glyph.size.x, glyph.uv.y + glyph.size.y );
+		this->vertex( x, y + h, glyph.uv.x, glyph.uv.y + glyph.size.y );
 
 		x += w;
 	}
 
 	this->draw();
+	this->clear();
 }
 
 void RenderSystem::drawScreen( Screen& screen ) {
 	this->setTexture( screen );
 
-	this->vertex2f( -1, -1,  0,  0 );
-	this->vertex2f(  1, -1,  1,  0 );
-	this->vertex2f( -1,  1,  0,  1 );
+	this->vertex( -1, -1,  0,  0 );
+	this->vertex(  1, -1,  1,  0 );
+	this->vertex( -1,  1,  0,  1 );
 
-	this->vertex2f(  1,  1,  1,  1 );
-	this->vertex2f( -1,  1,  0,  1 );
-	this->vertex2f(  1, -1,  1,  0 );
+	this->vertex(  1,  1,  1,  1 );
+	this->vertex( -1,  1,  0,  1 );
+	this->vertex(  1, -1,  1,  0 );
 
 	this->draw();
+	this->clear();
 }
 
 void RenderSystem::draw() {
-	if( !vertices.empty() ) {
 
-		assert( this->shader != nullptr );
-		assert( this->consumer != nullptr );
+	assert( this->shader != nullptr );
+	assert( this->consumer != nullptr );
 
-		// bind given texture
-		// TODO switch to Texture class
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->tex);
+	// bind given texture
+	this->texture->bind();
 
-		// bind vertex buffer
-		this->consumer->bind();	
+	// bind vertex buffer
+	this->consumer->bind();
 
-		// update buffer
-		glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(float), this->vertices.data(), GL_DYNAMIC_DRAW);
+	// bind shader
+	this->shader->bind();
 
-		// bind shader
-		this->shader->bind();
-
-		// call OpenGL
-		glDrawArrays(this->consumer->primitive, 0, vertices.size() / this->consumer->length);
-		vertices.clear();
-
-	}
+	// call OpenGL
+	glDrawArrays(this->consumer->primitive, 0, this->consumer->count());
 }
 
 void RenderSystem::flush() {

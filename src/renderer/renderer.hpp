@@ -13,19 +13,15 @@ class VertexConsumer;
 class RenderSystem {
 
 	private:
-		
-		ReusableBuffer<float> vertices;
-		GLuint vbo, vao, tex;
 
 		VertexConsumer* consumer;
 		ShaderProgram* shader;
+		Texture* texture;
 		GLenum depth;
 
 		RenderSystem();
 
 	public:
-
-		~RenderSystem();
 
 		// singleton pattern
 		RenderSystem( RenderSystem& ) = delete;
@@ -37,18 +33,21 @@ class RenderSystem {
 		void setConsumer( VertexConsumer& );
 		void setDepthFunc( GLenum depth );
 
-		void vertex3f( float, float, float );
-		void vertex2f( float, float, float, float );
-		void vertex3f( float, float, float, float, float );
+		void vertex( float, float );
+		void vertex( float, float, float );
+		void vertex( float, float, float, float );
+		void vertex( float, float, float, float, float );
 
 		void depthTest( bool flag );
 		void depthMask( bool flag );
+
+		void clear();
 
 		// render specific elements
 		void drawText( const std::string&, float, float, float, Charset& );
 		void drawScreen( Screen& );
 
-		// draw queued quads
+		// call OpenGL
 		void draw();
 
 		// wait for opengl
