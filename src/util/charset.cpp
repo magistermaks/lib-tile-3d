@@ -2,22 +2,16 @@
 #include "charset.hpp"
 
 Charset::Charset( const char* path, int size ) {
-	
-	int w, h, n;
-	byte* data = stbi_load(path, &w, &h, &n, 4);
 
-	if( data == NULL ) {
-		logger::error( "Failed to load font image: '" + std::string(path) + "'" );
-		throw std::runtime_error("Font error");
-	}
+	this->tex = Texture::fromFile(path);
+
+	const int w = this->tex->getWidth();
+	const int h = this->tex->getHeight();
 
 	if( w % size != 0 || h % size != 0 ) {
 		logger::error( "Invalid size of font: '" + std::string(path) + "'" );
-		throw std::runtime_error("Font error");
-	} 
-
-	this->tex = new Texture(w, h, GL_RGBA, GL_RGBA);
-	this->tex->update(data);
+		throw std::runtime_error("Font loading error");
+	}
   
 	glm::fvec2 siz( size / float(w), size / float(h) );
 
@@ -33,8 +27,6 @@ Charset::Charset( const char* path, int size ) {
 			characters.push_back( glyph );
 		}
 	}
-
-	stbi_image_free(data);
 
 }
 

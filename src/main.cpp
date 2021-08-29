@@ -28,9 +28,9 @@ int main() {
 	// compile shader program
 	ShaderProgram* depth = GLHelper::loadShaderProgram("depth");
 	ShaderProgram* layer = GLHelper::loadShaderProgram("layer");
-	ShaderProgram* lines = GLHelper::loadShaderProgram("lines");
+	ShaderProgram* mesh = GLHelper::loadShaderProgram("mesh");
 
-	GLint loc = lines->location("mvp");
+	GLint loc = mesh->location("mvp");
 
 	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 1000.0f);
 
@@ -55,25 +55,58 @@ int main() {
 
 	auto& renderer = RenderSystem::instance();
 
-	VertexConsumerProvider provider;
-	provider.attribute(2); // 0 -> [x, y]
-	provider.attribute(2); // 1 -> [u, v]
+	Texture* box = Texture::fromFile("./assets/box.png");
 
-	VertexConsumer consumer = provider.get();
-	renderer.setConsumer(consumer);
+	VertexConsumerProvider provider2d;
+	provider2d.attribute(2); // 0 -> [x, y]
+	provider2d.attribute(2); // 1 -> [u, v]
 
-	VertexConsumerProvider linesProvider;
-	linesProvider.attribute(3); // 0 -> [x, y, z]
-//	linesProvider.setPrimitive(GL_LINES);
+	VertexConsumer consumer2d = provider2d.get();
+	renderer.setConsumer(consumer2d);
 
-	VertexConsumer linesConsumer = linesProvider.get();
+	VertexConsumerProvider provider3d;
+	provider3d.attribute(3); // 0 -> [x, y, z]
+	provider3d.attribute(2); // 1 -> [u, v]
 
-	linesConsumer.vertex(  0+10.0f, -10+10.0f,   0-10.0f);
-	linesConsumer.vertex(  0+10.0f,  10+10.0f,   0-10.0f);
-	linesConsumer.vertex( 10+10.0f,   0+10.0f,   0-10.0f);
-	linesConsumer.vertex(-10+10.0f,   0+10.0f,   0-10.0f);
-	linesConsumer.vertex(  0+10.0f,   0+10.0f,  10-10.0f);
-	linesConsumer.vertex(  0+10.0f,   0+10.0f, -10-10.0f);
+	VertexConsumer consumer3d = provider3d.get();
+
+	// textured cube
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
 
 	Camera camera;
 
@@ -97,7 +130,7 @@ int main() {
 			count = 0;
 		}
 
-		renderer.setConsumer(consumer);
+		renderer.setConsumer(consumer2d);
 		renderer.setShader(*depth);
 		renderer.depthTest(false);
 		manager.update();
@@ -111,10 +144,14 @@ int main() {
 		renderer.depthMask(true);
 		renderer.depthTest(true);
 
-		lines->bind();
-		renderer.setShader(*lines);
-		renderer.setConsumer(linesConsumer);
+		mesh->bind(); // uniform
+		renderer.setShader(*mesh);
+		renderer.setConsumer(consumer3d);
+		renderer.setTexture(*box);
 		glm::mat4 model = MatrixStack::getModelIdentity();
+		model = glm::scale(model, glm::vec3(20, 20, 20));
+		model = glm::translate(model, glm::vec3(1, 1, -1));
+
 		glm::mat4 mvp = proj * camera.getView() * model;
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));
 		renderer.draw();
@@ -126,7 +163,7 @@ int main() {
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 
-	delete depth, layer, lines;
+	delete depth, layer, mesh;
 
 	// close window
 	glfwTerminate();

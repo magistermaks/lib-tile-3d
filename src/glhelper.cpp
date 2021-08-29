@@ -63,7 +63,7 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 	// Time to enter the third dimension!
 	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
 	// allow to override color if the depth is equal
 	renderer.setDepthFunc(GL_LEQUAL);

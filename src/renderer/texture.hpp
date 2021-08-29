@@ -23,6 +23,8 @@ class Texture {
 		// return OpenCL-OpenGL resource handle
 		cl::Image2DGL getHandle( cl_mem_flags flags );
 
+		static Texture* fromFile( const char* path );
+
 	public:
 		
 		template< typename T >
@@ -30,6 +32,9 @@ class Texture {
 			this->bind();
 			glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, this->width, this->height, this->format, this->type, (void*) data );
 		}
+
+		int getWidth();
+		int getHeight();
 
 };
 
