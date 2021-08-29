@@ -148,12 +148,12 @@ int main() {
 		renderer.setShader(*mesh);
 		renderer.setConsumer(consumer3d);
 		renderer.setTexture(*box);
-		glm::mat4 model = MatrixStack::getModelIdentity();
-		model = glm::scale(model, glm::vec3(20, 20, 20));
+		glm::mat4 model = MatrixHelper::getVoxelIdentity();
+		model = glm::scale(model, glm::vec3(10, 10, 10));
 		model = glm::translate(model, glm::vec3(1, 1, -1));
 
 		glm::mat4 mvp = proj * camera.getView() * model;
-		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));
+		MatrixHelper::uniform(loc, mvp);
 		renderer.draw();
 
 		GLHelper::frame();

@@ -28,6 +28,10 @@ void Scene::setBackground( float a, float b, float c ) {
 	this->set(4, a, b, c);
 }
 
+void Scene::setProjection( float a, float b, float c ) {
+	this->set(5, a, b, c);
+}
+
 float* Scene::ptr() {
 	return this->buffer;
 }

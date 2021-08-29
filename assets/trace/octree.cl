@@ -2,7 +2,13 @@
 #require math.cl
 #require ray.cl
 
+// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
+#define OCTREE_SIZE 299593
+
+// size of single octree leaf
 #define VOXEL_SIZE 4
+
+// channel offsets
 #define RED 0
 #define GREEN 1
 #define BLUE 2

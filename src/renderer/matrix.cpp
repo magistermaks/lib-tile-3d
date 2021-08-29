@@ -1,20 +1,15 @@
 
 #include "matrix.hpp"
 
-glm::mat4 MatrixStack::getProjection() {
-	return glm::perspective(
-		glm::radians(45.0f), // FoV
-		800.0f / 600.0f, // apspect ratio
-		0.1f, // near plane
-		100.0f // far plane
-	);
-}
-
-glm::mat4 MatrixStack::getModelIdentity() {
+glm::mat4 MatrixHelper::getModelIdentity() {
 	return glm::mat4(1.0f);
 }
 
-glm::mat4 MatrixStack::getModelViewProjection(Camera& camera, glm::mat4& model) {
-	return getProjection() * camera.getView() * model;
+glm::mat4 MatrixHelper::getVoxelIdentity() {
+	const float scale = 2.0f;
+	return glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, scale));
 }
 
+void MatrixHelper::uniform( GLint location, glm::mat4& matrix ) {
+	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}

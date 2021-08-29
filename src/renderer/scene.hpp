@@ -6,12 +6,13 @@ class Scene {
 
 	private:
 
-		float buffer[3 * 5] = {
+		float buffer[3 * 6] = {
 			0, 0, 0, // camera origin
 			0, 0, 0, // camera direction
 			0, 0, 0, // sky light
 			0, 0, 0, // ambient light
 			0, 0, 0, // background color
+			0, 0, 0, // fov, near plane, far plane
 		};
 
 		void set( int, float, float, float );
@@ -23,6 +24,7 @@ class Scene {
 		void setSkyLight( float, float, float );
 		void setAmbientLight( float, float, float );
 		void setBackground( float, float, float );
+		void setProjection( float, float, float );
 
 		float* ptr();
 		size_t size();

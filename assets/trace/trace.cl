@@ -3,32 +3,18 @@
 #require scene.cl
 #require ray.cl
 
-#define MAX_DEPTH 1000
-
-float get_depth( float dist ) {
-	const float far = MAX_DEPTH;
-	const float near = 0.1f;
-
-	return (1.0f/dist - 1.0f/near) / (1.0f/far - 1.0f/near);
-}
-
-void kernel main( const int spp, const int width, const int height, const int octree_depth, const int chunk_count, write_only image2d_t image, global float* scnf, global byte* octrees, global float* chunks, const byte render_mode ) {
-
-	// Epic ChadRayFrameworkX
-	//   pixel x       : get_global_id(0)
-	//   pixel y       : get_global_id(1)
-	//   samples/pixel : spp
-	//   width         : image width
-	//   height        : image height
-	//   output image  : image
-	//   scene         : scnf
-	//   octree array  : octrees 
-	//   depth         : octree_depth (<= 6)
-	//   chunk count   : chunk_count
-	//   chunk offsets : chunks 
-
-	// size of one voxel
-	float scale = 2;
+void kernel main(
+	const int spp,              // samples-per-pixel (unused)
+	const int width,            // width of the screen buffer
+	const int height,           // height of the screen buffer
+	const int octree_depth,     // depth of voxel octree (<= 6)
+	const int chunk_count,      // the number of chunks to render
+	write_only image2d_t image, // output RGB (+ depth) screen buffer
+	global float* scnf,         // scene data array
+	global byte* octrees,       // array of chunks
+	global float* chunks,       // array of chunk coordinates
+	const byte render_mode      // pixel pos offset mode
+) {
 
 	int2 pos = { 
 		get_global_id(0) * ((render_mode >= 16) ? 2 : 1),
@@ -54,23 +40,25 @@ void kernel main( const int spp, const int width, const int height, const int oc
 			pos.x += 1;
 			pos.y += 1;
 			break;
-
-		default:
-			break;
 	}
 
 	// load scene data
 	Scene scene;
 	load_scene(&scene, scnf);
 
+	const float scale = 2;
+	const float fov = scene.projection.x;
+	const float near = scene.projection.y;
+	const float far = scene.projection.z;
+
 	// preparing ray
 	Ray ray;
-	load_ray(&ray, &scene, &pos, width, height, tan(77.5f * 0.01745329 / 2));
+	load_ray(&ray, &scene, &pos, width, height, tan(fov / 2));
  
 	// set background color
-	float4 color = { scene.background.x, scene.background.y, scene.background.z, MAX_DEPTH };
+	float4 color = { scene.background.x, scene.background.y, scene.background.z, far };
 
-	float max_dist = 0xffffff;
+	float max_dist = far;
 	float size = 64 * scale;
 
 	// iterate all chunks
@@ -93,11 +81,9 @@ void kernel main( const int spp, const int width, const int height, const int oc
 			if( tmp_dist > -222.0f && tmp_dist < max_dist ) {
 
 				// get pointer to octree of given chunk
-				// the 299593 is derived from: `((1 - pow(8, (octree_depth + 1))) / -7)`
-				global byte* octree = octrees + (chunk * 299593 * VOXEL_SIZE);
+				global byte* octree = octrees + (chunk * OCTREE_SIZE * VOXEL_SIZE);
 
 				// render the chunk
-				// internally updates `max_dist`
 				octree_get_pixel(chunk_pos, &ray, octree, &max_dist, &color, octree_depth, size);
 			}
 		}
@@ -107,7 +93,7 @@ void kernel main( const int spp, const int width, const int height, const int oc
 		color.x * (1.0f / 255.0f),
 		color.y * (1.0f / 255.0f),
 		color.z * (1.0f / 255.0f),
-		get_depth(color.w)
+		(1.0f/color.w - 1.0f/near) / (1.0f/far - 1.0f/near),
 	};
 
 	write_imagef(image, pos, colr);

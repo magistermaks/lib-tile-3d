@@ -22,6 +22,7 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 
 	// init scene
 	scene->setBackground(3, 169, 252);
+	scene->setProjection(glm::radians(77.5f), 0.1f, 1000.0f);
 
 	// initialize all size dependent components
 	resize( w, h );

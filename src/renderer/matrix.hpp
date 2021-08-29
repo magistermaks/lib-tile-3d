@@ -4,13 +4,13 @@
 
 class Camera;
 
-class MatrixStack {
+class MatrixHelper {
 
 	public:
 
-		static glm::mat4 getProjection();
 		static glm::mat4 getModelIdentity();
-		static glm::mat4 getModelViewProjection(Camera& camera, glm::mat4& model);
+		static glm::mat4 getVoxelIdentity();
+		static void uniform( GLint location, glm::mat4& matrix );
 
 };
 
