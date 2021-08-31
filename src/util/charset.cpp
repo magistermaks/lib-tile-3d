@@ -2,30 +2,16 @@
 #include "charset.hpp"
 
 Charset::Charset( const char* path, int size ) {
-	
-	int w, h, n;
-	byte* data = stbi_load(path, &w, &h, &n, 4);
 
-	if( data == NULL ) {
-		logger::error( "Failed to load font image: '" + std::string(path) + "'" );
-		throw std::runtime_error("Font error");
-	}
+	this->tex = Texture::fromFile(path);
+
+	const int w = this->tex->getWidth();
+	const int h = this->tex->getHeight();
 
 	if( w % size != 0 || h % size != 0 ) {
 		logger::error( "Invalid size of font: '" + std::string(path) + "'" );
-		throw std::runtime_error("Font error");
-	} 
-
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-	// set texture options
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		throw std::runtime_error("Font loading error");
+	}
   
 	glm::fvec2 siz( size / float(w), size / float(h) );
 
@@ -42,19 +28,17 @@ Charset::Charset( const char* path, int size ) {
 		}
 	}
 
-	stbi_image_free(data);
-
 }
 
 Charset::~Charset() {
-	glDeleteTextures(1, &tex);
+	delete this->tex;
 }
 
 Glyph& Charset::get( char index ) {
 	return characters.at((int) index);
 }
 
-GLuint Charset::texture() {
-	return this->tex;
+Texture& Charset::texture() {
+	return *this->tex;
 }
 

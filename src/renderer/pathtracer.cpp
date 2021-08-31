@@ -18,20 +18,25 @@ PathTracer::PathTracer( int spp, int w, int h, int octree_depth, byte render_mod
 	this->kernel = CLHelper::loadKernel("trace");
 	this->queue = cl::CommandQueue( cl::Context::getDefault(), cl::Device::getDefault() );	
 	this->scene = new Scene();
-	this->canvas = nullptr;
+	this->screen = nullptr;
 
 	// init scene
 	scene->setBackground(3, 169, 252);
+	scene->setProjection(glm::radians(77.5f), 0.1f, 1000.0f);
 
 	// initialize all size dependent components
 	resize( w, h );
+
+	if( PathTracer::self != nullptr ) {
+		throw std::runtime_error("PathTracer already in use!");
+	}
 
 	PathTracer::self = this;
 }
 
 PathTracer::~PathTracer() {
 	delete this->scene;
-	delete this->canvas;
+	delete this->screen;
 
 	PathTracer::self = nullptr;
 }
@@ -42,8 +47,8 @@ PathTracer* PathTracer::instance() {
 
 void PathTracer::resize( int w, int h ) {
 
-	if( this->canvas != nullptr ) {
-		delete this->canvas;
+	if( this->screen != nullptr ) {
+		delete this->screen;
 	}
 
 	this->width = w;
@@ -54,10 +59,10 @@ void PathTracer::resize( int w, int h ) {
 	this->range = cl::NDRange(w / scale[this->render_mode].x, h / scale[this->render_mode].y);
 
 	// texture to draw on
-	this->canvas = new Canvas(w, h);
+	this->screen = new Screen(w, h);
 
 	this->scene_buffer = cl::Buffer(CL_MEM_READ_ONLY, scene->size());
-	this->image_buffer = cl::Image2DGL( cl::Context::getDefault(), CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, this->canvas->id() );
+	this->image_buffer = this->screen->getHandle(CL_MEM_WRITE_ONLY);
 	this->object_array = { this->image_buffer };
 
 	// static args
@@ -72,7 +77,7 @@ void PathTracer::resize( int w, int h ) {
 	this->kernel.setArg(6, this->scene_buffer);
 	
 	// send data to buffers in the GPU, do this every time the data changes
-	this->queue.enqueueWriteBuffer(scene_buffer, OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
+	this->queue.enqueueWriteBuffer(scene_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
 }
 
 void PathTracer::updateCamera( Camera& camera ) {
@@ -84,7 +89,7 @@ void PathTracer::updateCamera( Camera& camera ) {
 	scene->setCameraDirection( rot.x, rot.y, rot.z );
 
 	// send to kernel
-	this->queue.enqueueWriteBuffer(scene_buffer, OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
+	this->queue.enqueueWriteBuffer(scene_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, scene->size(), scene->ptr());
 }
 
 void PathTracer::resizeVoxels( size_t size ) {
@@ -95,14 +100,14 @@ void PathTracer::resizeVoxels( size_t size ) {
 }
 
 void PathTracer::updateVoxels( size_t offset, size_t count, byte* ptr ) {
-	this->queue.enqueueWriteBuffer(voxel_buffer, OPENCL_COPY_ON_WRITE, offset, count, ptr);
+	this->queue.enqueueWriteBuffer(voxel_buffer, LT3D_OPENCL_COPY_ON_WRITE, offset, count, ptr);
 	this->kernel.setArg(7, voxel_buffer);
 }
 
 void PathTracer::updateChunks( size_t count, float* ptr ) {
 	this->chunk_count = count;
 	this->chunk_buffer = cl::Buffer(CL_MEM_READ_ONLY, count * 3 * sizeof(float));
-	this->queue.enqueueWriteBuffer(chunk_buffer, OPENCL_COPY_ON_WRITE, 0, count * 3 * sizeof(float), (byte*) ptr);
+	this->queue.enqueueWriteBuffer(chunk_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, count * 3 * sizeof(float), (byte*) ptr);
 
 	this->kernel.setArg(4, chunk_count);
 	this->kernel.setArg(8, chunk_buffer);
@@ -151,8 +156,8 @@ void PathTracer::render( Camera& camera ) {
     // release texture handle
 	this->queue.enqueueReleaseGLObjects(&object_array);
 
-	// draw to screen
-	renderer.drawScreen(*canvas);
+	// draw the screen
+	renderer.drawScreen(*screen);
 
 }
 

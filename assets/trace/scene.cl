@@ -8,6 +8,7 @@ typedef struct {
 	Vec3 ambient_light;
 	Vec3 sky_light;
 	Vec3 background;
+	Vec3 projection;
 } Scene;
 
 // load scene from float array
@@ -17,5 +18,6 @@ void load_scene( Scene* s, global float* arr ) {
 	load_vec3( &(s->ambient_light),    arr + 2 * 3 );
 	load_vec3( &(s->sky_light),        arr + 3 * 3 );
 	load_vec3( &(s->background),       arr + 4 * 3 );
+	load_vec3( &(s->projection),       arr + 5 * 3 );
 }
 

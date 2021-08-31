@@ -19,6 +19,7 @@
 #	define CL_DISPLAY_KHR CL_GLX_DISPLAY_KHR
 #	define Region RegionX11
 #	define Glyph GlyphX11
+#	define Screen ScreenX11
 #endif
 
 #ifdef _WIN32
@@ -33,8 +34,8 @@
 // operation but I haven't observed any significant performance
 // impact so i disabled it for the time being, as it can introduce
 // problems if the buffer to be sent is modified (or deleted) between
-// issuing the copy command and the execution of the OpenCL kernel
-#define OPENCL_COPY_ON_WRITE CL_TRUE
+// issuing the copy command and execution of OpenCL kernel
+#define LT3D_OPENCL_COPY_ON_WRITE CL_TRUE
 
 #include <opencl/opencl.hpp>
 
@@ -53,6 +54,7 @@
 #include <perlin_noise/PerlinNoise.hpp>
 
 #ifdef __linux__
+#	undef Screen
 #	undef Region
 #	undef Glyph
 #endif
@@ -102,6 +104,9 @@ typedef std::mt19937 rng_type;
 #include "renderer/scene.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/material.hpp"
+#include "renderer/texture.hpp"
+#include "renderer/vertex.hpp"
+#include "renderer/matrix.hpp"
 #include "renderer/pathtracer.hpp"
 
 #ifdef WIN32 

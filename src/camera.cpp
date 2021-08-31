@@ -29,33 +29,33 @@ void Camera::update() {
 	this->rotation.y = y;
 
 	// vector representing where the camera is currently pointing
-	glm::vec3 direction = {
+	this->direction = {
 		 cos(x) * cos(y),
 		-sin(y),
 		 sin(x) * cos(y)
 	};
 
-	direction = glm::normalize(direction);
+	this->direction = glm::normalize(this->direction);
 
 	const float speed = this->speed * this->delta_time;
 	GLFWwindow* window = GLHelper::window();
 
 	//keyboard input
 	if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) {
-		this->pos += direction * speed;
+		this->pos += this->direction * speed;
 	}
 
 	if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) {
-		this->pos -= direction * speed;
+		this->pos -= this->direction * speed;
 	}
 
 	if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ) {
-		glm::vec3 vec = glm::cross( direction, glm::vec3(0, 1, 0) );
+		glm::vec3 vec = glm::cross( this->direction, glm::vec3(0, 1, 0) );
 		this->pos -= glm::normalize(vec) * speed;
 	}
 
 	if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) {
-		glm::vec3 vec = glm::cross( direction, glm::vec3(0, 1, 0) );
+		glm::vec3 vec = glm::cross( this->direction, glm::vec3(0, 1, 0) );
 		this->pos += glm::normalize(vec) * speed;
 	}
 
@@ -101,5 +101,14 @@ glm::vec3& Camera::getPosition() {
 
 glm::vec3& Camera::getRotation() {
 	return this->rotation;
+}
+
+glm::mat4 Camera::getView() {
+	glm::vec3 sign = {1, 1, -1};
+
+	glm::vec3 pos = this->pos * sign;
+	glm::vec3 dir = this->direction * sign;
+
+	return glm::lookAt(pos, pos + dir, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

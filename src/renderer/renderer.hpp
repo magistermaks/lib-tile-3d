@@ -4,57 +4,50 @@
 #include "../config.hpp"
 
 // :angry_bread:
+class Texture;
 class ShaderProgram;
 class Charset;
-
-class Canvas {
-
-	private:
-
-		int width, height;
-		GLuint tex;
-
-	public:
-
-		Canvas( int, int );
-		~Canvas();
-
-		void update( byte* data );
-		void bind();
-		GLuint id();
-
-		static byte* allocate( int, int );
-
-};
+class Screen;
+class VertexConsumer;
 
 class RenderSystem {
 
 	private:
-		
-		ReusableBuffer<float> vertices;
-		GLuint vbo, vao, tex;
+
+		VertexConsumer* consumer;
 		ShaderProgram* shader;
+		Texture* texture;
+		GLenum depth;
 
 		RenderSystem();
 
 	public:
-
-		~RenderSystem();
 
 		// singleton pattern
 		RenderSystem( RenderSystem& ) = delete;
 		void operator=( const RenderSystem& ) = delete;
 
 		// modify renderer state
-		void setTexture( GLuint );
+		void setTexture( Texture& );
 		void setShader( ShaderProgram& );
+		void setConsumer( VertexConsumer& );
+		void setDepthFunc( GLenum depth );
+
+		void vertex( float, float );
+		void vertex( float, float, float );
 		void vertex( float, float, float, float );
+		void vertex( float, float, float, float, float );
+
+		void depthTest( bool flag );
+		void depthMask( bool flag );
+
+		void clear();
 
 		// render specific elements
 		void drawText( const std::string&, float, float, float, Charset& );
-		void drawScreen( Canvas& );
+		void drawScreen( Screen& );
 
-		// draw queued quads
+		// call OpenGL
 		void draw();
 
 		// wait for opengl

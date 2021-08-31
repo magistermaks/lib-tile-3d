@@ -87,12 +87,13 @@ void Worldgen::gen_chunk_scene1(Region& region) {
 	tree.set(3, 3, 0, { 255, 255, 0, 255 });
 	tree.set(4, 4, 0, { 0, 255, 255, 255 });
 	tree.set(5, 5, 0, { 255, 0, 255, 255 });
+	tree.set(1, 1, 1, { 100, 255, 100, 255 });
 
 	for (int xc = -2; xc <= 2; xc++) {
 		for (int zc = -2; zc <= 2; zc++) {
 			if (zc == 1 && xc == 0) continue;
 			if (xc == 0 && zc == 0) continue;
-			if (zc == -1 && xc == 0) continue;
+			if (zc == -1 && xc == 0) continue; //
 			if (zc == 1 && xc == 1) continue;
 			if (zc == -1 && xc == 1) continue;
 			if (zc == 1 && xc == -1) continue;

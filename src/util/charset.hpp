@@ -2,6 +2,8 @@
 
 #include "../config.hpp"
 
+class Texture;
+
 struct Glyph {
 
 	// Offset to advance to next glyph
@@ -22,14 +24,14 @@ class Charset {
 
 	private:
 		std::vector<Glyph> characters;
-		GLuint tex;
+		Texture* tex;
 
 	public:
 		Charset( const char* path, int size = 8  );
 		~Charset();
 
 		Glyph& get( char );
-		GLuint texture();
+		Texture& texture();
 
 };
 

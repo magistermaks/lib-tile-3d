@@ -1,76 +1,54 @@
 
 #include "renderer.hpp"
 
-Canvas::Canvas( int width, int height ) {
-	this->width = width;
-	this->height = height;
-
-	glGenTextures(1, &tex);  
-
-	// set texture settings
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// initialize an empty texture
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
-}
-
-Canvas::~Canvas() {
-	glDeleteTextures(1, &tex);
-}
-
-void Canvas::update( byte* buffer ) {
-	this->bind();
-	glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
-}
-
-GLuint Canvas::id() {
-	return this->tex;
-}
-
-void Canvas::bind() {
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, this->tex );
-}
-
-byte* Canvas::allocate( int width, int height ) {
-	return new byte[3 * width * height];
-}
-
-RenderSystem::RenderSystem() : vertices(16) {
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-
-	// bind VBO to VAO
-	glBindVertexArray(this->vao);
-	glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-
-	// set buffer attributes
-	GLHelper::vertexAttribute(0, 2, GL_FLOAT, 4, 0, sizeof(float));
-	GLHelper::vertexAttribute(1, 2, GL_FLOAT, 4, 2, sizeof(float));
-
-	this->tex = 0;
+RenderSystem::RenderSystem() {
 	this->shader = nullptr;
+	this->consumer = nullptr;
+	this->texture = nullptr;
 }
 
-RenderSystem::~RenderSystem() {
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
-}
-
-void RenderSystem::setTexture( GLuint tex ) {
-	this->tex = tex;
+void RenderSystem::setTexture( Texture& texture ) {
+	this->texture = &texture;
 }
 
 void RenderSystem::setShader( ShaderProgram& shader ) {
 	this->shader = &shader;
 }
 
+void RenderSystem::setConsumer( VertexConsumer& consumer ) {
+	this->consumer = &consumer;
+}
+
+void RenderSystem::setDepthFunc( GLenum depth ) {
+	this->depth = depth;
+}
+
+void RenderSystem::vertex( float x, float y ) {
+	this->consumer->vertex(x, y);
+}
+
+void RenderSystem::vertex( float x, float y, float z ) {
+	this->consumer->vertex(x, y, z);
+}
+
 void RenderSystem::vertex( float x, float y, float u, float v ) {
-	vertices.push(x, y, u, v);
+	this->consumer->vertex(x, y, u, v);
+}
+
+void RenderSystem::vertex( float x, float y, float z, float u, float v ) {
+	this->consumer->vertex(x, y, z, u, v);
+}
+
+void RenderSystem::clear() {
+	this->consumer->clear();
+}
+
+void RenderSystem::depthTest( bool flag ) {
+	if( flag ) glDepthFunc(this->depth); else glDepthFunc(GL_ALWAYS);
+}
+
+void RenderSystem::depthMask( bool flag ) {
+	glDepthMask(flag);
 }
 
 void RenderSystem::drawText( const std::string& text, float x, float y, float size, Charset& charset ) {
@@ -95,10 +73,11 @@ void RenderSystem::drawText( const std::string& text, float x, float y, float si
 	}
 
 	this->draw();
+	this->clear();
 }
 
-void RenderSystem::drawScreen( Canvas& canvas ) {
-	this->setTexture( canvas.id() );
+void RenderSystem::drawScreen( Screen& screen ) {
+	this->setTexture( screen );
 
 	this->vertex( -1, -1,  0,  0 );
 	this->vertex(  1, -1,  1,  0 );
@@ -109,31 +88,25 @@ void RenderSystem::drawScreen( Canvas& canvas ) {
 	this->vertex(  1, -1,  1,  0 );
 
 	this->draw();
+	this->clear();
 }
 
 void RenderSystem::draw() {
-	if( !vertices.empty() ) {
 
-		assert( this->shader != nullptr );
+	assert( this->shader != nullptr );
+	assert( this->consumer != nullptr );
 
-		// bind given texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->tex);
+	// bind given texture
+	this->texture->bind();
 
-		// bind VAO and VBO
-		glBindVertexArray(this->vao);
+	// bind vertex buffer
+	this->consumer->bind();
 
-		// update buffer
-		glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(float), this->vertices.data(), GL_DYNAMIC_DRAW);
+	// bind shader
+	this->shader->bind();
 
-		// bind shader
-		this->shader->bind();
-
-		// call OpenGL
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3 );
-		vertices.clear();
-
-	}
+	// call OpenGL
+	glDrawArrays(this->consumer->primitive, 0, this->consumer->count());
 }
 
 void RenderSystem::flush() {

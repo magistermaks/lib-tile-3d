@@ -7,7 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/image/write.h>
 
-#define WORLD
+//#define WORLD
 
 int main() {
 
@@ -26,16 +26,19 @@ int main() {
 	GLFWwindow* window = GLHelper::window();
 
 	// compile shader program
-	ShaderProgram* program = GLHelper::loadShaderProgram("layer");
+	ShaderProgram* depth = GLHelper::loadShaderProgram("depth");
+	ShaderProgram* layer = GLHelper::loadShaderProgram("layer");
+	ShaderProgram* mesh = GLHelper::loadShaderProgram("mesh");
 
-	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) width / (float) height, 0.1f, 100.0f);
-	 
-	logger::info("Generating voxel data...");
+	GLint loc = mesh->location("mvp");
+
+	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 1000.0f);
 
 	PathTracer tracer( 8, width, height, 6, 0 );
 	ChunkManager manager( tracer );
-
 	Region region( manager );
+
+	logger::info("Generating voxel data...");
 
 #ifdef WORLD
 	Worldgen::gen_chunk_world(region);
@@ -50,16 +53,65 @@ int main() {
 	time_t last = 0;
 	long count = 0, fps = 0, ms = 0;
 
-	// enable shader program
 	auto& renderer = RenderSystem::instance();
-	renderer.setShader(*program);
+
+	Texture* box = Texture::fromFile("./assets/box.png");
+
+	VertexConsumerProvider provider2d;
+	provider2d.attribute(2); // 0 -> [x, y]
+	provider2d.attribute(2); // 1 -> [u, v]
+
+	VertexConsumer consumer2d = provider2d.get();
+	renderer.setConsumer(consumer2d);
+
+	VertexConsumerProvider provider3d;
+	provider3d.attribute(3); // 0 -> [x, y, z]
+	provider3d.attribute(2); // 1 -> [u, v]
+
+	VertexConsumer consumer3d = provider3d.get();
+
+	// textured cube
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f, -0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex( -0.5f, -0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f, -0.5f,  1.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f, -0.5f,  0.0f, 1.0f );
+	consumer3d.vertex( -0.5f,  0.5f,  0.5f,  0.0f, 0.0f );
+	consumer3d.vertex(  0.5f,  0.5f,  0.5f,  1.0f, 0.0f );
 
 	Camera camera;
 
 	// move the camera so that we don't start inside a black cube
 	camera.move( glm::vec3(1, 150, 1) );
- 
-	//size_t c = 0;
 
 	do {
 
@@ -68,7 +120,7 @@ int main() {
 #ifndef WORLD
 		tree.set(rand() % 65, rand() % 65, rand() % 65, {
 			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-	} );
+		} );
 #endif // !WORLD
 
 		// update the fps count
@@ -78,11 +130,31 @@ int main() {
 			count = 0;
 		}
 
+		renderer.setConsumer(consumer2d);
+		renderer.setShader(*depth);
+		renderer.depthTest(false);
 		manager.update();
 		camera.update();
 		tracer.render( camera );
 
+		renderer.depthMask(false);
+		renderer.setShader(*layer);
 		renderer.drawText( "FPS: " + std::to_string(fps) + " (avg: " + std::to_string(ms) + "ms)", -1, 1-0.05, 0.04, charset ); 
+
+		renderer.depthMask(true);
+		renderer.depthTest(true);
+
+		mesh->bind(); // uniform
+		renderer.setShader(*mesh);
+		renderer.setConsumer(consumer3d);
+		renderer.setTexture(*box);
+		glm::mat4 model = MatrixHelper::getVoxelIdentity();
+		model = glm::scale(model, glm::vec3(10, 10, 10));
+		model = glm::translate(model, glm::vec3(1, 1, -1));
+
+		glm::mat4 mvp = proj * camera.getView() * model;
+		MatrixHelper::uniform(loc, mvp);
+		renderer.draw();
 
 		GLHelper::frame();
 		count ++;
@@ -91,7 +163,7 @@ int main() {
 
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 
-	delete program;
+	delete depth, layer, mesh;
 
 	// close window
 	glfwTerminate();
