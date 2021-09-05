@@ -6,31 +6,55 @@ import argparse
 import shutil
 
 # parse cl args
-parser = argparse.ArgumentParser( description="LibTile3D Builder" )
-parser.add_argument( "--clean", help=f"(re-)generate build system", action="store_true" )
-parser.add_argument( "--run", help=f"execute binary", action="store_true" )
-parser.add_argument( "--debug", help=f"to build in debug mode", action="store_true" )
+parser = argparse.ArgumentParser(description="LibTile3D Builder")
+parser.add_argument("--clean", help="(re-)generate build system", action="store_true")
+parser.add_argument("--run", help="execute binary", action="store_true")
+parser.add_argument("--debug", help="to build in debug mode", action="store_true")
+parser.add_argument("--xansi", help="disable ANSI color codes", action="store_true")
 args = parser.parse_args();
 
-main = "build/main" + (".exe" if os.name == "nt" else "")
-options = "-DCMAKE_BUILD_TYPE=Debug" if args.debug else ""
+# used for clean logging
+def write(msg):
+	global args;
+	if not args.xansi:
+		print(f"\n\033[0;94m{msg}\033[00m")
+	else:
+		print(f"\n{msg}")
 
+# add cmake debug mode flag when required
+options = "-DCMAKE_BUILD_TYPE=Debug " if args.debug else ""
+
+# set system specific constants
+if os.name == "nt":
+	main = "build/main.exe"
+	make = "nmake"
+	options += "-G \"NMake Makefiles\" "
+else:
+	main = "build/main"
+	make = "make -j 4"
+
+# remove buid dir when required
 if args.clean:
 	shutil.rmtree("build")
-    
+
+# call cmake
 if not os.path.isdir("build"):
-	print( "\nPreparing Target..." )
+	write("Preparing Target...")
 	os.mkdir("build")
 	os.system(f"cd build && cmake {options} ../")
 
-print( "\nBuilding Target..." )
+write("Building Target...")
 try:
 	os.remove(main)
 except:
 	pass
-os.system("cd build && make -j 4")
 
+# build project
+os.system(f"cd build && {make}")
+
+# run project when required
 if args.run:
-	print( "\nRunning Target..." )
-	print( f"Executable: './{main}'" )
+	print(f"Executable: './{main}'")
+	write("Running Target...")
 	os.system(main)
+
