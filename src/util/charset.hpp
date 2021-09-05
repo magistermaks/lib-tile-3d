@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../config.hpp"
-
-class Texture;
+#include <config.hpp>
 
 struct Glyph {
 

@@ -1,11 +1,6 @@
 #pragma once
 
-#include "../config.hpp"
-
-class Screen;
-class Camera;
-class Scene;
-class VoxelTree;
+#include <config.hpp>
 
 class PathTracer {
 

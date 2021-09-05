@@ -1,3 +1,4 @@
+
 #include "camera.hpp"
 
 void Camera::update() {

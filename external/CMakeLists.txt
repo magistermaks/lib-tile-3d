@@ -9,7 +9,7 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
-### GLFW ###
+### GLFW
 
 add_subdirectory (glfw-3.1.2)
 
@@ -33,7 +33,7 @@ set(OPENGL_LIBRARY
 )
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-### GLEW ###
+### GLEW
 
 set(GLEW_SOURCE
 	glew-1.13.0/src/glew.c
@@ -41,7 +41,6 @@ set(GLEW_SOURCE
 
 set(GLEW_HEADERS
 )
-
 
 add_library( GLEW_1130 STATIC
 	${GLEW_SOURCE}
@@ -52,3 +51,12 @@ target_link_libraries(GLEW_1130
 	${OPENGL_LIBRARY}
 	${EXTRA_LIBS}
 )
+
+### STB
+
+add_library(STB_IMAGE STATIC
+	stb/impl.c
+)
+
+target_link_libraries(STB_IMAGE)
+

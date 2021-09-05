@@ -35,6 +35,7 @@ include_directories(
 	external/glm-0.9.7.1/
 	external/glew-1.13.0/include/
 	external/
+	src/
     .
 )
 
@@ -43,6 +44,7 @@ set(ALL_LIBS
 	${OpenCL_LIBRARY}
 	glfw
 	GLEW_1130
+	STB_IMAGE
 )
 
 add_definitions(
@@ -55,8 +57,6 @@ add_definitions(
 
 add_executable(main 
 	external/murmur-3/murmur.cpp
-	external/thread_pool/thread_pool.cpp
-	external/stx/string.cpp
 
 	src/util/charset.cpp
 
@@ -72,13 +72,11 @@ add_executable(main
 	src/renderer/vertex.cpp
 	src/renderer/matrix.cpp
 
-	src/math.cpp
 	src/main.cpp
 	src/logger.cpp
 	src/glhelper.cpp
 	src/clhelper.cpp
 	src/camera.cpp
-	src/voxel.cpp
  )
 
 target_link_libraries(main

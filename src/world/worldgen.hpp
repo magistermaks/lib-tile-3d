@@ -1,9 +1,6 @@
 #pragma once
 
-#include "../config.hpp"
-
-class Scene;
-
+#include <config.hpp>
 
 class Worldgen {
 

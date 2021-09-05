@@ -1,9 +1,6 @@
 #pragma once
 
-#include "renderer/shader.hpp"
-#include "config.hpp"
-
-class ShaderProgram;
+#include <config.hpp>
 
 namespace GLHelper {
 

@@ -1,10 +1,6 @@
 #pragma once
 
-#include "../config.hpp"
-
-class Chunk;
-class Region;
-class ChunkManager;
+#include <config.hpp>
 	
 struct ChunkPos {
 	int x, y, z;

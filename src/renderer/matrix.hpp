@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../config.hpp"
-
-class Camera;
+#include <config.hpp>
 
 class MatrixHelper {
 

@@ -1,6 +1,11 @@
 
 #include "clhelper.hpp"
 
+// helper function used by CLHelper::init
+bool string_includes( const std::string& str, const std::string& needle ) {
+	return str.find(needle) != std::string::npos;
+}
+
 // helper function used by CLHelper::loadKernel
 bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, const std::string& filename, std::vector<std::string>& includes ) {
 
@@ -110,7 +115,7 @@ bool CLHelper::init() {
 	// check device extensions
 	bool success = true;
 	auto extension = [&] ( std::string& str, std::string name ) {
-		if( !stx::includes( str, name ) ) {
+		if( !string_includes( str, name ) ) {
 			logger::error( "Required extension '" + name + "' not supported!" );
 			success = false;
 		}

@@ -1,14 +1,6 @@
 #pragma once
 
-#include "octree.hpp"
-#include "../config.hpp"
-
-class Region;
-class PathTracer;
-class OctreeVoxel;
-
-template< typename T >
-class Octree;
+#include <config.hpp>
 
 class Chunk {
 

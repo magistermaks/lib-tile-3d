@@ -113,7 +113,12 @@ void RenderSystem::flush() {
 
 	// glFlush() can also be used on SOME drivers,
 	// not flushing at all can work but depends on undefined behaviour.
-	glFinish();
+
+	#if LT3D_FAST_GLFINISH
+		glFlush()
+	#else
+		glFinish();
+	#endif
 
 }
 

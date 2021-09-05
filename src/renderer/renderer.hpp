@@ -1,14 +1,6 @@
 #pragma once
 
-#include "shader.hpp"
-#include "../config.hpp"
-
-// :angry_bread:
-class Texture;
-class ShaderProgram;
-class Charset;
-class Screen;
-class VertexConsumer;
+#include <config.hpp>
 
 class RenderSystem {
 

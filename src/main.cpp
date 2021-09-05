@@ -1,12 +1,6 @@
 
 #include "config.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/image/read.h>
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb/image/write.h>
-
 //#define WORLD
 
 int main() {
@@ -164,9 +158,6 @@ int main() {
 	} while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0 );
 
 	delete depth, layer, mesh;
-
-	// close window
-	glfwTerminate();
 
 	return 0;
 }

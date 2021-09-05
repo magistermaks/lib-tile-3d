@@ -32,5 +32,5 @@ os.system("cd build && make -j 4")
 
 if args.run:
 	print( "\nRunning Target..." )
-	print( f"Executable: '{main}'" )
+	print( f"Executable: './{main}'" )
 	os.system(main)

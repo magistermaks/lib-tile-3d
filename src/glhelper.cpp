@@ -30,7 +30,6 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 	if( windowHandle == NULL ) {
 		logger::fatal( "Failed to open GLFW window!" );
-		glfwTerminate();
 		return false;
 	}
 
@@ -49,7 +48,6 @@ bool GLHelper::init(int width, int height, const char* name) {
 
 	if( glewInit() != GLEW_OK ) {
 		logger::fatal( "Failed to initialize GLEW!" );
-		glfwTerminate();
 		return false;
 	}
 
