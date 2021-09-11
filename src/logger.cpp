@@ -1,22 +1,6 @@
 
 #include "logger.hpp"
 
-void logger::info( std::string msg ) {
-	std::cout << (getTimestamp() + " INFO: " + msg + "\n");
-}
-
-void logger::warn( std::string msg ) {
-	std::cout << (getTimestamp() + " WARN: " + msg + "\n");
-}
-
-void logger::error( std::string msg ) {
-	std::cout << (getTimestamp() + " ERROR: " + msg + "\n");
-}
-
-void logger::fatal( std::string msg ) {
-	std::cout << (getTimestamp() + " FATAL: " + msg + "\n");
-}
-
 // stolen from Sequensa
 std::string logger::getTimestamp( const char* pattern ) {
 	time_t rawtime = time(0); 
@@ -29,3 +13,8 @@ std::string logger::getTimestamp( const char* pattern ) {
 
 	return std::string(buf);
 }
+
+std::string logger::getText( const std::string& type, std::stringstream& buffer ) {
+	return getTimestamp() + " " + type + ": " + buffer.str() + "\n";
+}
+

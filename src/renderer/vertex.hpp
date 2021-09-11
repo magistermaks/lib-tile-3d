@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.hpp>
+#include <core.hpp>
 
 struct VertexAttribute {
 

@@ -126,9 +126,9 @@ void GLHelper::screenshot( const std::string& path ) {
 
 	// write buffer to file
 	if( stbi_write_png( path.c_str(), width, height, 3 /*RGB*/, pixels, 0 ) == 0 ) {
-		logger::error("Failed to write screenshot to: '" + std::string(path) + "'!");
+		logger::error("Failed to write screenshot to: '", path, "'!");
 	}else{
-		logger::info("Written screenshot to: '" + std::string(path) + "'");
+		logger::info("Written screenshot to: '", path, "'");
 	}
 
 	// free buffer
@@ -182,21 +182,10 @@ void GLHelper::getError( const char* origin ) {
 	std::string location = origin == nullptr ? "" : std::string(", at: '") + origin + std::string("'"); 
 
 	if( err != GL_NO_ERROR ) {
-		logger::warn( "OpenGL Error: " + std::to_string(err) + ", " + name + location + "!" );
+		logger::warn( "OpenGL Error: ", err, ", ", name, location, "!" );
 	}
 
 	std::cout << std::flush;
-}
-
-int GLHelper::getSizeOf( GLenum thing ) {
-	switch( thing ) {
-		case GL_TRIANGLES: return 3;
-		case GL_LINES: return 2;
-		case GL_FLOAT: return sizeof(float);
-		// TODO add more
-
-		default: throw std::runtime_error("Unsupported OpenGL enum! id: " + std::to_string(thing));
-	}
 }
 
 void GLHelper::vertexAttribute( GLint index, GLint length, GLenum type, GLsizei stride, GLsizei offset, GLsizei size, GLboolean normalize ) {
@@ -212,7 +201,7 @@ ShaderProgram* GLHelper::loadShaderProgram( std::string name ) {
 	if( vertex && fragment ) {
 		
 		if( builder.link() ) {
-			logger::info( "Loaded OpenGL shader program: '" + name + "'" );
+			logger::info( "Loaded OpenGL shader program: '", name, "'" );
 			return builder.build();
 		}
 

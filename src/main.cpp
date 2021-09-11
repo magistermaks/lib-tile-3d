@@ -1,5 +1,5 @@
 
-#include "config.hpp"
+#include "core.hpp"
 
 //#define WORLD
 
@@ -9,8 +9,7 @@ int main() {
 	const int height = 768;
 
 	// print cwd, nice for debugging
-	char tmp[ CWD_MAX_PATH ];
-	logger::info("Current working directory: '" + std::string( POSIX_GETCWD(tmp, sizeof(tmp)) ? tmp : "" ) + "'");
+	logger::info("Current working directory: '", std::filesystem::current_path().string(), "'");
 
 	// initilize GLFW, GLEW, OpenGL, and OpenCL
 	if( !GLHelper::init(width, height, "lib-tile-3d") ) {

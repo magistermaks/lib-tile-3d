@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.hpp>
+#include <core.hpp>
 
 // this must be a simple, C-like structure
 struct OctreeVoxel {

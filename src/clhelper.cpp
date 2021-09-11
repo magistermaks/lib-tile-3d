@@ -31,7 +31,7 @@ bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, co
 
 				if( std::find(includes.begin(), includes.end(), path + include) == includes.end() ) {
 					if( !parseKernelFile(sources, path, include, includes) ) {
-						logger::info( "Required from: '" + fullpath + "'" );
+						logger::info( "Required from: '", fullpath, "'" );
 						return false;
 					}
 				}
@@ -43,7 +43,7 @@ bool parseKernelFile( cl::Program::Sources& sources, const std::string& path, co
 		// add parsed source
 		sources.push_back( {source.c_str(), source.length()} );
 	}else{
-		logger::error( "Failed to read kernel file: '" + fullpath + "'!" );
+		logger::error( "Failed to read kernel file: '", fullpath, "'!" );
 		return false;
 	}
 
@@ -66,7 +66,7 @@ bool CLHelper::init() {
 		std::smatch match;
 
 		if( std::regex_search(version, match, std::regex("OpenCL (\\d+)", std::regex_constants::icase)) && std::stoi(match[1]) > 1 ) {
-			logger::info("Found OpenCL platform: '" + version + "'");
+			logger::info("Found OpenCL platform: '", version, "'");
 			platform = plat;
 			break;
 		}
@@ -96,7 +96,7 @@ bool CLHelper::init() {
 		logger::fatal("No OpenCL GPU device found!");
 		return false;
 	}else{
-		logger::info("Found " + std::to_string(count) + " OpenCL GPU device(s)");
+		logger::info("Found ", count, " OpenCL GPU device(s)");
 	}
 
 	cl::Context context( {devices[0]}, properties );
@@ -116,7 +116,7 @@ bool CLHelper::init() {
 	bool success = true;
 	auto extension = [&] ( std::string& str, std::string name ) {
 		if( !string_includes( str, name ) ) {
-			logger::error( "Required extension '" + name + "' not supported!" );
+			logger::error( "Required extension '", name, "' not supported!" );
 			success = false;
 		}
 	};
@@ -146,9 +146,9 @@ cl::Kernel CLHelper::loadKernel( const std::string& name ) {
 		if( program.build( {cl::Device::getDefault()} ) != CL_SUCCESS ) {
 			std::string log = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>( cl::Device::getDefault() );
 
-			logger::fatal( "Failed to compile OpenCL kernel: '" + name + "'\n" + log );
+			logger::fatal( "Failed to compile OpenCL kernel: '", name, "'\n", log );
 		}else{
-			logger::info( "Loaded OpenCL kernel: '" + name + "'" );
+			logger::info( "Loaded OpenCL kernel: '", name, "'" );
 			return cl::Kernel( program, "main" );
 		}
 

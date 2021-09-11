@@ -1,6 +1,7 @@
 #pragma once
 
 #include "trait.hpp"
+#include "logger.hpp"
 
 template< typename T >
 class ReusableBuffer {
@@ -82,12 +83,7 @@ void ReusableBuffer<T>::assert_size( int count ) {
 	if( this->pos + count > this->length ) {
 		size_t new_size = this->length * 2;
 
-		//if( new_size > MAX_BUFFER_LENGTH * sizeof(T) ) {
-		//	throw std::runtime_error( "Maximum buffer size excedded!" );
-		//}
-
-		// logger is not avaible here, ehhh
-		std::cout << "(ReusableBuffer) Buffer '" << this << "' resized to " << new_size << " (" << new_size * sizeof(T) << " bytes)\n";
+		logger::info("Reusable Buffer '", this, "' resized to ", new_size, " (", new_size * sizeof(T), " bytes)");
 
 		this->buffer = (T*) realloc(this->buffer, new_size * sizeof(T));
 		this->length = new_size;
@@ -103,7 +99,6 @@ template< typename T >
 bool ReusableBuffer<T>::empty() {
 	return this->pos == 0;
 }
-
 
 template< typename T >
 T* ReusableBuffer<T>::copy() {

@@ -69,6 +69,8 @@
 #include <thread>
 #include <random>
 #include <regex>
+#include <utility>
+#include <filesystem>
 
 // C
 #include <stdio.h>

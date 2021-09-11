@@ -39,7 +39,7 @@ bool ShaderProgramBuilder::compileSource( std::string source, std::string identi
 	if( !result && log_length > 0 ) {
 		std::vector<char> log(log_length + 1);
 		glGetShaderInfoLog(shader, log_length, NULL, &log[0]);
-        logger::error( "Failed to compile OpenGL shader: '" + identifier + "'!" );         
+        logger::error( "Failed to compile OpenGL shader: '", identifier, "'!" );         
 		printf("%s\n", &log[0]);
 		return false;
 	}
@@ -64,7 +64,7 @@ bool ShaderProgramBuilder::compileFile( std::string path, GLenum type ) {
         // compile shader source
         return this->compileSource( source, path, type );
 	}else{
-		logger::error( "Failed to open OpenGL shader file: '" + path + "'!" );
+		logger::error( "Failed to open OpenGL shader file: '", path, "'!" );
         return false;
 	}
 

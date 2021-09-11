@@ -24,6 +24,7 @@
 #include "renderer/matrix.hpp"
 #include "renderer/pathtracer.hpp"
 
-// when adding a file here, remember to add its
-// forward definition to the include/forward.hpp file!
+// When adding a file here, remember to add its forward definition to the 'include/forward.hpp' file!
+// Include this file to gain access to all LT3D components, external libraries and macros.
+// If your component is to be used in a header file, it MUST NOT include core.hpp, and can only use headers from the 'include/' directory
 
