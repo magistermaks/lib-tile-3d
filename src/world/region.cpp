@@ -18,7 +18,7 @@ bool ChunkPos::operator==(const ChunkPos& pos) const {
 }
 
 std::size_t std::hash<ChunkPos>::operator()( const ChunkPos& pos ) const {
-	return murmur3_32( (uint8_t*) &pos, sizeof(ChunkPos), 0 );
+	return (pos.z & 0x0FF) | (pos.y & 0xFFF) << 2 | (pos.x & 0xFFF) << 5;
 }
 
 std::string std::to_string( const ChunkPos& pos ) {

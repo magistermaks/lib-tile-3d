@@ -56,8 +56,6 @@ add_definitions(
 )
 
 add_executable(main 
-	external/murmur-3/murmur.cpp
-
 	src/util/charset.cpp
 
 	src/world/chunk.cpp
