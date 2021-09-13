@@ -2,7 +2,6 @@
 
 #include <core.hpp>
 
-// this must be a simple, C-like structure
 struct OctreeVoxel {
 	byte r; // red color
 	byte g; // green color
@@ -70,14 +69,11 @@ class Octree {
 				// shift the offset so that it aligns to the next layer
 				offset <<= 3;
 
-				// calculate the offset by decomposing the xyz to its binary form
-				offset += octant;
+				// add octant id to the shifted offset, keep the octant id in range 1-8, not 0-7
+				offset += octant + 1;
 
 				// shift the mask
 				mask >>= 1;
-
-				// the value added to `offset` must be kept in range 1-8, not 0-7
-				offset ++;
 
 			}
 

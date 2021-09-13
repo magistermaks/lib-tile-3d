@@ -95,8 +95,6 @@ void PathTracer::updateCamera( Camera& camera ) {
 void PathTracer::resizeVoxels( size_t size ) {
 	this->voxel_buffer = cl::Buffer( CL_MEM_READ_ONLY, size );
 	this->kernel.setArg(7, voxel_buffer);
-
-	logger::info("(PathTracer) Resized voxel buffer, size=", size);
 }
 
 void PathTracer::updateVoxels( size_t offset, size_t count, byte* ptr ) {
@@ -107,12 +105,10 @@ void PathTracer::updateVoxels( size_t offset, size_t count, byte* ptr ) {
 void PathTracer::updateChunks( size_t count, float* ptr ) {
 	this->chunk_count = count;
 	this->chunk_buffer = cl::Buffer(CL_MEM_READ_ONLY, count * 3 * sizeof(float));
-	this->queue.enqueueWriteBuffer(chunk_buffer, LT3D_OPENCL_COPY_ON_WRITE, 0, count * 3 * sizeof(float), (byte*) ptr);
+	this->queue.enqueueWriteBuffer(chunk_buffer, CL_TRUE /* intentional */, 0, count * 3 * sizeof(float), (byte*) ptr);
 
 	this->kernel.setArg(4, chunk_count);
 	this->kernel.setArg(8, chunk_buffer);
-
-	logger::info("(PathTracer) Updated chunk metadata array, count=", count);
 }
 
 void PathTracer::render( Camera& camera ) {

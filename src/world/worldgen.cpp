@@ -1,15 +1,15 @@
 
 #include "worldgen.hpp"
 
-void Worldgen::gen_chunk_world(Region& region) {
+void Worldgen::gen_chunk_world(World& world) {
 
 	for (int i = 0; i <= 2; i += 2) {
 		for (int xc = -2; xc <= 2; xc++) {
 			for (int zc = -2; zc <= 2; zc++) {
 				int x = xc, z = zc, y = i;
 
-				region.put(x, y, z);
-				auto& tree = *region.chunk(x, y, z)->tree;
+				world.put(x, y, z);
+				auto& tree = *world.get(x, y, z)->tree;
 
 				x *= 64;
 				y *= 64;
@@ -75,11 +75,11 @@ void Worldgen::gen_chunk_world(Region& region) {
 	}
 }
 
-void Worldgen::gen_chunk_scene1(Region& region) {
+void Worldgen::gen_chunk_scene1(World& world) {
 
-	region.put(0, 0, 0);
+	world.put(0, 0, 0);
 
-	auto& tree = *region.chunk(0, 0, 0)->tree;
+	auto& tree = *world.get(0, 0, 0)->tree;
 
 	tree.set(0, 0, 0, { 255, 0, 0, 255 });
 	tree.set(1, 1, 0, { 0, 255, 0, 255 });
@@ -93,7 +93,7 @@ void Worldgen::gen_chunk_scene1(Region& region) {
 		for (int zc = -2; zc <= 2; zc++) {
 			if (zc == 1 && xc == 0) continue;
 			if (xc == 0 && zc == 0) continue;
-			if (zc == -1 && xc == 0) continue; //
+			if (zc == -1 && xc == 0) continue;
 			if (zc == 1 && xc == 1) continue;
 			if (zc == -1 && xc == 1) continue;
 			if (zc == 1 && xc == -1) continue;
@@ -101,8 +101,8 @@ void Worldgen::gen_chunk_scene1(Region& region) {
 			if (zc == 0 && xc == -1) continue;
 			if (zc == 0 && xc == 1) continue;
 
-			region.put(xc, 0, zc);
-			auto& tree = *region.chunk(xc, 0, zc)->tree;
+			world.put(xc, 0, zc);
+			auto& tree = *world.get(xc, 0, zc)->tree;
 
 			for (int x = 0; x < 64; x++) {
 				for (int y = 0; y < 50; y++) {

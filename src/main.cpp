@@ -28,17 +28,16 @@ int main() {
 	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 1000.0f);
 
 	PathTracer tracer( 8, width, height, 6, 0 );
-	ChunkManager manager( tracer );
-	Region region( manager );
+	World world( tracer );
 
 	logger::info("Generating voxel data...");
 
 #ifdef WORLD
-	Worldgen::gen_chunk_world(region);
+	Worldgen::gen_chunk_world(world);
 #else
 	// floating voixels surrounded with cubes
-	Worldgen::gen_chunk_scene1(region);
-	auto& tree = *region.chunk(0, 0, 0)->tree;
+	Worldgen::gen_chunk_scene1(world);
+	auto& tree = *world.get(0, 0, 0)->tree;
 #endif
 
 	Charset charset( "assets/8x8font.png" );
@@ -126,7 +125,7 @@ int main() {
 		renderer.setConsumer(consumer2d);
 		renderer.setShader(*depth);
 		renderer.depthTest(false);
-		manager.update();
+		world.update();
 		camera.update();
 		tracer.render( camera );
 

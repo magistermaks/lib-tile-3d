@@ -13,7 +13,7 @@
 #include "util/trait.hpp"
 #include "util/charset.hpp"
 #include "world/chunk.hpp"
-#include "world/region.hpp"
+#include "world/world.hpp"
 #include "world/worldgen.hpp"
 #include "world/octree.hpp"
 #include "renderer/shader.hpp"

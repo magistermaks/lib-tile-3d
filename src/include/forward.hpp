@@ -9,7 +9,7 @@ class Texture;
 class ShaderProgram;
 class Charset;
 class VertexConsumer;
-class Region;
+class World;
 class PathTracer;
 class OctreeVoxel;
 class Worldgen;
