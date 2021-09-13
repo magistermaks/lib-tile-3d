@@ -14,11 +14,11 @@ ThreadPool::ThreadPool(size_t count) : stop(false) {
 ThreadPool::~ThreadPool() {
 	
 	{
-        std::unique_lock<std::mutex> lock(this->queue_mutex);
-        this->stop = true;
-    }
+		std::unique_lock<std::mutex> lock(this->queue_mutex);
+		this->stop = true;
+	}
 
-    this->condition.notify_all();
+	this->condition.notify_all();
 	
 	for(auto& worker : this->workers) {
 		worker.join();
@@ -29,21 +29,21 @@ ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::enqueue(const Task& task) {
-	
-	{
-        std::unique_lock<std::mutex> lock(this->queue_mutex);
 
-        // don't allow enqueueing after stopping the pool
-        if( this->stop ) throw std::runtime_error("Unable to add task to a stopped pool!");
+	{
+		std::unique_lock<std::mutex> lock(this->queue_mutex);
+
+		// don't allow enqueueing after stopping the pool
+		if( this->stop ) throw std::runtime_error("Unable to add task to a stopped pool!");
 
 		if( this->tasks.size() > 64 ) {
 			logger::warn("Thread pool ", this, " can't keep up! ", this->tasks.size(), " tasks awaiting execution!");
-		}	
+		}
 
-        this->tasks.emplace(task);
-    }
+		this->tasks.emplace(task);
+	}
 
-    this->condition.notify_one();
+	this->condition.notify_one();
 
 }
 
