@@ -12,7 +12,13 @@ class ThreadPool {
 		ThreadPool(size_t count = ThreadPool::optimal());
 		~ThreadPool();
 
-		void enqueue(Task task);
+		void enqueue(const Task& task);
+
+		template< typename Func, typename Arg, typename... Args >
+		void enqueue( Func func, Arg arg, Args... args ) {
+			this->enqueue( std::bind(func, arg, args...) );
+		}
+
 		static size_t optimal();
 
 	private:

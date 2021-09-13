@@ -28,7 +28,7 @@ ThreadPool::~ThreadPool() {
 
 }
 
-void ThreadPool::enqueue(Task task) {
+void ThreadPool::enqueue(const Task& task) {
 	
 	{
         std::unique_lock<std::mutex> lock(this->queue_mutex);
