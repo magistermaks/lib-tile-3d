@@ -15,6 +15,8 @@ class OctreeVoxel;
 class Worldgen;
 class Chunk;
 class ChunkManager;
+class ThreadPool;
+class Task;
 
 // template forward definitions
 template<typename T> class Octree;

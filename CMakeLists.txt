@@ -57,6 +57,7 @@ add_definitions(
 
 add_executable(main 
 	src/util/charset.cpp
+	src/util/thread_pool.cpp
 
 	src/world/chunk.cpp
 	src/world/world.cpp

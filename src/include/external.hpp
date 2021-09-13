@@ -70,6 +70,7 @@
 #include <regex>
 #include <utility>
 #include <filesystem>
+#include <condition_variable>
 
 // C
 #include <stdio.h>

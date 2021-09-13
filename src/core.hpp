@@ -12,6 +12,7 @@
 #include "util/buffer.hpp"
 #include "util/trait.hpp"
 #include "util/charset.hpp"
+#include "util/thread_pool.hpp"
 #include "world/chunk.hpp"
 #include "world/world.hpp"
 #include "world/worldgen.hpp"
