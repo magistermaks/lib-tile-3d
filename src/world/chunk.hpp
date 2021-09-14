@@ -7,6 +7,7 @@ class Chunk {
 	private:
 
 		World* world;
+		bool dirty;
 
 	public:
 
@@ -15,6 +16,9 @@ class Chunk {
 
 		Chunk( World*, int, int, int );
 		~Chunk();
+
+		void markDirty();
+		bool readDirty();
 
 };
 

@@ -10,3 +10,14 @@ Chunk::~Chunk() {
 	delete this->tree;
 }
 
+void Chunk::markDirty() {
+	this->dirty = true;
+}
+
+bool Chunk::readDirty() {
+	bool flag = this->dirty;
+	this->dirty = false;
+	return flag;
+}
+
+

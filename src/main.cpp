@@ -1,7 +1,7 @@
 
 #include "core.hpp"
 
-//#define WORLD
+#define WORLD
 
 int main() {
 
@@ -30,12 +30,10 @@ int main() {
 	PathTracer tracer( 8, width, height, 6, 0 );
 	World world( tracer );
 
-	logger::info("Generating voxel data...");
-
 #ifdef WORLD
 	Worldgen::gen_chunk_world(world);
 #else
-	// floating voixels surrounded with cubes
+	// floating voxels surrounded with cubes
 	Worldgen::gen_chunk_scene1(world);
 	auto& tree = *world.get(0, 0, 0)->tree;
 #endif
@@ -113,6 +111,8 @@ int main() {
 		tree.set(rand() % 65, rand() % 65, rand() % 65, {
 			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
 		} );
+
+		world.get(0, 0, 0)->markDirty();
 #endif // !WORLD
 
 		// update the fps count

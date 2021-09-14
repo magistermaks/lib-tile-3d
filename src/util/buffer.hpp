@@ -83,7 +83,7 @@ void ReusableBuffer<T>::assert_size( int count ) {
 	if( this->pos + count > this->length ) {
 		size_t new_size = this->length * 2;
 
-		logger::info("Reusable Buffer '", this, "' resized to ", new_size, " (", new_size * sizeof(T), " bytes)");
+		logger::info("Buffer ", this, " resized to ", new_size, " (", new_size * sizeof(T), " bytes)");
 
 		this->buffer = (T*) realloc(this->buffer, new_size * sizeof(T));
 		this->length = new_size;

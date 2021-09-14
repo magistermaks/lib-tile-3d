@@ -32,7 +32,7 @@ class Octree {
 
 	private:
 
-		bool modified = false;
+		volatile bool modified = false;
 
 		int mask; // iterator mask, based on tree depth
 
@@ -81,12 +81,6 @@ class Octree {
 			return this->buffer + offset;
 
 		}
-
-		void optimize( const int offset, byte depth ) {
-
-			// TODO: fix alpha masks for removed leafs
-
-		}
 	
 	public:
 	
@@ -117,7 +111,6 @@ class Octree {
 
 		/// set raw entry in a tree
 		void set( const int x, const int y, const int z, T leaf ) {
-			this->modified = true;
 			if( leaf.empty() ) {
 				*accessor<T::erase>(x, y, z) = leaf;
 			} else {
@@ -130,15 +123,6 @@ class Octree {
 		/// get tree buffer pointer
 		byte* data() {
 			return (byte*) this->buffer;
-		}
-
-		/// TODO make it less ugly
-		bool dirty() {
-			bool flag = this->modified;
-			this->modified = false;
-			if( flag ) this->optimize(0, this->mask);
-
-			return flag;
 		}
 
 		// length of the buffer used to store the tree of a given depth

@@ -27,12 +27,18 @@ namespace std {
 
 class World {
 
+	public:
+
+		using Generator = std::function<void(World*, Chunk*, int, int, int)>;
+
 	private:
 
 		std::unordered_map<ChunkPos, Chunk*> map;
 		std::vector<Chunk*> chunks;
 
 		PathTracer& tracer;
+		ThreadPool pool;
+		Generator generator;
 		
 		size_t chunk_size;
 		size_t length;
@@ -43,19 +49,16 @@ class World {
 
 		World(PathTracer& tracer);
 
-		void put( int x, int y, int z );
-		void put( const ChunkPos& pos );
-	
+		void setGenerator( Generator generator );
+
+		Chunk* put( int x, int y, int z );
+		Chunk* get( int x, int y, int z );
+		Chunk* request( int x, int y, int z );
+
+		// a little unsafe
 		void remove( int x, int y, int z );
 
-		// get chunk from region
-		Chunk* get( int x, int y, int z );
-		Chunk* get( const ChunkPos& pos );
-
-		// remove all chunks from region
 		void clear();
-
-		// submit changes to renderer
 		void update();
 
 };

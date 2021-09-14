@@ -18,10 +18,10 @@ std::size_t std::hash<ChunkPos>::operator()( const ChunkPos& pos ) const {
 }
 
 std::string std::to_string( const ChunkPos& pos ) {
-	return std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z);
+	return std::to_string(pos.x) + " " + std::to_string(pos.y) + " " + std::to_string(pos.z);
 }
 
-World::World(PathTracer& tracer) : tracer(tracer), length(0), chunk_size( Octree<OctreeVoxel>::sizeOf(6) * sizeof(OctreeVoxel) ) {
+World::World(PathTracer& tracer) : tracer(tracer), length(0), chunk_size( Octree<OctreeVoxel>::sizeOf(6) * sizeof(OctreeVoxel) ), pool(4) {
 	
 }
 
@@ -37,15 +37,16 @@ void World::notify() {
 	this->tracer.updateChunks( chunks.size(), offsets.data() );
 }
 
-void World::put( int x, int y, int z ) {
-	this->put( ChunkPos(x, y, z) );
+void World::setGenerator( Generator generator ) {
+	this->generator = generator;
 }
 
-void World::put( const ChunkPos& pos ) {
-	Chunk* chunk = new Chunk(this, pos.x, pos.y, pos.z);
+Chunk* World::put( int x, int y, int z ) {
+
+	Chunk* chunk = new Chunk(this, x, y, z);
 
 	// add chunk to buffers
-	this->map[pos] = chunk;
+	this->map[ ChunkPos(x, y, z) ] = chunk;
 	this->chunks.push_back(chunk);
 
 	// if there are more chunks than slots in kernel buffers
@@ -61,7 +62,7 @@ void World::put( const ChunkPos& pos ) {
 	// update kernel buffers
 	this->notify();
 
-	logger::info("Added chunk #", chunk_count, " at: (", std::to_string(pos), ")");
+	return chunk;
 }
 
 void World::remove( int x, int y, int z ) {
@@ -77,12 +78,8 @@ void World::remove( int x, int y, int z ) {
 }
 
 Chunk* World::get( int x, int y, int z ) {
-	return this->get( ChunkPos(x, y, z) );
-}
-
-Chunk* World::get( const ChunkPos& pos ) {
 	try {
-		return this->map.at( pos );
+		return this->map.at( ChunkPos(x, y, z) );
 	} catch(std::out_of_range& err) {
 		return nullptr;
 	}
@@ -106,9 +103,31 @@ void World::update() {
 	int i = 0;
 
 	for( Chunk* chunk : chunks ) {
-		if( chunk->tree->dirty() ) {
-			tracer.updateVoxels( (i ++) * chunk_size, chunk_size, chunk->tree->data() );
+		if( chunk->readDirty() ) {
+			tracer.updateVoxels( i * chunk_size, chunk_size, chunk->tree->data() );
 		}
+
+		i ++;
 	}
+}
+
+Chunk* World::request( int x, int y, int z ) {
+
+	// ensure that the chunk is instantly available
+	Chunk* chunk = this->put(x, y, z);
+
+	// add worldgen task to thread pool
+	pool.enqueue(
+		[] (World* world, Chunk* chunk, int cx, int cy, int cz) -> void {
+
+			world->generator(world, chunk, cx, cy, cz);
+
+			logger::info("Generated chunk at: ", cx, " ", cy, " ", cz);
+			chunk->markDirty();
+
+		}, this, chunk, x, y, z
+	);
+
+	return chunk;
 }
 
