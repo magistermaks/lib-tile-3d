@@ -37,7 +37,6 @@ class World {
 		std::vector<Chunk*> chunks;
 
 		PathTracer& tracer;
-		ThreadPool pool;
 		Generator generator;
 		
 		size_t chunk_size;
@@ -49,7 +48,7 @@ class World {
 
 		World(PathTracer& tracer);
 
-		void setGenerator( Generator generator );
+		void setGenerator( const Generator& generator );
 
 		Chunk* put( int x, int y, int z );
 		Chunk* get( int x, int y, int z );

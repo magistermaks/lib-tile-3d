@@ -9,3 +9,4 @@ class Worldgen {
 		static void gen_chunk_scene1(World& world);
 
 };
+

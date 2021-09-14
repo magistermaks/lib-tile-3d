@@ -21,7 +21,7 @@ std::string std::to_string( const ChunkPos& pos ) {
 	return std::to_string(pos.x) + " " + std::to_string(pos.y) + " " + std::to_string(pos.z);
 }
 
-World::World(PathTracer& tracer) : tracer(tracer), length(0), chunk_size( Octree<OctreeVoxel>::sizeOf(6) * sizeof(OctreeVoxel) ), pool(4) {
+World::World(PathTracer& tracer) : tracer(tracer), length(0), chunk_size( Octree<OctreeVoxel>::sizeOf(6) * sizeof(OctreeVoxel) ) {
 	
 }
 
@@ -37,7 +37,7 @@ void World::notify() {
 	this->tracer.updateChunks( chunks.size(), offsets.data() );
 }
 
-void World::setGenerator( Generator generator ) {
+void World::setGenerator( const Generator& generator ) {
 	this->generator = generator;
 }
 
@@ -117,7 +117,7 @@ Chunk* World::request( int x, int y, int z ) {
 	Chunk* chunk = this->put(x, y, z);
 
 	// add worldgen task to thread pool
-	pool.enqueue(
+	Threads::async(
 		[] (World* world, Chunk* chunk, int cx, int cy, int cz) -> void {
 
 			world->generator(world, chunk, cx, cy, cz);

@@ -107,6 +107,8 @@ int main() {
 
 		auto start = Clock::now();
 
+		Threads::execute();
+
 #ifndef WORLD
 		tree.set(rand() % 65, rand() % 65, rand() % 65, {
 			((byte)rand()), ((byte)rand()), ((byte)rand()), 255

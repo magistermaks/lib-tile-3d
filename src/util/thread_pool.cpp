@@ -72,3 +72,16 @@ size_t ThreadPool::optimal() {
 	return std::max((int) std::thread::hardware_concurrency() - 1, 1);
 }
 
+ThreadPool Threads::pool;
+std::queue<Task> Threads::synced_tasks;
+
+void Threads::execute() {
+
+	while( !Threads::synced_tasks.empty() ) {
+		
+		Threads::synced_tasks.front()();
+		Threads::synced_tasks.pop();
+
+	}
+}
+

@@ -32,8 +32,6 @@ class Octree {
 
 	private:
 
-		volatile bool modified = false;
-
 		int mask; // iterator mask, based on tree depth
 
 		T* buffer;
