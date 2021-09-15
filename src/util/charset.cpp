@@ -9,7 +9,7 @@ Charset::Charset( const char* path, int size ) {
 	const int h = this->tex->getHeight();
 
 	if( w % size != 0 || h % size != 0 ) {
-		logger::error( "Invalid size of font: '" + std::string(path) + "'" );
+		logger::error( "Invalid size of font: '", path, "'" );
 		throw std::runtime_error("Font loading error");
 	}
   

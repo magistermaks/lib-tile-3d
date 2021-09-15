@@ -31,11 +31,14 @@ if os.name == "nt":
 	options += "-G \"NMake Makefiles\" "
 else:
 	main = "build/main"
-	make = "make -j 4"
+	make = "make -j $(nproc)"
 
 # remove buid dir when required
 if args.clean:
-	shutil.rmtree("build")
+	try:
+		shutil.rmtree("build")
+	except:
+		pass
 
 # call cmake
 if not os.path.isdir("build"):

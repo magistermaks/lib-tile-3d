@@ -41,7 +41,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <murmur-3/murmur.hpp>
 #include <perlin_noise/PerlinNoise.hpp>
 
 #define glfwTerminate dont_use_glfw_terminate_because_it_causes_segfault_on_my_driver_thank_you
@@ -71,6 +70,7 @@
 #include <regex>
 #include <utility>
 #include <filesystem>
+#include <condition_variable>
 
 // C
 #include <stdio.h>

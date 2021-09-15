@@ -56,12 +56,11 @@ add_definitions(
 )
 
 add_executable(main 
-	external/murmur-3/murmur.cpp
-
 	src/util/charset.cpp
+	src/util/thread_pool.cpp
 
 	src/world/chunk.cpp
-	src/world/region.cpp
+	src/world/world.cpp
 	src/world/worldgen.cpp
 
 	src/renderer/renderer.cpp

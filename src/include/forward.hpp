@@ -9,12 +9,13 @@ class Texture;
 class ShaderProgram;
 class Charset;
 class VertexConsumer;
-class Region;
+class World;
 class PathTracer;
 class OctreeVoxel;
 class Worldgen;
 class Chunk;
 class ChunkManager;
+class ThreadPool;
 
 // template forward definitions
 template<typename T> class Octree;

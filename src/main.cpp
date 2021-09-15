@@ -1,9 +1,11 @@
 
 #include "core.hpp"
 
-//#define WORLD
-
 int main() {
+
+	// 0 - ring of funny voxels
+	// 1 - simple worldgen with perlin noise
+	const int scene = 0;
 
 	const int width = 1024;
 	const int height = 768;
@@ -28,18 +30,13 @@ int main() {
 	glm::mat4 proj = glm::perspective(glm::radians(77.5f), (float) width / (float) height, 0.1f, 1000.0f);
 
 	PathTracer tracer( 8, width, height, 6, 0 );
-	ChunkManager manager( tracer );
-	Region region( manager );
+	World world( tracer );
 
-	logger::info("Generating voxel data...");
-
-#ifdef WORLD
-	Worldgen::gen_chunk_world(region);
-#else
-	// floating voixels surrounded with cubes
-	Worldgen::gen_chunk_scene1(region);
-	auto& tree = *region.chunk(0, 0, 0)->tree;
-#endif
+	if( scene == 0 ) {
+		Worldgen::scene_ring(world);
+	}else{
+		Worldgen::scene_world(world);
+	}
 
 	Charset charset( "assets/8x8font.png" );
 
@@ -110,11 +107,17 @@ int main() {
 
 		auto start = Clock::now();
 
-#ifndef WORLD
-		tree.set(rand() % 65, rand() % 65, rand() % 65, {
-			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-		} );
-#endif // !WORLD
+		Threads::execute();
+
+		if( scene == 0 ) {
+			Chunk* chunk = world.get(0, 0, 0);
+
+			chunk->tree->set(rand() % 65, rand() % 65, rand() % 65, {
+				((byte)rand()), ((byte)rand()), ((byte)rand()), 255
+			} );
+
+			chunk->markDirty();
+		}
 
 		// update the fps count
 		if( last != time(0) ) {
@@ -126,7 +129,7 @@ int main() {
 		renderer.setConsumer(consumer2d);
 		renderer.setShader(*depth);
 		renderer.depthTest(false);
-		manager.update();
+		world.update();
 		camera.update();
 		tracer.render( camera );
 

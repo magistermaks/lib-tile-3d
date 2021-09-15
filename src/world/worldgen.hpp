@@ -5,7 +5,8 @@
 class Worldgen {
 
 	public:
-		static void gen_chunk_world(Region& region);
-		static void gen_chunk_scene1(Region& region);
+		static void scene_world(World& world);
+		static void scene_ring(World& world);
 
 };
+

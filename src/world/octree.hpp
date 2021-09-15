@@ -2,7 +2,6 @@
 
 #include <core.hpp>
 
-// this must be a simple, C-like structure
 struct OctreeVoxel {
 	byte r; // red color
 	byte g; // green color
@@ -32,8 +31,6 @@ template< typename T >
 class Octree {
 
 	private:
-
-		bool modified = false;
 
 		int mask; // iterator mask, based on tree depth
 
@@ -70,25 +67,16 @@ class Octree {
 				// shift the offset so that it aligns to the next layer
 				offset <<= 3;
 
-				// calculate the offset by decomposing the xyz to its binary form
-				offset += octant;
+				// add octant id to the shifted offset, keep the octant id in range 1-8, not 0-7
+				offset += octant + 1;
 
 				// shift the mask
 				mask >>= 1;
-
-				// the value added to `offset` must be kept in range 1-8, not 0-7
-				offset ++;
 
 			}
 
 			// return pointer to leaf
 			return this->buffer + offset;
-
-		}
-
-		void optimize( const int offset, byte depth ) {
-
-			// TODO: fix alpha masks for removed leafs
 
 		}
 	
@@ -121,7 +109,6 @@ class Octree {
 
 		/// set raw entry in a tree
 		void set( const int x, const int y, const int z, T leaf ) {
-			this->modified = true;
 			if( leaf.empty() ) {
 				*accessor<T::erase>(x, y, z) = leaf;
 			} else {
@@ -134,15 +121,6 @@ class Octree {
 		/// get tree buffer pointer
 		byte* data() {
 			return (byte*) this->buffer;
-		}
-
-		/// TODO make it less ugly
-		bool dirty() {
-			bool flag = this->modified;
-			this->modified = false;
-			if( flag ) this->optimize(0, this->mask);
-
-			return flag;
 		}
 
 		// length of the buffer used to store the tree of a given depth
