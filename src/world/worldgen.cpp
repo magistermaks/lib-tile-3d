@@ -1,7 +1,7 @@
 
 #include "worldgen.hpp"
 
-void Worldgen::gen_chunk_world(World& world) {
+void Worldgen::scene_world(World& world) {
 
 	world.setGenerator( [] (World* world, Chunk* chunk, int x, int y, int z) {
 		auto& tree = *chunk->tree;
@@ -76,7 +76,7 @@ void Worldgen::gen_chunk_world(World& world) {
 	}
 }
 
-void Worldgen::gen_chunk_scene1(World& world) {
+void Worldgen::scene_ring(World& world) {
 	
 	Chunk* chunk = world.put(0, 0, 0);
 

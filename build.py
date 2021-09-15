@@ -35,7 +35,10 @@ else:
 
 # remove buid dir when required
 if args.clean:
-	shutil.rmtree("build")
+	try:
+		shutil.rmtree("build")
+	except:
+		pass
 
 # call cmake
 if not os.path.isdir("build"):

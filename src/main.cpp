@@ -1,9 +1,11 @@
 
 #include "core.hpp"
 
-#define WORLD
-
 int main() {
+
+	// 0 - ring of funny voxels
+	// 1 - simple worldgen with perlin noise
+	const int scene = 0;
 
 	const int width = 1024;
 	const int height = 768;
@@ -30,13 +32,11 @@ int main() {
 	PathTracer tracer( 8, width, height, 6, 0 );
 	World world( tracer );
 
-#ifdef WORLD
-	Worldgen::gen_chunk_world(world);
-#else
-	// floating voxels surrounded with cubes
-	Worldgen::gen_chunk_scene1(world);
-	auto& tree = *world.get(0, 0, 0)->tree;
-#endif
+	if( scene == 0 ) {
+		Worldgen::scene_ring(world);
+	}else{
+		Worldgen::scene_world(world);
+	}
 
 	Charset charset( "assets/8x8font.png" );
 
@@ -109,13 +109,15 @@ int main() {
 
 		Threads::execute();
 
-#ifndef WORLD
-		tree.set(rand() % 65, rand() % 65, rand() % 65, {
-			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-		} );
+		if( scene == 0 ) {
+			Chunk* chunk = world.get(0, 0, 0);
 
-		world.get(0, 0, 0)->markDirty();
-#endif // !WORLD
+			chunk->tree->set(rand() % 65, rand() % 65, rand() % 65, {
+				((byte)rand()), ((byte)rand()), ((byte)rand()), 255
+			} );
+
+			chunk->markDirty();
+		}
 
 		// update the fps count
 		if( last != time(0) ) {
