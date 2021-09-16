@@ -20,6 +20,3 @@ set_target_properties(${name}
 	PROPERTIES OUTPUT_NAME main
 )
 
-if( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/assets )
-	file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endif()
