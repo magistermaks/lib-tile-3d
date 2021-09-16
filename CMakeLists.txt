@@ -55,13 +55,12 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
-add_executable(main 
+add_library(LT3D STATIC
 	src/util/charset.cpp
 	src/util/thread_pool.cpp
 
 	src/world/chunk.cpp
 	src/world/world.cpp
-	src/world/worldgen.cpp
 
 	src/renderer/renderer.cpp
 	src/renderer/pathtracer.cpp
@@ -71,16 +70,17 @@ add_executable(main
 	src/renderer/vertex.cpp
 	src/renderer/matrix.cpp
 
-	src/main.cpp
 	src/logger.cpp
 	src/glhelper.cpp
 	src/clhelper.cpp
 	src/camera.cpp
- )
+)
 
-target_link_libraries(main
+target_link_libraries(LT3D
 	${ALL_LIBS}
 )
+
+add_subdirectory(demo)
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 

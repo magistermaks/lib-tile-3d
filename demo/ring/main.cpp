@@ -1,11 +1,7 @@
-
-#include "core.hpp"
+#include <core.hpp>
+#include "worldgen.hpp"
 
 int main() {
-
-	// 0 - ring of funny voxels
-	// 1 - simple worldgen with perlin noise
-	const int scene = 0;
 
 	const int width = 1024;
 	const int height = 768;
@@ -14,7 +10,7 @@ int main() {
 	logger::info("Current working directory: '", std::filesystem::current_path().string(), "'");
 
 	// initilize GLFW, GLEW, OpenGL, and OpenCL
-	if( !GLHelper::init(width, height, "lib-tile-3d") ) {
+	if( !GLHelper::init(width, height, "Ring Demo") ) {
 		return -1;
 	}
 	
@@ -32,11 +28,7 @@ int main() {
 	PathTracer tracer( 8, width, height, 6, 0 );
 	World world( tracer );
 
-	if( scene == 0 ) {
-		Worldgen::scene_ring(world);
-	}else{
-		Worldgen::scene_world(world);
-	}
+	worldgen(world);
 
 	Charset charset( "assets/8x8font.png" );
 
@@ -109,15 +101,13 @@ int main() {
 
 		Threads::execute();
 
-		if( scene == 0 ) {
-			Chunk* chunk = world.get(0, 0, 0);
+		Chunk* chunk = world.get(0, 0, 0);
 
-			chunk->tree->set(rand() % 65, rand() % 65, rand() % 65, {
-				((byte)rand()), ((byte)rand()), ((byte)rand()), 255
-			} );
+		chunk->tree->set(rand() % 65, rand() % 65, rand() % 65, {
+			((byte)rand()), ((byte)rand()), ((byte)rand()), 255
+		} );
 
-			chunk->markDirty();
-		}
+		chunk->markDirty();
 
 		// update the fps count
 		if( last != time(0) ) {
@@ -163,5 +153,4 @@ int main() {
 
 	return 0;
 }
-
 
