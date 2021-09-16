@@ -3,6 +3,8 @@
 
 project(LibTile3D)
 
+cmake_minimum_required(VERSION 3.10)
+
 find_package(OpenGL REQUIRED)
 find_package(OpenCL REQUIRED)
 
@@ -55,25 +57,13 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
+file(GLOB_RECURSE LT3D_SOURCES RELATIVE 
+	${CMAKE_SOURCE_DIR} 
+	"src/*.cpp"
+)
+
 add_library(LT3D STATIC
-	src/util/charset.cpp
-	src/util/thread_pool.cpp
-
-	src/world/chunk.cpp
-	src/world/world.cpp
-
-	src/renderer/renderer.cpp
-	src/renderer/pathtracer.cpp
-	src/renderer/scene.cpp
-	src/renderer/shader.cpp
-	src/renderer/texture.cpp
-	src/renderer/vertex.cpp
-	src/renderer/matrix.cpp
-
-	src/logger.cpp
-	src/glhelper.cpp
-	src/clhelper.cpp
-	src/camera.cpp
+	${LT3D_SOURCES}
 )
 
 target_link_libraries(LT3D
@@ -81,6 +71,4 @@ target_link_libraries(LT3D
 )
 
 add_subdirectory(demo)
-
-file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 

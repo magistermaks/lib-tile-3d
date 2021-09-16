@@ -44,7 +44,7 @@ if os.name == "nt":
 	options += "-G \"NMake Makefiles\" "
 else:
 	main = "main"
-	make = "make"
+	make = "make -j ${nproc}"
 
 # remove buid dir when requesed
 if args.clean:
