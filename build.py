@@ -60,19 +60,23 @@ if not os.path.isdir("build"):
 	os.system(f"cd build && cmake {options} ../")
 
 write("Building Target...")
+
+# remove old binary
 try:
-	os.remove(main)
+	if args.run is not None:
+		os.remove(f"build/demo/{args.run}/{main}")
 except:
 	pass
 
+# TODO do this with cmake
 # build project
 os.system(f"cd build && {make}")
 
 # run project when required
 if args.run is not None:
-	binary = f"build/demo/{args.run}/{main}"
+	os.chdir(f"build/demo/{args.run}/")
 
-	print(f"Executable: './{binary}'")
+	print(f"Executable: '{os.getcwd()}/{main}'")
 	write("Running Target...")
-	os.system(binary)
+	os.system(f"./{main}")
 
