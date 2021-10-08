@@ -15,7 +15,6 @@
 #include "util/thread_pool.hpp"
 #include "world/chunk.hpp"
 #include "world/world.hpp"
-#include "world/worldgen.hpp"
 #include "world/octree.hpp"
 #include "renderer/shader.hpp"
 #include "renderer/scene.hpp"
