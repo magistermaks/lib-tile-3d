@@ -50,8 +50,19 @@ void load_direction(Vec3* vec, Vec3* rotation) {
 	vec->x = rotated;
 }
 
+void load_ray(Ray* ray, Vec3 direction, Vec3 origin) {
+
+	ray->orig = origin;
+	ray->invdir.x = 1.0f / direction.x;
+	ray->invdir.y = 1.0f / direction.y;
+	ray->invdir.z = 1.0f / direction.z;
+	ray->sign[0] = (ray->invdir.x < 0);
+	ray->sign[1] = (ray->invdir.y < 0);
+	ray->sign[2] = (ray->invdir.z < 0);
+}
+
 // initialize ray object
-void load_ray(Ray* ray, Scene* scene, int2* pos, const int width, const int height, float fov) {
+void load_primary_ray(Ray* ray, Scene* scene, int2* pos, const int width, const int height, float fov) {
 	const float aspect_ratio = (float) width / (float) height;
 
 	Vec3 dir;
@@ -67,12 +78,7 @@ void load_ray(Ray* ray, Scene* scene, int2* pos, const int width, const int heig
 
 	load_direction(&dir, &rotation);
 
-	ray->orig = scene->camera_origin;
-	ray->invdir.x = 1 / dir.x;
-	ray->invdir.y = 1 / dir.y;
-	ray->invdir.z = 1 / dir.z;
-	ray->sign[0] = (ray->invdir.x < 0);
-	ray->sign[1] = (ray->invdir.y < 0);
-	ray->sign[2] = (ray->invdir.z < 0);
+	load_ray(ray, dir, scene->camera_origin);
 }
+
 

@@ -50,50 +50,91 @@ void kernel main(
 	const float fov = scene.projection.x;
 	const float near = scene.projection.y;
 	const float far = scene.projection.z;
+ 
+	// set background color
+	float4 pixel_color = { scene.background.x, scene.background.y, scene.background.z, far };
+
+	const float ray_retreat = 0.1f;
 
 	// preparing ray
 	Ray ray;
-	load_ray(&ray, &scene, &pos, width, height, tan(fov / 2));
- 
-	// set background color
-	float4 color = { scene.background.x, scene.background.y, scene.background.z, far };
+	load_primary_ray(&ray, &scene, &pos, width, height, tan(fov / 2));
+	Ray primary_ray = ray;
 
-	float max_dist = far;
-	float size = 64 * scale;
+	//very random
+	const float random[] = { 0.193298, 0.701774, 0.213003, 0.341672, 0.869307, 0.029466, 0.518960, 0.059532, 0.987613, 0.007828, 0.053581, 0.199910, 0.580236, 0.717150, 0.633529, 0.231681, 0.485278, 0.198106, 0.717302, 0.181609 };
+	const float jitter = 0.1f;
+	int randomid = 0;
 
-	// iterate all chunks
-	for( int chunk = 0; chunk < chunk_count; chunk ++ ) {
+	for (int spp = 0; spp < 2; spp++) {		
 
-		// read chunk offset from chunks array
-		Vec3 chunk_pos;
-		load_vec3(&chunk_pos, chunks + chunk * 3);
-		chunk_pos = muls(&chunk_pos, scale);
+		float4 color = { scene.background.x, scene.background.y, scene.background.z, far };
+		float max_dist = far;
+		float size = 64 * scale;
 
-		Vec3 bounds[2] = { 
-			chunk_pos, 
-			adds(&chunk_pos, size)
-		};
+		// iterate all chunks
+		for (int chunk = 0; chunk < chunk_count; chunk++) {
 
-		float tmp_dist = 0;
-		if( intersects(&ray, bounds, &tmp_dist) ) {
+			// read chunk offset from chunks array
+			Vec3 chunk_pos;
+			load_vec3(&chunk_pos, chunks + chunk * 3);
+			chunk_pos = muls(&chunk_pos, scale);
 
-			// 222 = csize * sqrt(3)
-			if( tmp_dist > -222.0f && tmp_dist < max_dist ) {
+			Vec3 bounds[2] = {
+				chunk_pos,
+				adds(&chunk_pos, size)
+			};
 
-				// get pointer to octree of given chunk
-				global byte* octree = octrees + (chunk * OCTREE_SIZE * VOXEL_SIZE);
+			float tmp_dist = 0;
+			if (intersects(&ray, bounds, &tmp_dist)) {
 
-				// render the chunk
-				octree_get_pixel(chunk_pos, &ray, octree, &max_dist, &color, octree_depth, size);
+				// 222 = csize * sqrt(3)
+				if (tmp_dist > -222.0f && tmp_dist < max_dist) {
+
+					// get pointer to octree of given chunk
+					global byte* octree = octrees + (chunk * OCTREE_SIZE * VOXEL_SIZE);
+
+					// render the chunk
+					octree_get_pixel(chunk_pos, &ray, octree, &max_dist, &color, octree_depth, size);
+				}
 			}
+		}
+		if (spp == 0) pixel_color = color;
+		else {
+			pixel_color.x = ((color.w >= far) ? pixel_color.x : pixel_color.x * 0.5f);
+			pixel_color.y = ((color.w >= far) ? pixel_color.y : pixel_color.y * 0.5f);
+			pixel_color.z = ((color.w >= far) ? pixel_color.z : pixel_color.z * 0.5f);
+		}
+
+		if (color.w >= far) break;
+		else {
+			ray = primary_ray;
+			color = pixel_color;
+
+			Vec3 dir = {
+				//even more random
+				1.0f * (1.0f - random[(pos.x + (int)pixel_color.x + randomid) % 20] * jitter),
+				1.0f * (1.0f - random[(pos.y + (int)pixel_color.y + randomid) % 20] * jitter),
+				-1.0f * (1.0f - random[(pos.x + (int)pixel_color.z + pos.y + randomid) % 20] * jitter)
+			};
+			randomid++;
+			norm(&dir);
+
+			Vec3 origin = {
+				ray.orig.x + (1.0f / ray.invdir.x) * (color.w - ray_retreat),
+				ray.orig.y + (1.0f / ray.invdir.y) * (color.w - ray_retreat),
+				ray.orig.z + (1.0f / ray.invdir.z) * (color.w - ray_retreat)
+			};
+
+			load_ray(&ray, dir, origin);			
 		}
 	}
 
 	float4 colr = {
-		color.x * (1.0f / 255.0f),
-		color.y * (1.0f / 255.0f),
-		color.z * (1.0f / 255.0f),
-		(1.0f/color.w - 1.0f/near) / (1.0f/far - 1.0f/near),
+		pixel_color.x * (1.0f / 255.0f),
+		pixel_color.y * (1.0f / 255.0f),
+		pixel_color.z * (1.0f / 255.0f),
+		(1.0f/ pixel_color.w - 1.0f/near) / (1.0f/far - 1.0f/near),
 	};
 
 	write_imagef(image, pos, colr);
