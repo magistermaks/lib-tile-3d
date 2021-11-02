@@ -82,7 +82,7 @@ byte octree_test_octant(const float csize, global byte* octree, const Ray* ray, 
 }
 
 // draw single pixel queried from octree with a 3D ray
-void octree_get_pixel(Vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, float4* output, int octree_depth, float csize) {
+void octree_get_pixel(Vec3 xyzc, Ray* ray, global byte* octree, float* max_dist, float4* output, int octree_depth, float csize, Vec3* box_pos) {
 
 	float dist;
 
@@ -184,6 +184,11 @@ void octree_get_pixel(Vec3 xyzc, Ray* ray, global byte* octree, float* max_dist,
 		output->y = octree[index + GREEN];
 		output->z = octree[index + BLUE];
 		output->w = dist;
+
+		*box_pos = add(&xyzo, &xyzc);
+		box_pos->x += 1;
+		box_pos->y += 1;
+		box_pos->z += 1;
 	}
 }
 

@@ -84,3 +84,8 @@ inline float sclamp( float x ){
 	return x < 0 ? 0 : x > 1 ? 1 : x; 
 }
 
+// clamps given float to given range [min-max]
+inline float mclamp(float x, float min, float max) {
+	return x < min ? min : x > max ? max : x;
+}
+

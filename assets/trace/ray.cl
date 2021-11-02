@@ -81,4 +81,12 @@ void load_primary_ray(Ray* ray, Scene* scene, int2* pos, const int width, const 
 	load_ray(ray, dir, scene->camera_origin);
 }
 
-
+void Bounce(Ray* ray, Vec3 hit, Vec3 box_pos, float size) {
+	ray->orig = hit;
+	ray->invdir.x *= ((hit.x >= box_pos.x + size || hit.x <= box_pos.x - size) ? -1.0f : 1.0f);
+	ray->invdir.y *= ((hit.y >= box_pos.y + size || hit.y <= box_pos.y - size) ? -1.0f : 1.0f);
+	ray->invdir.z *= ((hit.z >= box_pos.z + size || hit.z <= box_pos.z - size) ? -1.0f : 1.0f);
+	ray->sign[0] = (ray->invdir.x < 0);
+	ray->sign[1] = (ray->invdir.y < 0);
+	ray->sign[2] = (ray->invdir.z < 0);
+}
