@@ -152,9 +152,9 @@ void kernel main(
 		}
 		else {
 			const float intensity = 0.5f;
-			pixel_color.x = ((pixel_color.x + ray_pixel_color.x * intensity) / (1 + intensity), 0.0f, 255.0f);
-			pixel_color.y = ((pixel_color.y + ray_pixel_color.y * intensity) / (1 + intensity), 0.0f, 255.0f);
-			pixel_color.z = ((pixel_color.z + ray_pixel_color.z * intensity) / (1 + intensity), 0.0f, 255.0f);
+			pixel_color.x = mclamp((pixel_color.x + ray_pixel_color.x * intensity) / (1 + intensity), 0.0f, 255.0f);
+			pixel_color.y = mclamp((pixel_color.y + ray_pixel_color.y * intensity) / (1 + intensity), 0.0f, 255.0f);
+			pixel_color.z = mclamp((pixel_color.z + ray_pixel_color.z * intensity) / (1 + intensity), 0.0f, 255.0f);
 		}
 
 		if (ray_pixel_color.w >= far) break;
